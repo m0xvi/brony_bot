@@ -130,8 +130,8 @@ input[type="number"] {
 input[type="text"] {
     width: 99%;
     height: 100px;
-    padding: 8px;
     margin: 5px 0;
     border: 1px solid #ccc;
     border-radius: 4px;
+    text-align: left;
 }
