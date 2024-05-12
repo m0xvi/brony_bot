@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalPriceElement = document.getElementById('totalPrice');
     const phoneInput = document.getElementById('phone');
     const nameInput = document.getElementById('name');
-   const bedsControl = document.querySelector('.quantity-beds'); // Контейнер для кроватей
+    const bedsControl = document.querySelector('.quantity-beds'); // Контейнер для кроватей
     const bedsLabel = document.getElementById('bed-control'); // Заголовок для кроватей
     const loungerControl = document.querySelector('.quantity-loungers'); // Контейнер для шезлонгов
     const loungerLabel = document.getElementById('lounger-control'); // Заголовок для шезлонгов
@@ -91,4 +91,37 @@ document.addEventListener('DOMContentLoaded', function () {
     loungersInput.addEventListener('change', updateTotalPrice);
     childrenInput.addEventListener('change', updateTotalPrice);
     updateTotalPrice();
+});
+
+document.querySelector('.booking-form .book-btn').addEventListener('click', async function (event) {
+    event.preventDefault();  // Предотвращаем обычную отправку формы
+
+    // Собираем данные формы
+    let bookingData = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        arrivalDate: document.getElementById('arrival-date').value,
+        arrivalTime: document.getElementById('arrival-time').value,
+        beds: document.getElementById('beds').value,
+        loungers: document.getElementById('loungers').value,
+        children: document.getElementById('children').value,
+        comments: document.getElementById('comments').value
+    };
+
+    // Отправляем данные на сервер
+    let response = await fetch('http://192.168.0.107:3000/book', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(bookingData)
+    });
+    let result = await response.json();  // Убедитесь, что ответ корректно обрабатывается
+
+    if (response.ok) {
+        alert('Бронирование успешно сохранено!');
+    } else {
+        throw new Error('Ошибка при сохранении бронирования');
+    }
+
 });
