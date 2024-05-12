@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updateTotalPrice();
 });
 
-document.querySelector('.book-btn').addEventListener('click', function (event) {
+document.querySelector('.booking-form .book-btn').addEventListener('click', function (event) {
     event.preventDefault();  // Предотвращаем стандартную отправку формы
 
     const formData = {
