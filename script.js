@@ -93,11 +93,10 @@ document.addEventListener('DOMContentLoaded', function () {
     updateTotalPrice();
 });
 
-document.querySelector('.booking-form .book-btn').addEventListener('click', async function (event) {
-    event.preventDefault();  // Предотвращаем обычную отправку формы
+document.querySelector('.book-btn').addEventListener('click', function (event) {
+    event.preventDefault();  // Предотвращаем стандартную отправку формы
 
-    // Собираем данные формы
-    let bookingData = {
+    const formData = {
         name: document.getElementById('name').value,
         phone: document.getElementById('phone').value,
         arrivalDate: document.getElementById('arrival-date').value,
@@ -108,20 +107,15 @@ document.querySelector('.booking-form .book-btn').addEventListener('click', asyn
         comments: document.getElementById('comments').value
     };
 
-    // Отправляем данные на сервер
-    let response = await fetch('http://192.168.0.107:3000/book', {
+    fetch('https://192.168.0.107:3000/book', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
-        body: JSON.stringify(bookingData)
-    });
-    let result = await response.json();  // Убедитесь, что ответ корректно обрабатывается
-
-    if (response.ok) {
-        alert('Бронирование успешно сохранено!');
-    } else {
-        throw new Error('Ошибка при сохранении бронирования');
-    }
-
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => console.log('Success:', data))
+    .catch((error) => console.error('Error:', error));
 });
+
