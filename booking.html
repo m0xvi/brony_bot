@@ -7,53 +7,69 @@
 </head>
 <body>
 <div class="container">
-    <!-- Форма бронирования -->
     <h2>Бронирование</h2>
     <div class="booking-form">
-        <div class="date-time">
-            <div>
-                <label for="arrival-date">Заезд</label>
-                <br>
-                <input type="date" id="arrival-date">
-                <input type="time" id="arrival-time">
+        <div class="flex-row">
+            <div class="flex-item">
+                <label for="name">Ваше имя</label>
+                <input type="text" id="name" placeholder="Введите ваше имя">
+                <div class="error-message" id="name-error"></div>
             </div>
-            <br>
-            <div>
-                <label for="departure-date">Выезд</label>
-                <br>
-                <input type="date" id="departure-date">
-                <input type="time" id="departure-time">
+            <div class="flex-item">
+                <label class="tel" for="phone">Телефон</label>
+                <input type="tel" id="phone" placeholder="+7 (___) ___-____">
+                <div class="error-message" id="phone-error"></div>
             </div>
         </div>
-        <br>
-        <label for="beds">Количество кроватей:</label>
-        <input type="number" id="beds" min="1" max="15" value="1"> <br>
-        <label for="loungers">Количество шезлонгов:</label>
-        <input type="number" id="loungers" min="1" max="35" value="1"> <br> <br>
-        <label>Ребенок (500 ₽)<input type="checkbox" id="child"></label>
-        <br>
-        <br>
-        <label for="phone">Телефон:</label>
-        <input type="number" id="phone">
-        <br>
-        <br>
-        <label for="comments">Комментарий:</label>
-        <br>
+        <div class="flex-row">
+                <div class="flex-item">
+                    <label for="arrival-date">Дата заезда</label>
+                    <input type="date" id="arrival-date">
+                    <div class="error-message" id="arrival-date-error"></div>
+                </div>
+                <div class="flex-item">
+                    <label for="arrival-time">Время заезда</label>
+                    <input type="time" id="arrival-time">
+                    <div class="error-message" id="arrival-time-error"></div>
+                </div>
+        </div>
+        <div class="flex-row">
+            <div class="flex-item">
+                <label id="bed-control">Количество кроватей</label>
+                <div class="quantity-beds">
+                    <button type="button" onclick="decreaseCount('beds')">-</button>
+                    <input type="number" id="beds" min="1" max="15" value="1">
+                    <button type="button" onclick="increaseCount('beds')">+</button>
+                    <div class="error-message" id="beds-error"></div>
+                </div>
+                <label id="lounger-control">Количество шезлонгов</label>
+                <div class="quantity-loungers">
+                    <button type="button" onclick="decreaseCount('loungers')">-</button>
+                    <input type="number" id="loungers" min="1" max="35" value="1">
+                    <button type="button" onclick="increaseCount('loungers')">+</button>
+                    <div class="error-message" id="loungers-error"></div>
+                </div>
+            </div>
+            <div class="flex-item">
+                <label for="children">Количество детей</label>
+                <div class="quantity-control">
+                    <button type="button" onclick="decreaseCount('children')">-</button>
+                    <input type="number" id="children" min="0" max="10" value="0">
+                    <button type="button" onclick="increaseCount('children')">+</button>
+                </div>
+            </div>
+        </div>
+        <label class="comm" for="comments">Комментарий</label>
         <input type="text" id="comments">
-
+        <div class="line_h"></div>
         <div class="total">
             <p><b>Итого:</b> <span id="totalPrice">0</span> ₽</p>
         </div>
-
         <button class="book-btn">Забронировать</button>
-    </div>
-
-    <!-- Подтверждение брони (изначально скрыто) -->
-    <div class="confirmation hidden">
-        <p>Ваша заявка принята, ожидайте подтверждения.</p>
     </div>
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="script.js"></script>
+<script src="https://unpkg.com/imask"></script>
 </body>
 </html>

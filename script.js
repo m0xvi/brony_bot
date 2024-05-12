@@ -1,61 +1,94 @@
-const tg = window.Telegram.WebApp;
-
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const bedsInput = document.getElementById('beds');
     const loungersInput = document.getElementById('loungers');
-    const childCheckbox = document.getElementById('child');
+    const childrenInput = document.getElementById('children');
     const totalPriceElement = document.getElementById('totalPrice');
     const phoneInput = document.getElementById('phone');
-    const commentsInput = document.getElementById('comments');
+    const nameInput = document.getElementById('name');
+   const bedsControl = document.querySelector('.quantity-beds'); // Контейнер для кроватей
+    const bedsLabel = document.getElementById('bed-control'); // Заголовок для кроватей
+    const loungerControl = document.querySelector('.quantity-loungers'); // Контейнер для шезлонгов
+    const loungerLabel = document.getElementById('lounger-control'); // Заголовок для шезлонгов
 
-    // Функция для обновления итоговой цены в зависимости от введенных данных
+    // Применение маски ввода к полю телефона
+    IMask(phoneInput, {
+        mask: '+{7} (000) 000-0000'
+    });
+
+    // Считывание параметра типа из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type');
+
+    // Управление отображением элементов в зависимости от типа
+    if (type === 'bed') {
+        loungerControl.style.display = 'none';
+        loungerLabel.style.display = 'none'; // Скрываем заголовок для шезлонгов
+    } else if (type === 'lounger') {
+        bedsControl.style.display = 'none';
+        bedsLabel.style.display = 'none'; // Скрываем заголовок для кроватей
+    }
+
+
+    function increaseCount(id) {
+        let element = document.getElementById(id);
+        let currentValue = parseInt(element.value);
+        if (currentValue < element.max) {
+            element.value = currentValue + 1;
+        }
+        updateTotalPrice();
+    }
+
+    function decreaseCount(id) {
+        let element = document.getElementById(id);
+        let currentValue = parseInt(element.value);
+        if (currentValue > element.min) {
+            element.value = currentValue - 1;
+        }
+        updateTotalPrice();
+    }
+
+    window.increaseCount = increaseCount;
+    window.decreaseCount = decreaseCount;
+
     function updateTotalPrice() {
         const beds = parseInt(bedsInput.value) || 0;
         const loungers = parseInt(loungersInput.value) || 0;
-        const child = childCheckbox.checked ? 500 : 0;
-        const total = (beds * 4000) + (loungers * 2000) + child;
+        const children = parseInt(childrenInput.value) || 0;
+        const childPrice = children * 500;
+        const total = (beds * 4000) + (loungers * 2000) + childPrice;
         totalPriceElement.textContent = total;
     }
 
-    // Подписка на события изменения значений элементов формы для перерасчета цены
+    document.querySelector('.book-btn').addEventListener('click', function (event) {
+        let isValid = true;
+        const requiredFields = [
+            {id: 'name', message: 'Введите ваше имя.'},
+            {id: 'arrival-date', message: 'Выберите дату заезда.'},
+            {id: 'arrival-time', message: 'Укажите время заезда.'},
+            {id: type === 'bed' ? 'beds' : 'loungers', message: 'Укажите количество.'},
+            {id: 'phone', message: 'Укажите ваш телефон.'}
+        ];
+
+        requiredFields.forEach(field => {
+            const input = document.getElementById(field.id);
+            const errorDiv = document.getElementById(field.id + '-error');
+            if (!input.value.trim()) {
+                isValid = false;
+                errorDiv.textContent = field.message;
+                input.classList.add('error');
+            } else {
+                errorDiv.textContent = '';
+                input.classList.remove('error');
+            }
+        });
+
+        if (!isValid) {
+            event.preventDefault();
+        }
+    });
+
     bedsInput.addEventListener('change', updateTotalPrice);
     loungersInput.addEventListener('change', updateTotalPrice);
-    childCheckbox.addEventListener('change', updateTotalPrice);
-
-    // Инициализация итоговой цены при загрузке страницы
+    childrenInput.addEventListener('change', updateTotalPrice);
     updateTotalPrice();
-
-    // Обработчик клика по кнопке "Забронировать"
-    document.querySelector('.book-btn').addEventListener('click', function() {
-        const formData = {
-            arrivalDate: document.getElementById('arrival-date').value,
-            arrivalTime: document.getElementById('arrival-time').value,
-            departureDate: document.getElementById('departure-date').value,
-            departureTime: document.getElementById('departure-time').value,
-            beds: parseInt(document.getElementById('beds').value),
-            loungers: parseInt(document.getElementById('loungers').value),
-            child: document.getElementById('child').checked,
-            phone: document.getElementById('phone').value,
-            comments: document.getElementById('comments').value
-        };
-
-        // Отправка данных на сервер с использованием fetch API
-        fetch('http://localhost:3000/book', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.text())
-        .then(data => {
-            console.log('Success:', data);
-            alert('Бронирование успешно сохранено!');
-            // Здесь можно добавить логику для закрытия формы или сообщения пользователю
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-            alert('Ошибка при бронировании. Проверьте консоль для деталей.');
-        });
-    });
 });

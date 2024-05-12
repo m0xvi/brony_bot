@@ -7,30 +7,47 @@ body, html {
 }
 
 .container {
-    width: 90%;
-    margin: auto;
+    width: 100%;
+    max-width: 600px;
+    margin: 20px auto;
     padding: 20px;
-    background: white;
-    border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+}
+
+h2 {
     text-align: center;
+}
+
+hr {
+    border: none; /* Удаляет стандартную границу */
+    height: 1px; /* Устанавливает толщину линии */
+    background-color: #eeeeee; /* Устанавливает цвет линии, здесь используется томатный */
+}
+
+label {
+    display: block;
+    margin: 10px 0; /* отступы между полями */
+    color: #333; /* темный цвет текста для лучшей читаемости */
 }
 
 .product {
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin-bottom: 20px;
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    padding: 30px;
     text-align: center;
+    margin: 20px;
     border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
 }
 
 .booking-form {
-    border: 1px solid #ccc;
     padding: 10px;
     margin-bottom: 20px;
     text-align: justify;
     border-radius: 10px;
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
 }
 
 .booking-form label {
@@ -38,54 +55,108 @@ body, html {
 }
 
 img {
-    max-width: 25%;
+    max-width: 40%;
     height: auto;
+    border-radius: 5px;
 }
+
+
+.description:hover {
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    border-radius: 5px;
+    scale: 105%;
+}
+
 
 .description p, .total p, .confirmation p {
     margin: 10px 0;
+    padding: 10px;
+    font-weight: 600;
 }
 
-input[type="date"],
-input[type="time"] {
-    padding: 8px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 90%;
+.price {
+    padding: 5px 0;
+    background-color: #10c44c;
+    color: white;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 18px;
 }
 
-button {
-    background-color: #eb4b4b;
+.line {
+    width: 4px;
+    height: 150px;
+    border-radius: 10px;
+    margin-top: 25px;
+    background-color: #eee;
+}
+
+.line_h {
+    width: 150px;
+    height: 4px;
+    border-radius: 10px;
+    background-color: #eee;
+    margin-left: 200px;
+}
+
+.description {
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    border-radius: 5px;
+    padding: 10px 30px 40px 30px;
+    transition: box-shadow 0.5s ease;
+    transition: scale 0.5s ease;
+}
+
+.description a {
+    font-weight: 600;
+    background-color: #007BFF;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 15px 25px;
     cursor: pointer;
     border-radius: 4px;
     width: 100%;
-    margin-top: 10px;
-}
-
-a {
-    background-color: #eb4b4b;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 4px;
-    width: 100%;
-    margin-top: 10px;
     text-decoration: none;
 }
 
-button:hover {
-    transition: 0.4s;
-    background-color: #c94040;
+button {
+    font-weight: 600;
+    font-size: 16px;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: auto; /* Автоматическая ширина для кнопок "+", "-" */
+    margin: 5px 3px; /* Мелкий отступ вокруг кнопок */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.5s ease;
+    transition: scale 0.5s ease;
 }
+
+button.book-btn {
+    display: block;
+    width: 100%; /* Кнопка на всю ширину */
+    margin-top: 20px; /* Отступ сверху для кнопки */
+}
+
+button:hover {
+    background-color: #0069c8;
+    scale: 103%;
+}
+
+
+.quantity-control, .quantity-loungers, .quantity-beds {
+    display: flex;
+    align-items: center; /* Выравнивание по центру по вертикали */
+    margin-bottom: 10px;
+}
+
 
 a:hover {
     transition: 0.4s;
-    background-color: #c94040;
+    background-color: #0069c8;
 }
 
 button:active {
@@ -93,45 +164,81 @@ button:active {
     transform: scale(99%);
 }
 
-#loungers, #beds {
-    width: 20%;
-    text-align: right;
-    font-size: 15px;
-}
 
 .hidden {
     display: none;
 }
 
-.user-data-modal {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    padding: 20px;
-    border: 1px solid #ccc;
-    background: white;
-    z-index: 1001;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    display: none;
+#beds, #loungers, #children {
+    text-align: center;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 input[type="number"] {
-    width: 90%;
-    padding: 8px;
-    margin: 5px 0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    -moz-appearance: textfield;
 }
 
-input[type="text"] {
-    width: 90%;
-    height: 100px;
+input {
     padding: 8px;
-    margin: 5px 0;
-    border: 1px solid #ccc;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: none;
     border-radius: 4px;
+    box-sizing: border-box; /* Включает padding в ширину элемента */
+    font-size: 16px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: scale 0.5s ease;
+}
+
+input:hover {
+    scale: 103%;
+}
+
+.total {
+    font-weight: bold;
+    font-size: 1.2em;
+    text-align: center; /* Центрирование текста итога */
+    margin-top: 20px;
+    background-color: #10c44c;
+    color: white;
+    border-radius: 5px;
+}
+
+.error {
+    border: 2px solid red; /* Красная рамка для поля с ошибкой */
+}
+
+.flex-row {
+    display: flex;
+    justify-content: space-between; /* Равномерное распределение между элементами */
+    margin-bottom: 10px; /* Отступ снизу для каждой строки */
+}
+
+
+.flex-item {
+    flex: 1; /* Каждый элемент занимает равную часть строки */
+    padding-right: 10px; /* Отступ справа для каждого элемента */
+}
+
+.flex-item:last-child {
+    padding-right: 0; /* Убираем отступ справа у последнего элемента в строке */
+}
+
+input[type="text"], input[type="tel"], input[type="number"], input[type="date"], input[type="time"] {
+    width: 100%; /* Поля ввода занимают всю доступную ширину внутри элемента */
+}
+
+#comments {
+    margin-bottom: 20px;
+}
+
+.error-message {
+    color: red; /* Красный цвет текста для сообщений об ошибке */
+    font-size: 0.8em; /* Меньший размер шрифта для текста ошибки */
+    height: 1em; /* Высота для сообщений об ошибке, чтобы не изменять высоту строки при их появлении */
 }
