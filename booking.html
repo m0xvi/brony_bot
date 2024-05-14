@@ -8,7 +8,7 @@
 <body>
 <div class="container">
     <h2>Бронирование</h2>
-    <div class="booking-form">
+    <div class="booking-form" id="form">
         <div class="flex-row">
             <div class="flex-item">
                 <label for="name">Ваше имя</label>
@@ -22,16 +22,16 @@
             </div>
         </div>
         <div class="flex-row">
-                <div class="flex-item">
-                    <label for="arrival-date">Дата заезда</label>
-                    <input type="date" id="arrival-date">
-                    <div class="error-message" id="arrival-date-error"></div>
-                </div>
-                <div class="flex-item">
-                    <label for="arrival-time">Время заезда</label>
-                    <input type="time" id="arrival-time">
-                    <div class="error-message" id="arrival-time-error"></div>
-                </div>
+            <div class="flex-item">
+                <label for="arrival-date">Дата заезда</label>
+                <input type="date" id="arrival-date">
+                <div class="error-message" id="arrival-date-error"></div>
+            </div>
+            <div class="flex-item">
+                <label for="arrival-time">Время заезда</label>
+                <input type="time" id="arrival-time">
+                <div class="error-message" id="arrival-time-error"></div>
+            </div>
         </div>
         <div class="flex-row">
             <div class="flex-item">
@@ -71,5 +71,11 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="script.js"></script>
 <script src="https://unpkg.com/imask"></script>
+<script>
+    window.onload = function () {
+        let element1 = document.getElementById("form");
+        element1.classList.add("show");
+    }
+</script>
 </body>
 </html>

@@ -114,8 +114,10 @@ document.querySelector('.booking-form .book-btn').addEventListener('click', func
         },
         body: JSON.stringify(formData)
     })
-    .then(response => response.json())
-    .then(data => console.log('Success:', data))
-    .catch((error) => console.error('Error:', error));
+        .then(response => response.json())
+        .then(data => console.log('Success:', data))
+        .catch((error) => console.error('Error:', error));
 });
+
+
 
