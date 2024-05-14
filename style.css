@@ -69,7 +69,7 @@ img {
 
 
 .description p, .total p, .confirmation p, .description a {
-    margin: 0 15px;
+    margin: 10px 15px;
     padding: 10px;
     font-weight: 600;
 }
