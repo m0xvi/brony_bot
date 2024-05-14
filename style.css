@@ -8,7 +8,7 @@ body, html {
 
 .container {
     width: 100%;
-    max-width: 450px;
+    max-width: 400px;
     margin: 20px auto;
     padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -40,7 +40,7 @@ label {
     display: flex;
     justify-content: space-between;
     margin: 20px auto;
-
+    position: relative;
     opacity: 0;
     transform: scale(0.90);
     transition: opacity 1s ease-out, transform 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -73,7 +73,7 @@ label {
 }
 
 img {
-    width: 40%;
+    width: 30%;
     height: auto;
     border-radius: 5px;
 }
@@ -87,7 +87,7 @@ img {
 
 
 .description p, .total p, .confirmation p, .description a {
-    margin: 10px 15px;
+    margin: 3px 15px;
     padding: 10px;
     font-weight: 600;
 }
@@ -101,6 +101,7 @@ img {
 }
 
 .line {
+    z-index: 1001;
     width: 4px;
     height: auto;
     margin: 20px;
@@ -138,6 +139,7 @@ img {
     border-radius: 4px;
     width: auto;
     text-decoration: none;
+    margin-bottom: 10px;
 }
 
 button {
