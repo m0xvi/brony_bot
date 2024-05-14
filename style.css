@@ -8,7 +8,7 @@ body, html {
 
 .container {
     width: 100%;
-    max-width: 600px;
+    max-width: 500px;
     margin: 20px auto;
     padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -36,10 +36,10 @@ label {
     box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
     padding: 30px;
     text-align: center;
-    margin: 20px;
     border-radius: 10px;
     display: flex;
     justify-content: space-between;
+    margin: 20px auto;
 }
 
 .booking-form {
@@ -56,7 +56,7 @@ label {
 
 img {
     max-width: 40%;
-    height: auto;
+    height: 40%;
     border-radius: 5px;
 }
 
@@ -68,14 +68,13 @@ img {
 }
 
 
-.description p, .total p, .confirmation p {
-    margin: 10px 0;
+.description p, .total p, .confirmation p, .description a {
+    margin: 0 15px;
     padding: 10px;
     font-weight: 600;
 }
 
-.price {
-    padding: 5px 0;
+.price{
     background-color: #10c44c;
     color: white;
     border-radius: 5px;
@@ -85,9 +84,9 @@ img {
 
 .line {
     width: 4px;
-    height: 150px;
+    height: auto;
+    margin: 20px;
     border-radius: 10px;
-    margin-top: 25px;
     background-color: #eee;
 }
 
@@ -102,20 +101,24 @@ img {
 .description {
     box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
     border-radius: 5px;
-    padding: 10px 30px 40px 30px;
+    /*padding: 10px 30px 40px 30px;*/
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    margin: 0 auto;
+    width: 50%;
+    height: auto;
     transition: box-shadow 0.5s ease;
     transition: scale 0.5s ease;
 }
 
 .description a {
-    font-weight: 600;
     background-color: #007BFF;
     color: white;
     border: none;
-    padding: 15px 25px;
     cursor: pointer;
     border-radius: 4px;
-    width: 100%;
+    width: auto;
     text-decoration: none;
 }
 
@@ -129,7 +132,7 @@ button {
     border-radius: 4px;
     cursor: pointer;
     width: auto; /* Автоматическая ширина для кнопок "+", "-" */
-    margin: 5px 3px; /* Мелкий отступ вокруг кнопок */
+    margin: 10px 3px; /* Мелкий отступ вокруг кнопок */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     transition: background-color 0.5s ease;
     transition: scale 0.5s ease;
