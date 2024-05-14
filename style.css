@@ -4,6 +4,7 @@ body, html {
     margin: 0;
     padding: 0;
     background: #f4f4f4;
+    user-select: none;
 }
 
 .container {
@@ -127,8 +128,7 @@ img {
     margin: 0 auto;
     width: 50%;
     height: auto;
-    transition: box-shadow 0.5s ease;
-    transition: scale 0.5s ease;
+    transition: box-shadow 0.5s ease,  scale 0.5s ease;
 }
 
 .description a {
@@ -154,8 +154,7 @@ button {
     width: auto; /* Автоматическая ширина для кнопок "+", "-" */
     margin: 10px 3px; /* Мелкий отступ вокруг кнопок */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.5s ease;
-    transition: scale 0.5s ease;
+    transition: background-color 0.5s ease, scale 0.5s ease;
 }
 
 button.book-btn {
