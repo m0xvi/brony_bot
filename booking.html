@@ -13,54 +13,38 @@
             <div class="flex-item">
                 <label for="name">Ваше имя</label>
                 <input type="text" id="name" placeholder="Введите ваше имя">
-                <div class="error-message" id="name-error"></div>
             </div>
             <div class="flex-item">
                 <label class="tel" for="phone">Телефон</label>
                 <input type="tel" id="phone" placeholder="+7 (___) ___-____">
-                <div class="error-message" id="phone-error"></div>
             </div>
         </div>
         <div class="flex-row">
             <div class="flex-item">
-                <label for="arrival-date">Дата заезда</label>
-                <input type="date" id="arrival-date">
-                <div class="error-message" id="arrival-date-error"></div>
+                <label for="arrival-date">Дата бронирования</label>
+                <select id="arrival-date"></select>
             </div>
             <div class="flex-item">
-                <label for="arrival-time">Время заезда</label>
+                <label for="arrival-time">Время бронирования</label>
                 <input type="time" id="arrival-time">
-                <div class="error-message" id="arrival-time-error"></div>
             </div>
         </div>
-        <div class="flex-row">
-            <div class="flex-item">
-                <label id="bed-control">Количество кроватей</label>
-                <div class="quantity-beds">
-                    <button type="button" onclick="decreaseCount('beds')">-</button>
-                    <input type="number" id="beds" min="1" max="15" value="1">
-                    <button type="button" onclick="increaseCount('beds')">+</button>
-                    <div class="error-message" id="beds-error"></div>
-                </div>
-                <label id="lounger-control">Количество шезлонгов</label>
-                <div class="quantity-loungers">
-                    <button type="button" onclick="decreaseCount('loungers')">-</button>
-                    <input type="number" id="loungers" min="1" max="35" value="1">
-                    <button type="button" onclick="increaseCount('loungers')">+</button>
-                    <div class="error-message" id="loungers-error"></div>
-                </div>
-            </div>
-            <div class="flex-item">
-                <label for="children">Количество детей</label>
+        <label>Доступно:</label>
+        <div id="beds-container" class="items-container"></div>
+        <div id="loungers-container" class="items-container"></div>
+        <div id="child">
+            <label for="children-checkbox">Дети</label>
+            <input type="checkbox" id="children-checkbox">
+            <div id="children-controls" class="animated" style="display: none;">
                 <div class="quantity-control">
                     <button type="button" onclick="decreaseCount('children')">-</button>
-                    <input type="number" id="children" min="0" max="10" value="0">
+                    <input type="number" id="children" name="children" min="1" max="10" value="0">
                     <button type="button" onclick="increaseCount('children')">+</button>
                 </div>
             </div>
         </div>
         <label class="comm" for="comments">Комментарий</label>
-        <input type="text" id="comments">
+        <textarea id="comments" placeholder="Ваши комментарии"></textarea>
         <div class="line_h"></div>
         <div class="total">
             <p><b>Итого:</b> <span id="totalPrice">0</span> ₽</p>
