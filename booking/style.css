@@ -1,0 +1,572 @@
+body, html {
+    font-family: Arial, sans-serif;
+
+}
+
+.container {
+    /*width: 450px; !* Используем ширину в процентах для более гибкого масштабирования *!*/
+    /*margin: 20px auto;*/
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    border-radius: 8px;
+    box-sizing: border-box; /* Учитываем внешние отступы и рамку в общей ширине элемента */
+}
+
+h2 {
+    text-align: center;
+}
+
+hr {
+    border: none;
+    height: 1px;
+    background-color: #eeeeee;
+}
+
+label {
+    display: block;
+    margin: 10px 0;
+    color: #333;
+}
+
+.product {
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    padding: 30px 0;
+    text-align: center;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    margin: 20px auto;
+    position: relative;
+    opacity: 0;
+    transform: scale(0.90);
+    transition: opacity 1s ease-out, transform 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.product.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.booking-form {
+    user-select: none;
+    padding: 10px;
+    margin-bottom: 20px;
+    text-align: justify;
+    border-radius: 10px;
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 1s ease-out, transform 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.booking-form.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+
+.booking-form label {
+    font-weight: bold;
+}
+
+img {
+    width: 30%;
+    height: auto;
+    border-radius: 5px;
+    margin: 0 auto;
+}
+
+
+.description:hover {
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    border-radius: 5px;
+    scale: 105%;
+}
+
+
+.description p, .confirmation p, .description a {
+    margin: 3px 15px;
+    padding: 10px;
+    font-weight: 600;
+}
+
+.price {
+    background-color: #10c44c;
+    color: white;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.line {
+    z-index: 1001;
+    width: 6px;
+    height: auto;
+    margin: 0 auto;
+    border-radius: 10px;
+    background-color: #eee;
+}
+
+.line_h {
+    width: auto;
+    height: 6px;
+    border-radius: 10px;
+    background-color: #eee;
+    margin: 0 20px;
+}
+
+.description {
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    border-radius: 5px;
+    /*padding: 10px 30px 40px 30px;*/
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    margin: 0 auto;
+    width: 50%;
+    height: auto;
+    transition: box-shadow 0.5s ease, scale 0.5s ease;
+}
+
+.description a {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    width: auto;
+    text-decoration: none;
+    margin-bottom: 10px;
+}
+
+button {
+    font-weight: 600;
+    font-size: 16px;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: auto;
+    margin: 10px 3px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.5s ease, scale 0.5s ease;
+}
+
+button.book-btn {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color: #0069c8;
+    scale: 101%;
+}
+
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+
+a:hover {
+    transition: 0.4s;
+    background-color: #0069c8;
+}
+
+button:active {
+    transition: 0.2s;
+    transform: scale(99%);
+}
+
+
+.hidden {
+    display: none;
+}
+
+#children {
+    text-align: center;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+input {
+    padding: 8px;
+    margin-top: 5px;
+    border: none;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: scale 0.5s ease;
+}
+
+input:hover {
+    scale: 101%;
+}
+
+
+.total {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-top: 20px;
+    color: black;
+    border-radius: 5px;
+    text-align: right;
+}
+
+.total p {
+    margin: 3px 15px;
+    font-weight: 600;
+}
+
+.error {
+    border: 1px solid red;
+    background-color: #fdd;
+}
+
+.flex-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+
+.flex-item {
+    flex: 1;
+    padding-right: 10px;
+}
+
+.flex-item:last-child {
+    padding-right: 0;
+}
+
+input[type="text"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+input[type="time"] {
+    resize: none;
+}
+
+textarea {
+    height: 80px;
+    font-size: 16px;
+}
+
+#comments {
+    margin-bottom: 20px;
+    padding-bottom: 80px;
+    transition: scale 1s ease-out;
+}
+
+#comments:hover {
+    scale: 101%;
+}
+
+
+#child {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease-in-out;
+}
+
+#child.show {
+    opacity: 1;
+}
+
+
+#children-checkbox {
+    position: absolute;
+    top: 8px;
+    left: 50px;
+}
+
+#children-controls {
+    position: absolute;
+    top: 80%;
+}
+
+
+.animated {
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+    height: 0;
+    opacity: 0;
+    transform: translateY(-30%);
+}
+
+.animated.show {
+    height: auto;
+    opacity: 1;
+    transform: translateY(0%);
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+}
+
+.quantity-control button {
+    width: 30px;
+    height: 30px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.quantity-control input {
+    width: 50px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin: 0 5px;
+}
+
+.quantity-control button:hover {
+    background-color: #0056b3;
+}
+
+#arrival-date {
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: scale 0.5s ease;
+    width: 100%;
+}
+
+#arrival-date:hover {
+    scale: 101%;
+}
+
+.hidden {
+    display: none;
+}
+
+.items-container {
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    justify-content: center;
+    padding-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.items-container .item {
+    width: 40px;
+    height: 40px;
+    position: relative;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.items-container label {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    margin: 5px;
+}
+
+.items-container label input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.items-container .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 35px;
+    width: 35px;
+    background-color: #eee;
+    border-radius: 5px;
+    background-size: cover;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-shadow: 0px 1px 5px 1px rgba(34, 60, 80, 0.2);
+    transition: all 0.3s ease-out;
+}
+
+.items-container .checkmark:hover {
+    scale: 101%;
+}
+
+.items-container .checkmark:hover
+{
+    background-color: #ccc;
+}
+
+.items-container .bed input:not(:checked) ~ .checkmark {
+    background-image: url('../img/bed-icon.svg');
+}
+
+.items-container .bed input:checked ~ .checkmark {
+    background-image: url('../img/bed-icon.svg');
+    background-color: #86ff91;
+    border: 1px solid limegreen;
+    box-shadow: 0px 5px 10px 2px rgba(26, 255, 0, 0.2);
+}
+
+.items-container .lounger input:not(:checked) ~ .checkmark {
+    background-image: url('../img/lounger-icon.svg');
+}
+
+.items-container .lounger input:checked ~ .checkmark {
+    background-image: url('../img/lounger-icon.svg');
+    background-color: #86ff91;
+    border: 1px solid limegreen;
+    box-shadow: 0px 5px 10px 2px rgba(26, 255, 0, 0.2);
+}
+
+
+
+.items-container input:disabled ~ .checkmark {
+    background-color: #ff8987;
+    cursor: not-allowed;
+    border-radius: 5px;
+    border: 2px solid red;
+}
+
+select {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 8px;
+    appearance: none;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    position: relative;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%204%205%22%3E%3Cpath%20fill%3D%22%23000%22%20d%3D%22M2%200L0%202h4zm0%205L0%203h4z%22/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 8px 10px;
+}
+
+select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+select option {
+    padding: 10px;
+}
+
+select option:hover {
+    background-color: #f1f1f1;
+
+}
+
+select option:checked {
+    background-color: #007bff;
+    color: #fff;
+
+}
+
+#booking_id {
+    user-select: all;
+}
+
+
+/* Стили для мобильных устройств */
+@media (max-width: 600px) {
+    .container {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .flex-row {
+        flex-direction: column;
+    }
+
+    .flex-item {
+        margin-bottom: 10px;
+    }
+
+    .items-container {
+        grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+        gap: 5px;
+    }
+
+    .items-container .item {
+        width: 30px;
+        height: 30px;
+    }
+
+    .checkbox-container .checkmark {
+        height: 40px;
+        width: 40px;
+    }
+
+    .book-btn {
+        width: 100%;
+        font-size: 16px;
+        padding: 10px;
+    }
+
+    .total p {
+        font-size: 18px;
+    }
+
+    .comm, .comm textarea {
+        width: 100%;
+    }
+
+    .quantity-control button {
+        width: 30px;
+        height: 30px;
+    }
+
+    .quantity-control input {
+        width: 50px;
+        text-align: center;
+    }
+}
+
+.confirmation-details p {
+    margin: 0;
+    padding: 10px 0;
+    font-size: 18px;
+}
+
+#booking-id p {
+    margin: 0;
+    padding: 10px 0;
+    font-size: 18px;
+    font-weight: bold;
+}

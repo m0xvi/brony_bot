@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Забронировать</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="img/logo.png" alt="Логотип"> <!-- Путь к логотипу -->
+        </div>
+        <div class="header-title">
+            <h1>Отель "Усадьба"</h1>
+        </div>
+        <div class="contact">
+            <p>Телефон: +7 (4012) 38-48-50</p>
+        </div>
+    </header>
+
+    <div class="content">
+        <p class="description">Бронирование шезлонгов</p>
+        <button id="openFormBtn">Забронировать</button>
+    </div>
+
+    <div id="iframeContainer">
+        <div id="overlay"></div>
+        <div id="iframeContent">
+            <button id="closeBtn">&times;</button>
+            <iframe id="externalForm" src=""></iframe>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('openFormBtn').addEventListener('click', function() {
+            var iframeContainer = document.getElementById('iframeContainer');
+            var iframe = document.getElementById('externalForm');
+
+            // Установите URL сайта, который вы хотите загрузить
+            iframe.src = 'http://pool.hotelusadba.ru:81/booking/index.html'; // Замените на нужный URL
+
+            // Показываем контейнер с iframe
+            iframeContainer.style.display = 'flex';
+
+            // Добавляем класс для размытия фона
+            document.body.classList.add('blur-background');
+        });
+
+        document.getElementById('closeBtn').addEventListener('click', function() {
+            var iframeContainer = document.getElementById('iframeContainer');
+            iframeContainer.style.display = 'none';
+
+            // Удаляем класс для размытия фона
+            document.body.classList.remove('blur-background');
+        });
+
+        document.getElementById('overlay').addEventListener('click', function() {
+            var iframeContainer = document.getElementById('iframeContainer');
+            iframeContainer.style.display = 'none';
+
+            // Удаляем класс для размытия фона
+            document.body.classList.remove('blur-background');
+        });
+    </script>
+</body>
+</html>

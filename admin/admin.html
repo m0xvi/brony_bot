@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Админка</title>
+    <link rel="stylesheet" href="../booking/style.css">
+    <style>
+        html, body {
+            font-size: 18px;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .containera {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            height: 100%;
+        }
+
+        .admin-controls, .bookings-container {
+            padding: 20px;
+        }
+
+        .admin-controls {
+            flex: 2;
+            border-right: 1px solid #ccc;
+        }
+
+        .bookings-container {
+            flex: 3;
+            overflow-y: auto;
+        }
+
+        .admin-form {
+            margin-bottom: 20px;
+        }
+
+        .item {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .booking-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .admin-controls h2, .bookings-container h2 {
+            margin-top: 0;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .items-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            font-size: 14px;
+            user-select: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            transition: background-color 0.3s;
+        }
+
+        .checkbox-container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkbox-container .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 50px;
+            width: 50px;
+            background-color: #eee;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .checkbox-container:hover input ~ .checkmark {
+            background-color: #ccc;
+        }
+
+        .checkbox-container input:checked ~ .checkmark {
+            background-color: #4CAF50;
+        }
+
+        .checkbox-container input:disabled ~ .checkmark {
+            background-color: #FF0000;
+        }
+
+        .checkbox-container .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .checkbox-container input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        .control-buttons {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            margin-left: 20px;
+        }
+
+        .control-buttons button {
+            margin: 10px 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            line-height: 24px;
+            padding: 0;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .control-buttons button:hover {
+            background-color: #0056b3;
+        }
+
+        .jst_btn {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+<div class="containera">
+    <div class="admin-controls">
+        <h2>Управление</h2>
+        <div class="admin-form">
+            <label for="item-type">Тип:</label>
+            <select id="item-type">
+                <option value="bed">Кровати</option>
+                <option value="lounger">Шезлонги</option>
+            </select>
+        </div>
+        <div class="items-control-container">
+            <div class="items-container" id="beds-container"></div>
+            <div class="items-container" id="loungers-container"></div>
+            <div class="control-buttons">
+                <button id="add-item-btn">+</button>
+                <button id="remove-item-btn">-</button>
+            </div>
+        </div>
+        <div class="jst_btn">
+            <button id="update-items-btn">Обновить</button>
+            <button id="reset-data-btn">Сбросить данные</button>
+        </div>
+    </div>
+    <div class="bookings-container">
+        <h2>Бронирования</h2>
+        <div id="bookings-container"></div>
+    </div>
+</div>
+<script src="./admin.js"></script>
+</body>
+</html>
