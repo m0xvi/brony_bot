@@ -15,7 +15,7 @@
             flex-direction: column;
         }
 
-        .containera {
+        .admin-container {
             display: flex;
             flex-direction: row;
             width: 100%;
@@ -31,7 +31,7 @@
             border-right: 1px solid #ccc;
         }
 
-        .bookings-container {
+        .admin-bookings {
             flex: 3;
             overflow-y: auto;
         }
@@ -71,11 +71,6 @@
             background-color: #0056b3;
         }
 
-        .items-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 10px;
-        }
 
         .checkbox-container {
             display: flex;
@@ -90,7 +85,9 @@
             border-radius: 5px;
             background-color: #f9f9f9;
             transition: background-color 0.3s;
+            margin: 10px;
         }
+
 
         .checkbox-container input {
             position: absolute;
@@ -109,6 +106,7 @@
             background-color: #eee;
             border-radius: 5px;
             transition: background-color 0.3s;
+
         }
 
         .checkbox-container:hover input ~ .checkmark {
@@ -156,45 +154,52 @@
             transition: background-color 0.3s;
         }
 
+
         .control-buttons button:hover {
             background-color: #0056b3;
-        }
-
-        .jst_btn {
-            display: flex;
-            justify-content: space-between;
         }
     </style>
 </head>
 <body>
-<div class="containera">
+<div class="admin-container">
     <div class="admin-controls">
         <h2>Управление</h2>
-        <div class="admin-form">
-            <label for="item-type">Тип:</label>
-            <select id="item-type">
-                <option value="bed">Кровати</option>
-                <option value="lounger">Шезлонги</option>
-            </select>
+        <select id="item-type">
+            <option value="bed">Кровати</option>
+            <option value="lounger">Шезлонги</option>
+        </select>
+        <div id="items-container" class="items-container">
+            <div id="beds-container"></div>
+            <div id="loungers-container"></div>
         </div>
-        <div class="items-control-container">
-            <div class="items-container" id="beds-container"></div>
-            <div class="items-container" id="loungers-container"></div>
-            <div class="control-buttons">
-                <button id="add-item-btn">+</button>
-                <button id="remove-item-btn">-</button>
+        <div class="date-time-inputs">
+            <label for="booking-date">Дата бронирования</label>
+            <input type="date" id="booking-date">
+        </div>
+        <button id="update-items-btn">Обновить</button>
+        <button id="add-item-btn">+</button>
+        <button id="remove-item-btn">-</button>
+        <button id="reset-data-btn">Сбросить данные</button>
+    </div>
+    <div class="admin-bookings">
+        <h2>Бронирования</h2>
+        <div id="bookings-container">
+            <!-- Example booking item -->
+            <div class="booking-item">
+                <p><strong>ID бронирования:</strong> booking_id</p>
+                <p><strong>Имя:</strong> name</p>
+                <p><strong>Дата бронирования:</strong> arrival_date</p>
+                <p><strong>Время бронирования:</strong> booking_timestamp</p>
+                <p><strong>Телефон:</strong> phone</p>
+                <p><strong>Комментарии:</strong> comments</p>
+                <p><strong>Общая цена:</strong> total_price ₽</p>
+                <p><strong>Кровати:</strong> beds</p>
+                <p><strong>Шезлонги:</strong> loungers</p>
+                <button class="cancel-booking-btn" data-item-id="item_id" data-booking-id="booking_id">Отменить бронирование</button>
             </div>
         </div>
-        <div class="jst_btn">
-            <button id="update-items-btn">Обновить</button>
-            <button id="reset-data-btn">Сбросить данные</button>
-        </div>
-    </div>
-    <div class="bookings-container">
-        <h2>Бронирования</h2>
-        <div id="bookings-container"></div>
     </div>
 </div>
-<script src="./admin.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>

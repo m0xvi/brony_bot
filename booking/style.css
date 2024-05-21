@@ -91,6 +91,10 @@ img {
     font-weight: 600;
 }
 
+.description p:first-child {
+    font-size: 25px;
+}
+
 .price {
     background-color: #10c44c;
     color: white;
@@ -304,7 +308,7 @@ textarea {
 #children-checkbox {
     position: absolute;
     top: 8px;
-    left: 50px;
+    left: 200px;
 }
 
 #children-controls {
@@ -520,7 +524,7 @@ select option:checked {
 
     .items-container {
         grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-        gap: 5px;
+        gap: 10px;
     }
 
     .items-container .item {

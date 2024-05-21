@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Форма бронирования</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
+    <link rel="manifest" href="/img/site.webmanifest">
 </head>
 <body>
 <div class="container">
@@ -23,18 +27,14 @@
         <div class="flex-row">
             <div class="flex-item">
                 <label for="arrival-date">Дата бронирования</label>
-                <select id="arrival-date"></select>
-            </div>
-            <div class="flex-item">
-                <label for="arrival-time">Время бронирования</label>
-                <input type="time" id="arrival-time">
+                <select id="arrival-date" required></select>
             </div>
         </div>
         <label>Доступно:</label>
         <div id="beds-container" class="items-container"></div>
-        <div id="loungers-container" class="items-container"></div>
+        <div id="loungers-container" class="items-container" style="display: none;"></div>
         <div id="child">
-            <label for="children-checkbox">Дети</label>
+            <label for="children-checkbox">Дети (с 3-х до 14-ти лет)</label>
             <input type="checkbox" id="children-checkbox">
             <div id="children-controls" class="animated" style="display: none;">
                 <div class="quantity-control">

@@ -14,7 +14,7 @@ const db = mysql.createConnection({
     host: 'localhost',
     user: 'truykiPosih',
     password: 'DY7nf87f327nh86nt6r6fd&#',
-    database: 'booking_db'
+    database: 'booking_db0'
 });
 db.connect((err) => {
     if (err) {
@@ -27,7 +27,8 @@ db.connect((err) => {
 app.post('/api/reset-data', (req, res) => {
     const resetItemStatus = "UPDATE item_status SET is_booked = 0, booking_date = NULL";
     const clearBookings = "DELETE FROM bookings";
-    const clearBookingItems = "DELETE FROM booking_items";
+    const clearBookingItems = "DELETE FROM item_bookings";
+    const clearBookingHistory = "DELETE FROM booking_history";
 
     db.beginTransaction(err => {
         if (err) {
@@ -59,14 +60,23 @@ app.post('/api/reset-data', (req, res) => {
                         });
                     }
 
-                    db.commit(err => {
+                    db.query(clearBookingHistory, (err, result) => {
                         if (err) {
-                            console.error('Error committing transaction', err);
+                            console.error('Error clearing booking history', err);
                             return db.rollback(() => {
-                                res.status(500).json({ error: 'Error committing transaction' });
+                                res.status(500).json({ error: 'Error clearing booking history' });
                             });
                         }
-                        res.json({ message: 'Data reset successfully' });
+
+                        db.commit(err => {
+                            if (err) {
+                                console.error('Error committing transaction', err);
+                                return db.rollback(() => {
+                                    res.status(500).json({ error: 'Error committing transaction' });
+                                });
+                            }
+                            res.json({ message: 'Data reset successfully' });
+                        });
                     });
                 });
             });
@@ -76,16 +86,26 @@ app.post('/api/reset-data', (req, res) => {
 
 app.get('/api/get-items', (req, res) => {
     const type = req.query.type;
+    const date = req.query.date;
+
+    if (!date || !type) {
+        return res.status(400).json({ error: 'Invalid date or type' });
+    }
+
     const sql = `
-        SELECT item_id, item_type, price, is_booked, 
+        SELECT item_id, item_type, price, 
                CASE 
-                   WHEN is_booked = TRUE AND booking_date > NOW() - INTERVAL 1 DAY THEN TRUE
+                   WHEN EXISTS (
+                       SELECT 1 FROM item_bookings 
+                       WHERE item_id = item_status.item_id 
+                       AND booking_date = ?
+                   ) THEN TRUE
                    ELSE FALSE
                END AS is_booked_today
         FROM item_status 
-        WHERE item_type = ? 
+        WHERE item_type = ?
     `;
-    db.query(sql, [type], (err, result) => {
+    db.query(sql, [date, type], (err, result) => {
         if (err) {
             console.error('Error fetching items:', err);
             res.status(500).json({ error: 'Error fetching items from database' });
@@ -95,11 +115,17 @@ app.get('/api/get-items', (req, res) => {
     });
 });
 
+
 app.get('/api/get-bookings', (req, res) => {
     const sql = `
-        SELECT booking_id, name, arrival_date, arrival_time, children, phone, comments, total_price
-        FROM bookings
-        ORDER BY arrival_date DESC, arrival_time DESC
+        SELECT b.booking_id, b.name, b.arrival_date, b.children, b.phone, b.comments, b.total_price, b.booking_timestamp,
+               GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END) AS beds,
+               GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
+        FROM bookings b
+        LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
+        LEFT JOIN item_status i ON bi.item_id = i.item_id
+        GROUP BY b.booking_id
+        ORDER BY b.booking_timestamp DESC
     `;
     db.query(sql, (err, result) => {
         if (err) {
@@ -113,7 +139,9 @@ app.get('/api/get-bookings', (req, res) => {
 
 app.post('/api/admin/update-items', (req, res) => {
     const items = req.body.items;
-    const sql = "UPDATE item_status SET is_booked = ? WHERE item_id = ?";
+    const sqlUpdate = "UPDATE item_status SET is_booked = ?, booking_date = ? WHERE item_id = ?";
+    const sqlInsertHistory = "INSERT INTO booking_history (item_id, booking_id, booking_date) VALUES (?, ?, ?)";
+    const checkBookingExists = "SELECT 1 FROM bookings WHERE booking_id = ?";
 
     db.beginTransaction(err => {
         if (err) {
@@ -122,8 +150,9 @@ app.post('/api/admin/update-items', (req, res) => {
         }
 
         const updatePromises = items.map(item => {
+            let booking_date = item.booking_date ? new Date(item.booking_date).toISOString().slice(0, 19).replace('T', ' ') : null;
             return new Promise((resolve, reject) => {
-                db.query(sql, [item.is_booked, item.item_id], (err, result) => {
+                db.query(sqlUpdate, [item.is_booked, booking_date, item.item_id], (err, result) => {
                     if (err) {
                         console.error('Error updating item status', err);
                         return reject(err);
@@ -133,9 +162,36 @@ app.post('/api/admin/update-items', (req, res) => {
             });
         });
 
-        Promise.all(updatePromises)
+        const historyPromises = items.map(item => {
+            if (item.booking_id && item.booking_date) {
+                return new Promise((resolve, reject) => {
+                    db.query(checkBookingExists, [item.booking_id], (err, result) => {
+                        if (err) {
+                            console.error('Error checking if booking exists', err);
+                            return reject(err);
+                        }
+                        if (result.length > 0) {
+                            let booking_date = new Date(item.booking_date).toISOString().slice(0, 19).replace('T', ' ');
+                            db.query(sqlInsertHistory, [item.item_id, item.booking_id, booking_date], (err, result) => {
+                                if (err) {
+                                    console.error('Error inserting into booking history', err);
+                                    return reject(err);
+                                }
+                                resolve(result);
+                            });
+                        } else {
+                            resolve(); // Skip insertion if booking_id does not exist
+                        }
+                    });
+                });
+            } else {
+                return Promise.resolve(); // Skip insertion if booking_id or booking_date is not valid
+            }
+        });
+
+        Promise.all([...updatePromises, ...historyPromises])
             .then(results => {
-                console.log('Update results:', results); // Логируем результаты обновления
+                console.log('Update and history insert results:', results); // Log the update results
                 db.commit(err => {
                     if (err) {
                         console.error('Error committing transaction', err);
@@ -143,16 +199,17 @@ app.post('/api/admin/update-items', (req, res) => {
                             res.status(500).json({ error: 'Error committing transaction' });
                         });
                     }
-                    res.json({ message: 'Items updated successfully' });
+                    res.json({ message: 'Items updated and history inserted successfully' });
                 });
             })
             .catch(err => {
                 db.rollback(() => {
-                    res.status(500).json({ error: 'Error updating item status' });
+                    res.status(500).json({ error: 'Error updating item status or inserting into history' });
                 });
             });
     });
 });
+
 
 app.post('/api/admin/add-item', (req, res) => {
     const { item_type, price } = req.body;
@@ -191,10 +248,10 @@ app.post('/api/admin/remove-item', (req, res) => {
     });
 });
 
-
 app.post('/api/book', (req, res) => {
-    const { name, arrivalDate, arrivalTime, items, children, phone, comments, totalPrice } = req.body;
+    const { name, arrivalDate, items, children, phone, comments, totalPrice } = req.body;
     const bookingId = uuidv4();
+    const bookingTimestamp = new Date();
 
     db.beginTransaction(err => {
         if (err) {
@@ -202,8 +259,8 @@ app.post('/api/book', (req, res) => {
             return res.status(500).json({ error: 'Error starting transaction' });
         }
 
-        const sqlBooking = "INSERT INTO bookings (name, arrival_date, arrival_time, children, phone, comments, total_price, booking_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        db.query(sqlBooking, [name, arrivalDate, arrivalTime, children, phone, comments, totalPrice, bookingId], (err, result) => {
+        const sqlBooking = "INSERT INTO bookings (name, arrival_date, children, phone, comments, total_price, booking_id, booking_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        db.query(sqlBooking, [name, arrivalDate, children, phone, comments, totalPrice, bookingId, bookingTimestamp], (err, result) => {
             if (err) {
                 console.error('Error saving booking to database (sqlBooking)', err);
                 return db.rollback(() => {
@@ -213,9 +270,9 @@ app.post('/api/book', (req, res) => {
 
             console.log(`Booking ID: ${bookingId} inserted into bookings table`);
 
-            const bookingItems = items.map(itemId => [bookingId, itemId]);
-            const sqlBookingItems = "INSERT INTO booking_items (booking_id, item_id) VALUES ?";
+            const bookingItems = items.map(itemId => [bookingId, itemId, new Date(arrivalDate).toISOString().slice(0, 19).replace('T', ' ')]);
 
+            const sqlBookingItems = "INSERT INTO item_bookings (booking_id, item_id, booking_date) VALUES ?";
             db.query(sqlBookingItems, [bookingItems], (err, result) => {
                 if (err) {
                     console.error('Error saving booking items to database (sqlBookingItems)', err);
@@ -224,9 +281,9 @@ app.post('/api/book', (req, res) => {
                     });
                 }
 
-                console.log(`Booking items for Booking ID: ${bookingId} inserted into booking_items table`);
+                console.log(`Booking items for Booking ID: ${bookingId} inserted into item_bookings table`);
 
-                const sqlUpdateItems = "UPDATE item_status SET is_booked = TRUE, booking_date = NOW() WHERE item_id IN (?)";
+                const sqlUpdateItems = "UPDATE item_status SET is_booked = TRUE WHERE item_id IN (?)";
                 db.query(sqlUpdateItems, [items], (err, result) => {
                     if (err) {
                         console.error('Error updating item status (sqlUpdateItems)', err);
@@ -242,7 +299,7 @@ app.post('/api/book', (req, res) => {
                                 res.status(500).json({ error: 'Error committing transaction', details: err.message });
                             });
                         }
-                        res.json({ message: 'Booking saved to database', bookingId, name, arrivalDate, arrivalTime, items, children });
+                        res.json({ message: 'Booking saved to database', bookingId, name, arrivalDate, items, children });
                     });
                 });
             });

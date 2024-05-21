@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const bookingIdContainer = document.getElementById('booking-id');
 
         detailsContainer.innerHTML = `
-            <p>Вы забронировали ${confirmationData.items.length} ${confirmationData.items.length > 1 ? 'кровати' : 'кровать'}. <br> Дата: ${confirmationData.arrivalDate}. <br> Время: ${confirmationData.arrivalTime}.</p>
+            <p>Вы забронировали ${confirmationData.items.length} ${confirmationData.items.length > 1 ? 'кровати' : 'кровать'}. <br> Дата: ${confirmationData.arrivalDate}.</p>
         `;
         
         bookingIdContainer.innerHTML = `

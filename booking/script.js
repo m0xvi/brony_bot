@@ -6,8 +6,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const loungersContainer = document.getElementById('loungers-container');
     const childrenCheckbox = document.getElementById('children-checkbox');
     const childrenControls = document.getElementById('children-controls');
-    const arrivalDateSelect = document.getElementById('arrival-date');
+    const arrivalDateInput = document.getElementById('arrival-date');
     const child = document.getElementById('child');
+    const itemsContainers = document.querySelectorAll('.items-container');
+
+    itemsContainers.forEach(container => container.style.display = 'none');
 
     childrenCheckbox.addEventListener('change', function () {
         if (childrenCheckbox.checked) {
@@ -31,19 +34,21 @@ document.addEventListener('DOMContentLoaded', function () {
         mask: '+{7}(000)000-00-00'
     });
 
-    if (type === 'bed') {
-        loungersContainer.style.display = 'none';
-        fetchItemsAndDisplay('bed');
-    } else if (type === 'lounger') {
-        bedsContainer.style.display = 'none';
-        fetchItemsAndDisplay('lounger');
-    }
-
-    document.addEventListener('change', function (event) {
-        if (event.target.type === 'checkbox' && event.target.id !== 'children-checkbox') {
-            updateTotalPrice();
+    arrivalDateInput.addEventListener('change', function () {
+        if (type) {
+            fetchItemsAndDisplay(type, arrivalDateInput.value);
+            itemsContainers.forEach(container => container.style.display = 'block');
         }
     });
+
+    if (type) {
+        populateDateOptions();
+        if (type === 'bed') {
+            loungersContainer.style.display = 'none';
+        } else {
+            bedsContainer.style.display = 'none';
+        }
+    }
 
     document.querySelector('.book-btn').addEventListener('click', function (event) {
         event.preventDefault();
@@ -51,28 +56,31 @@ document.addEventListener('DOMContentLoaded', function () {
             submitBookingForm();
         }
     });
-
-    setArrivalDates();
 });
 
-function setArrivalDates() {
-    const arrivalDateSelect = document.getElementById('arrival-date');
+function populateDateOptions() {
+    const arrivalDateInput = document.getElementById('arrival-date');
+    arrivalDateInput.innerHTML = '';
     const today = new Date();
     for (let i = 0; i < 7; i++) {
-        const date = new Date();
-        date.setDate(today.getDate() + i);
+        const optionDate = new Date(today);
+        optionDate.setDate(today.getDate() + i);
+        const dayOfWeek = optionDate.toLocaleDateString('ru-RU', { weekday: 'long' });
+        const formattedDate = optionDate.toISOString().split('T')[0];
         const option = document.createElement('option');
-        option.value = date.toISOString().split('T')[0];
-        option.textContent = date.toLocaleDateString('ru-RU', {
-            weekday: 'long', month: 'long', day: 'numeric'
-        });
-        arrivalDateSelect.appendChild(option);
+        option.value = formattedDate;
+        option.text = `${dayOfWeek} ${optionDate.getDate()} ${optionDate.toLocaleDateString('ru-RU', { month: 'long' })}`;
+        arrivalDateInput.appendChild(option);
     }
-    arrivalDateSelect.value = today.toISOString().split('T')[0];
 }
 
-function fetchItemsAndDisplay(type) {
-    fetch(`http://213.226.126.160:3000/api/get-items?type=${type}`)
+function fetchItemsAndDisplay(type, date) {
+    if (!date || !type) {
+        console.error('Invalid date or type');
+        return;
+    }
+
+    fetch(`http://213.226.126.160:3000/api/get-items?type=${type}&date=${date}`)
         .then(response => response.json())
         .then(items => {
             const container = type === 'bed' ? 'beds-container' : 'loungers-container';
@@ -93,6 +101,10 @@ function fetchItemsAndDisplay(type) {
                 }
 
                 itemsContainer.appendChild(label);
+            });
+
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', updateTotalPrice);
             });
         })
         .catch(error => console.error('Failed to load items:', error));
@@ -139,7 +151,6 @@ function submitBookingForm() {
         name: document.getElementById('name').value,
         phone: document.getElementById('phone').value,
         arrivalDate: document.getElementById('arrival-date').value,
-        arrivalTime: document.getElementById('arrival-time').value,
         items: selectedItems,
         children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 10) || 0 : 0,
         comments: document.getElementById('comments').value,
@@ -162,7 +173,6 @@ function submitBookingForm() {
             return response.json();
         })
         .then(data => {
-            // Сохранение данных бронирования в локальное хранилище для отображения на странице подтверждения
             localStorage.setItem('bookingConfirmation', JSON.stringify(data));
             window.location.href = 'confirmation.html';
         })
