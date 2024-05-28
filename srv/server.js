@@ -160,8 +160,8 @@ app.post('/api/admin/update-items', (req, res) => {
         const updatePromises = items.map(item => {
             const bookingDate = item.booking_date ? new Date(item.booking_date).toISOString().slice(0, 19).replace('T', ' ') : null;
             if (item.is_booked === 1) {
-                const newBookingId = uuidv4();
                 return new Promise((resolve, reject) => {
+                    const newBookingId = uuidv4();
                     db.query(sqlInsertBooking, [newBookingId, bookingDate], (err, result) => {
                         if (err) {
                             console.error('Error inserting admin booking', err);
@@ -208,6 +208,12 @@ app.post('/api/admin/update-items', (req, res) => {
             });
     });
 });
+
+
+
+
+
+
 
 
 

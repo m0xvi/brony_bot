@@ -1,10 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('item-type').addEventListener('change', fetchItems);
-    document.getElementById('booking-date').addEventListener('change', fetchItems);
-    document.getElementById('add-item-btn').addEventListener('click', addItem);
-    document.getElementById('remove-item-btn').addEventListener('click', removeItem);
-    document.getElementById('update-items-btn').addEventListener('click', updateItems);
-    document.getElementById('reset-data-btn').addEventListener('click', resetData);
+    // Удаление существующих обработчиков перед привязкой новых
+    document.getElementById('item-type').removeEventListener('change', fetchItems);
+    document.getElementById('booking-date').removeEventListener('change', fetchItems);
+    document.getElementById('add-item-btn').removeEventListener('click', addItem);
+    document.getElementById('remove-item-btn').removeEventListener('click', removeItem);
+    document.getElementById('update-items-btn').removeEventListener('click', updateItems);
+    document.getElementById('reset-data-btn').removeEventListener('click', resetData);
+
     fetchBookings(); // Load bookings on page load
     fetchItems(); // Load items on page load
 
@@ -71,6 +73,8 @@ function updateItems() {
         booking_id: checkbox.checked ? generateUUID() : null
     }));
 
+    console.log('Updating items:', items); // Логирование
+
     fetch('http://213.226.126.160:3000/api/admin/update-items', {
         method: 'POST',
         headers: {
@@ -78,19 +82,26 @@ function updateItems() {
         },
         body: JSON.stringify({ items })
     })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            alert('Items updated successfully!');
-            fetchItems(); // Reload items after update
-            fetchBookings(); // Reload bookings after update
-        })
-        .catch(error => console.error('Error updating items:', error));
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert('Items updated successfully!');
+        fetchItems(); // Reload items after update
+        fetchBookings(); // Reload bookings after update
+    })
+    .catch(error => console.error('Error updating items:', error));
 }
+
+
+
+
+
+
+
 
 // Function to generate UUID (can be replaced with a library function if needed)
 function generateUUID() {

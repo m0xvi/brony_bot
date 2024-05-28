@@ -34,8 +34,8 @@
         <div id="beds-container" class="items-container" style="display: none;"></div>
         <div id="loungers-container" class="items-container" style="display: none;"></div>
         <div id="child">
-            <label for="children-checkbox">Дети (с 3-х до 14-ти лет)</label>
             <input type="checkbox" id="children-checkbox">
+            <label for="children-checkbox">Дети (с 3-х до 14-ти лет)</label>
             <div id="children-controls" class="animated" style="display: none;">
                 <div class="quantity-control">
                     <button type="button" onclick="decreaseCount('children')">-</button>
@@ -46,6 +46,16 @@
         </div>
         <label class="comm" for="comments">Комментарий</label>
         <textarea id="comments" placeholder="Ваши комментарии"></textarea>
+        <div class="policy-container">
+            <div class="policy">
+                <input type="checkbox" id="policy-checkbox" required>
+                <label for="policy-checkbox">Я согласен(а) на <a href="#">обработку моих персональных данных</a></label>
+            </div>
+            <div class="rules">
+                <input type="checkbox" id="rules-checkbox" required>
+                <label for="rules-checkbox">Я ознакомлен(а) с <a href="#">правилами посещения бассейна</a></label>
+            </div>
+        </div>
         <div class="line_h"></div>
         <div class="total">
             <p><b>Итого:</b> <span id="totalPrice">0</span> ₽</p>
