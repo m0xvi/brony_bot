@@ -30,7 +30,6 @@ function fetchItems() {
             return response.json();
         })
         .then(items => {
-            console.log('Items fetched:', items); // Log the fetched items
             const bedsContainer = document.getElementById('beds-container');
             const loungersContainer = document.getElementById('loungers-container');
 
@@ -41,22 +40,20 @@ function fetchItems() {
                 loungersContainer.style.display = 'none';
                 bedsContainer.style.display = 'flex';
                 bedsContainer.style.flexWrap = 'wrap';
-                bedsContainer.style.width = '70%';
             } else {
                 bedsContainer.style.display = 'none';
                 loungersContainer.style.display = 'flex';
                 loungersContainer.style.flexWrap = 'wrap';
-                loungersContainer.style.width = '70%';
             }
 
             const itemsContainer = itemType === 'bed' ? bedsContainer : loungersContainer;
-            items.forEach(item => {
+            items.forEach((item, index) => {
                 const label = document.createElement('label');
                 label.className = `checkbox-container ${itemType}`;
                 label.innerHTML = `
                     <input type="checkbox" data-id="${item.item_id}" ${item.is_booked_today ? 'checked' : ''}>
                     <span class="checkmark"></span>
-                    <div>${item.item_id}</div>
+                    <div>${index + 1} (ID: ${item.item_id})</div>
                 `;
                 itemsContainer.appendChild(label);
             });
@@ -64,15 +61,14 @@ function fetchItems() {
         .catch(error => console.error('Failed to load items:', error));
 }
 
-
 function updateItems() {
     const checkboxes = document.querySelectorAll('#beds-container input[type="checkbox"], #loungers-container input[type="checkbox"]');
     const bookingDate = document.getElementById('booking-date').value;
     const items = Array.from(checkboxes).map(checkbox => ({
         item_id: checkbox.getAttribute('data-id'),
         is_booked: checkbox.checked ? 1 : 0,
-        booking_date: checkbox.checked ? bookingDate : null,
-        booking_id: checkbox.checked ? generateUUID() : null // generateUUID() is a function to generate UUID
+        booking_date: bookingDate,
+        booking_id: checkbox.checked ? generateUUID() : null
     }));
 
     fetch('http://213.226.126.160:3000/api/admin/update-items', {
@@ -89,7 +85,6 @@ function updateItems() {
             return response.json();
         })
         .then(data => {
-            console.log('Items updated:', data); // Log the server response after update
             alert('Items updated successfully!');
             fetchItems(); // Reload items after update
             fetchBookings(); // Reload bookings after update
@@ -104,6 +99,8 @@ function generateUUID() {
         return v.toString(16);
     });
 }
+
+
 
 function resetData() {
     fetch('http://213.226.126.160:3000/api/reset-data', {
@@ -135,7 +132,9 @@ function fetchBookings() {
         .then(bookings => {
             const bookingsContainer = document.getElementById('bookings-container');
             bookingsContainer.innerHTML = '';
-            bookings.forEach(booking => {
+            bookings.forEach((booking, index) => {
+                const beds = booking.beds ? booking.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : null;
+                const loungers = booking.loungers ? booking.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : null;
                 const div = document.createElement('div');
                 div.className = 'booking-item';
                 div.innerHTML = `
@@ -146,8 +145,8 @@ function fetchBookings() {
                     <p><strong>Телефон:</strong> ${booking.phone}</p>
                     <p><strong>Комментарии:</strong> ${booking.comments}</p>
                     <p><strong>Общая цена:</strong> ${booking.total_price} ₽</p>
-                    <p><strong>Кровати:</strong> ${booking.beds}</p>
-                    <p><strong>Шезлонги:</strong> ${booking.loungers}</p>
+                    ${beds ? `<p><strong>Кровати:</strong> ${beds}</p>` : ''}
+                    ${loungers ? `<p><strong>Шезлонги:</strong> ${loungers}</p>` : ''}
                 `;
                 bookingsContainer.appendChild(div);
             });

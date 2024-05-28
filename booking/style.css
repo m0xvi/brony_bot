@@ -159,17 +159,16 @@ button {
     transition: background-color 0.5s ease, scale 0.5s ease;
 }
 
-button.book-btn {
-    display: block;
-    width: 100%;
-    margin-top: 20px;
-}
-
 button:hover {
     background-color: #0069c8;
     scale: 101%;
 }
 
+button.book-btn {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+}
 
 .quantity-control {
     display: flex;

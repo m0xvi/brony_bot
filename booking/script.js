@@ -80,7 +80,7 @@ function fetchItemsAndDisplay(type, date) {
         return;
     }
 
-    fetch(`http://213.226.126.160:3000/api/get-items?type=${type}&date=${date}`)
+    fetch(`http://pool.hotelusadba.ru:3000/api/get-items?type=${type}&date=${date}`)
         .then(response => response.json())
         .then(items => {
             const container = type === 'bed' ? 'beds-container' : 'loungers-container';
@@ -159,7 +159,7 @@ function submitBookingForm() {
 
     console.log('Submitting booking with data:', formData);
 
-    fetch('http://213.226.126.160:3000/api/book', {
+    fetch('http://pool.hotelusadba.ru:3000/api/book', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -14,7 +14,7 @@ const db = mysql.createConnection({
     host: 'localhost',
     user: 'truykiPosih',
     password: 'DY7nf87f327nh86nt6r6fd&#',
-    database: 'booking_db0'
+    database: 'booking_db1'
 });
 db.connect((err) => {
     if (err) {
@@ -86,23 +86,24 @@ app.post('/api/reset-data', (req, res) => {
 
 app.get('/api/get-items', (req, res) => {
     const type = req.query.type;
-    const date = req.query.date;
+    const date = req.query.date || new Date().toISOString().split('T')[0]; // Default to today's date
 
     if (!date || !type) {
         return res.status(400).json({ error: 'Invalid date or type' });
     }
 
     const sql = `
-        SELECT item_id, item_type, price, 
-               CASE 
-                   WHEN EXISTS (
-                       SELECT 1 FROM item_bookings 
-                       WHERE item_id = item_status.item_id 
-                       AND booking_date = ?
-                   ) THEN TRUE
+        SELECT item_id,
+               item_type,
+               price,
+               CASE
+                   WHEN EXISTS (SELECT 1
+                                FROM item_bookings
+                                WHERE item_id = item_status.item_id
+                                  AND booking_date = ?) THEN TRUE
                    ELSE FALSE
-               END AS is_booked_today
-        FROM item_status 
+                   END AS is_booked_today
+        FROM item_status
         WHERE item_type = ?
     `;
     db.query(sql, [date, type], (err, result) => {
@@ -115,15 +116,21 @@ app.get('/api/get-items', (req, res) => {
     });
 });
 
-
 app.get('/api/get-bookings', (req, res) => {
     const sql = `
-        SELECT b.booking_id, b.name, b.arrival_date, b.children, b.phone, b.comments, b.total_price, b.booking_timestamp,
+        SELECT b.booking_id,
+               b.name,
+               b.arrival_date,
+               b.children,
+               b.phone,
+               b.comments,
+               b.total_price,
+               b.booking_timestamp,
                GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END) AS beds,
                GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
         FROM bookings b
-        LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
-        LEFT JOIN item_status i ON bi.item_id = i.item_id
+                 LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
+                 LEFT JOIN item_status i ON bi.item_id = i.item_id
         GROUP BY b.booking_id
         ORDER BY b.booking_timestamp DESC
     `;
@@ -139,9 +146,10 @@ app.get('/api/get-bookings', (req, res) => {
 
 app.post('/api/admin/update-items', (req, res) => {
     const items = req.body.items;
-    const sqlUpdate = "UPDATE item_status SET is_booked = ?, booking_date = ? WHERE item_id = ?";
-    const sqlInsertHistory = "INSERT INTO booking_history (item_id, booking_id, booking_date) VALUES (?, ?, ?)";
-    const checkBookingExists = "SELECT 1 FROM bookings WHERE booking_id = ?";
+    const sqlUpdateItemStatus = "UPDATE item_status SET is_booked = ?, booking_date = ? WHERE item_id = ?";
+    const sqlInsertBooking = "INSERT INTO bookings (booking_id, name, arrival_date, children, phone, comments, total_price, booking_timestamp) VALUES (?, 'Администратор', ?, 0, 'N/A', 'Администратор изменил статус', 0, NOW())";
+    const sqlInsertItemBooking = "INSERT INTO item_bookings (item_id, booking_id, booking_date) VALUES (?, ?, ?)";
+    const sqlDeleteItemBooking = "DELETE FROM item_bookings WHERE item_id = ? AND booking_date = ?";
 
     db.beginTransaction(err => {
         if (err) {
@@ -150,48 +158,39 @@ app.post('/api/admin/update-items', (req, res) => {
         }
 
         const updatePromises = items.map(item => {
-            let booking_date = item.booking_date ? new Date(item.booking_date).toISOString().slice(0, 19).replace('T', ' ') : null;
-            return new Promise((resolve, reject) => {
-                db.query(sqlUpdate, [item.is_booked, booking_date, item.item_id], (err, result) => {
-                    if (err) {
-                        console.error('Error updating item status', err);
-                        return reject(err);
-                    }
-                    resolve(result);
-                });
-            });
-        });
-
-        const historyPromises = items.map(item => {
-            if (item.booking_id && item.booking_date) {
+            const bookingDate = item.booking_date ? new Date(item.booking_date).toISOString().slice(0, 19).replace('T', ' ') : null;
+            if (item.is_booked === 1) {
+                const newBookingId = uuidv4();
                 return new Promise((resolve, reject) => {
-                    db.query(checkBookingExists, [item.booking_id], (err, result) => {
+                    db.query(sqlInsertBooking, [newBookingId, bookingDate], (err, result) => {
                         if (err) {
-                            console.error('Error checking if booking exists', err);
+                            console.error('Error inserting admin booking', err);
                             return reject(err);
                         }
-                        if (result.length > 0) {
-                            let booking_date = new Date(item.booking_date).toISOString().slice(0, 19).replace('T', ' ');
-                            db.query(sqlInsertHistory, [item.item_id, item.booking_id, booking_date], (err, result) => {
-                                if (err) {
-                                    console.error('Error inserting into booking history', err);
-                                    return reject(err);
-                                }
-                                resolve(result);
-                            });
-                        } else {
-                            resolve(); // Skip insertion if booking_id does not exist
-                        }
+                        db.query(sqlInsertItemBooking, [item.item_id, newBookingId, bookingDate], (err, result) => {
+                            if (err) {
+                                console.error('Error inserting item booking', err);
+                                return reject(err);
+                            }
+                            resolve(result);
+                        });
                     });
                 });
             } else {
-                return Promise.resolve(); // Skip insertion if booking_id or booking_date is not valid
+                return new Promise((resolve, reject) => {
+                    db.query(sqlDeleteItemBooking, [item.item_id, bookingDate], (err, result) => {
+                        if (err) {
+                            console.error('Error deleting item booking', err);
+                            return reject(err);
+                        }
+                        resolve(result);
+                    });
+                });
             }
         });
 
-        Promise.all([...updatePromises, ...historyPromises])
+        Promise.all(updatePromises)
             .then(results => {
-                console.log('Update and history insert results:', results); // Log the update results
                 db.commit(err => {
                     if (err) {
                         console.error('Error committing transaction', err);
@@ -199,16 +198,18 @@ app.post('/api/admin/update-items', (req, res) => {
                             res.status(500).json({ error: 'Error committing transaction' });
                         });
                     }
-                    res.json({ message: 'Items updated and history inserted successfully' });
+                    res.json({ message: 'Items updated successfully' });
                 });
             })
             .catch(err => {
                 db.rollback(() => {
-                    res.status(500).json({ error: 'Error updating item status or inserting into history' });
+                    res.status(500).json({ error: 'Error updating items' });
                 });
             });
     });
 });
+
+
 
 
 app.post('/api/admin/add-item', (req, res) => {
@@ -228,14 +229,14 @@ app.post('/api/admin/add-item', (req, res) => {
 app.post('/api/admin/remove-item', (req, res) => {
     const { item_type } = req.body;
     const sql = `
-        DELETE FROM item_status 
-        WHERE item_type = ? AND item_id = (
-            SELECT item_id FROM (
-                SELECT item_id FROM item_status 
-                WHERE item_type = ? 
-                ORDER BY item_id DESC LIMIT 1
-            ) as temp
-        )
+        DELETE
+        FROM item_status
+        WHERE item_type = ?
+          AND item_id = (SELECT item_id
+                         FROM (SELECT item_id
+                               FROM item_status
+                               WHERE item_type = ?
+                               ORDER BY item_id DESC LIMIT 1) as temp)
     `;
 
     db.query(sql, [item_type, item_type], (err, result) => {
@@ -264,7 +265,10 @@ app.post('/api/book', (req, res) => {
             if (err) {
                 console.error('Error saving booking to database (sqlBooking)', err);
                 return db.rollback(() => {
-                    res.status(500).json({ error: 'Error saving booking to database (sqlBooking)', details: err.message });
+                    res.status(500).json({
+                        error: 'Error saving booking to database (sqlBooking)',
+                        details: err.message
+                    });
                 });
             }
 
@@ -277,7 +281,10 @@ app.post('/api/book', (req, res) => {
                 if (err) {
                     console.error('Error saving booking items to database (sqlBookingItems)', err);
                     return db.rollback(() => {
-                        res.status(500).json({ error: 'Error saving booking items to database (sqlBookingItems)', details: err.message });
+                        res.status(500).json({
+                            error: 'Error saving booking items to database (sqlBookingItems)',
+                            details: err.message
+                        });
                     });
                 }
 
@@ -288,7 +295,10 @@ app.post('/api/book', (req, res) => {
                     if (err) {
                         console.error('Error updating item status (sqlUpdateItems)', err);
                         return db.rollback(() => {
-                            res.status(500).json({ error: 'Error updating item status (sqlUpdateItems)', details: err.message });
+                            res.status(500).json({
+                                error: 'Error updating item status (sqlUpdateItems)',
+                                details: err.message
+                            });
                         });
                     }
 
