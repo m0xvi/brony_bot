@@ -2,7 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
+require('dotenv').config();
 
 const app = express();
 const port = 3000;
@@ -11,11 +13,12 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'truykiPosih',
-    password: 'DY7nf87f327nh86nt6r6fd&#',
-    database: 'booking_db1'
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
 });
+
 db.connect((err) => {
     if (err) {
         console.error('Error connecting to MySQL:', err);
@@ -253,6 +256,10 @@ app.post('/api/admin/remove-item', (req, res) => {
             res.json({ message: 'Item removed successfully' });
         }
     });
+});
+
+app.get('/privacy-policy', (req, res) => {
+  res.sendFile(path.join(__dirname, 'privacy-policy.html'));
 });
 
 app.post('/api/book', (req, res) => {

@@ -80,37 +80,30 @@ function updateItems() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ items })
+        body: JSON.stringify({items})
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        alert('Items updated successfully!');
-        fetchItems(); // Reload items after update
-        fetchBookings(); // Reload bookings after update
-    })
-    .catch(error => console.error('Error updating items:', error));
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Items updated successfully!');
+            fetchItems(); // Reload items after update
+            fetchBookings(); // Reload bookings after update
+        })
+        .catch(error => console.error('Error updating items:', error));
 }
-
-
-
-
-
-
 
 
 // Function to generate UUID (can be replaced with a library function if needed)
 function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
 }
-
 
 
 function resetData() {
@@ -175,7 +168,7 @@ function addItem() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ item_type: itemType, price: parseFloat(price) })
+        body: JSON.stringify({item_type: itemType, price: parseFloat(price)})
     })
         .then(response => {
             if (!response.ok) {
@@ -198,7 +191,7 @@ function removeItem() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ item_type: itemType })
+        body: JSON.stringify({item_type: itemType})
     })
         .then(response => {
             if (!response.ok) {
@@ -213,3 +206,41 @@ function removeItem() {
         })
         .catch(error => console.error('Error removing item:', error));
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Скрываем админку и показываем форму авторизации
+    const authModal = document.getElementById('auth-modal');
+    const container = document.querySelector('.container');
+    container.style.display = 'none';
+    authModal.style.display = 'flex';
+
+    // Зашифрованный пароль (создайте его отдельно и вставьте сюда)
+    const hashedPassword = '$2b$10$vofpJTkbMD2vI4NDle7wTOabOki.c2GY.cmAlLuB3CwR68oIK0xEa'; // Пример хэша для пароля "admin123"
+
+    // Функция для проверки логина и пароля
+    window.authenticate = function () {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        if (username === 'admin') {
+            bcrypt.compare(password, hashedPassword, function (err, result) {
+                if (result) {
+                    authModal.style.display = 'none';
+                    container.style.display = 'flex';
+                } else {
+                    alert('Неверный логин или пароль');
+                }
+            });
+        } else {
+            alert('Неверный логин или пароль');
+        }
+    };
+
+    // Загрузка данных для админки
+    fetchBookings();
+    fetchItems();
+
+    // Установка текущей даты по умолчанию
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('booking-date').value = today;
+});

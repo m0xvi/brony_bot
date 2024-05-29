@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
     arrivalDateInput.addEventListener('change', function () {
         if (type) {
             fetchItemsAndDisplay(type, arrivalDateInput.value);
-            itemsContainers.forEach(container => container.style.display = 'block');
+            itemsContainers.forEach(container => container.style.display = 'flex');
         }
     });
 
@@ -80,7 +80,7 @@ function fetchItemsAndDisplay(type, date) {
         return;
     }
 
-    fetch(`http://pool.hotelusadba.ru:3000/api/get-items?type=${type}&date=${date}`)
+    fetch(`/api/get-items?type=${type}&date=${date}`)
         .then(response => response.json())
         .then(items => {
             const container = type === 'bed' ? 'beds-container' : 'loungers-container';
@@ -159,7 +159,7 @@ function submitBookingForm() {
 
     console.log('Submitting booking with data:', formData);
 
-    fetch('http://pool.hotelusadba.ru:3000/api/book', {
+    fetch('/api/book', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
