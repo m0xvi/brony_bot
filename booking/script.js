@@ -37,22 +37,36 @@ document.addEventListener('DOMContentLoaded', function () {
     arrivalDateInput.addEventListener('change', function () {
         if (type) {
             fetchItemsAndDisplay(type, arrivalDateInput.value);
-            itemsContainers.forEach(container => container.style.display = 'flex');
+            if (type === 'bed') {
+                bedsContainer.style.display = 'flex';
+                loungersContainer.style.display = 'none';
+            } else {
+                bedsContainer.style.display = 'none';
+                loungersContainer.style.display = 'flex';
+            }
         }
     });
 
     if (type) {
         populateDateOptions();
         if (type === 'bed') {
+            bedsContainer.style.display = 'flex';
             loungersContainer.style.display = 'none';
         } else {
             bedsContainer.style.display = 'none';
+            loungersContainer.style.display = 'flex';
         }
+
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('arrival-date').value = today;
+        fetchItemsAndDisplay(type, today);
     }
 
     document.getElementById('book-button').addEventListener('click', async function (event) {
         event.preventDefault();
-        if (validateForm()) {
+        if (validateAll()) {
+            // Существующий код обработки формы
+            console.log('Form is valid, submitting...');
             try {
                 const response = await fetch('/api/create-payment', {
                     method: 'POST',
@@ -87,6 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
 
 function populateDateOptions() {
     const arrivalDateInput = document.getElementById('arrival-date');
@@ -158,9 +173,10 @@ function updateTotalPrice() {
     return total;
 }
 
-function validateForm() {
+function validateAll() {
     let isValid = true;
-    ['name', 'phone', 'arrival-date'].forEach(id => {
+
+    ['name', 'phone', 'arrival-date', 'email'].forEach(id => {
         const input = document.getElementById(id);
         if (!input.value.trim()) {
             input.classList.add('error');
@@ -169,8 +185,41 @@ function validateForm() {
             input.classList.remove('error');
         }
     });
+
+    const checkboxes = document.querySelectorAll('input[name="selectedItems[]"]:checked');
+    const bedsContainer = document.getElementById('beds-container');
+    const loungersContainer = document.getElementById('loungers-container');
+    if (checkboxes.length === 0) {
+        bedsContainer.classList.add('error');
+        loungersContainer.classList.add('error');
+        isValid = false;
+    } else {
+        bedsContainer.classList.remove('error');
+        loungersContainer.classList.remove('error');
+    }
+
+    const policyCheckbox = document.getElementById('policy-checkbox');
+    const rulesCheckbox = document.getElementById('rules-checkbox');
+    const policyContainer = policyCheckbox.closest('.policy');
+    const rulesContainer = rulesCheckbox.closest('.rules');
+
+    if (!policyCheckbox.checked) {
+        policyContainer.classList.add('error');
+        isValid = false;
+    } else {
+        policyContainer.classList.remove('error');
+    }
+
+    if (!rulesCheckbox.checked) {
+        rulesContainer.classList.add('error');
+        isValid = false;
+    } else {
+        rulesContainer.classList.remove('error');
+    }
+
     return isValid;
 }
+
 
 function submitBookingForm() {
     const selectedItems = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
@@ -180,6 +229,7 @@ function submitBookingForm() {
     const formData = {
         name: document.getElementById('name').value,
         phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
         arrivalDate: document.getElementById('arrival-date').value,
         items: selectedItems,
         children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 10) || 0 : 0,

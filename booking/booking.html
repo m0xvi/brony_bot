@@ -42,7 +42,8 @@
         <div class="nav-buttons">
             <button onclick="history.back()"><img src="/img/back.svg" alt="back"></button>
             <h2>Бронирование</h2>
-            <button onclick="window.location.href='../home.html'"><img src="/img/home.svg" alt="home"></button>
+            <button onclick="window.location.href='https://pool.hotelusadba.ru/'"><img src="/img/home.svg" alt="home">
+            </button>
         </div>
     </div>
     <div class="booking-form" id="form">
@@ -54,6 +55,12 @@
             <div class="flex-item">
                 <label class="tel" for="phone">Телефон</label>
                 <input type="tel" id="phone" placeholder="+7 (___) ___-____">
+            </div>
+        </div>
+        <div class="flex-row">
+            <div class="flex-item">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Введите ваш email">
             </div>
         </div>
         <div class="flex-row">
@@ -105,6 +112,18 @@
         let element3 = document.getElementById("nav");
         element1.classList.add("show");
         element3.classList.add("show");
+
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('arrival-date').value = today;
+        fetchItemsAndDisplay(getQueryParam('type'), today);
+
+        const itemsContainers = document.querySelectorAll('.items-container');
+        itemsContainers.forEach(container => container.style.display = 'flex');
+    }
+
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
     }
 </script>
 </body>

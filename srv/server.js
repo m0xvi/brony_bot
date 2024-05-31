@@ -287,7 +287,7 @@ app.get('/privacy-policy', (req, res) => {
 });
 
 app.post('/api/book', (req, res) => {
-    const {name, arrivalDate, items, children, phone, comments, totalPrice} = req.body;
+    const {name, arrivalDate, items, children, phone, email, comments, totalPrice} = req.body;
     const bookingId = uuidv4();
     const bookingTimestamp = new Date();
 
@@ -297,8 +297,8 @@ app.post('/api/book', (req, res) => {
             return res.status(500).json({error: 'Error starting transaction'});
         }
 
-        const sqlBooking = "INSERT INTO bookings (name, arrival_date, children, phone, comments, total_price, booking_id, booking_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        db.query(sqlBooking, [name, arrivalDate, children, phone, comments, totalPrice, bookingId, bookingTimestamp], (err, result) => {
+        const sqlBooking = "INSERT INTO bookings (name, arrival_date, children, phone, email, comments, total_price, booking_id, booking_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        db.query(sqlBooking, [name, arrivalDate, children, phone, email, comments, totalPrice, bookingId, bookingTimestamp], (err, result) => {
             if (err) {
                 console.error('Error saving booking to database (sqlBooking)', err);
                 return db.rollback(() => {
@@ -346,13 +346,14 @@ app.post('/api/book', (req, res) => {
                                 res.status(500).json({error: 'Error committing transaction', details: err.message});
                             });
                         }
-                        res.json({message: 'Booking saved to database', bookingId, name, arrivalDate, items, children});
+                        res.json({message: 'Booking saved to database', bookingId, name, arrivalDate, items, children, email});
                     });
                 });
             });
         });
     });
 });
+
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

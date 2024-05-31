@@ -31,7 +31,7 @@ label {
 }
 
 .product {
-    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    box-shadow: 0 4px 16px 1px rgba(0, 26, 52, .16);
     padding: 10px 0;
     text-align: center;
     border-radius: 10px;
@@ -229,7 +229,6 @@ input[type="number"] {
 input {
     padding: 8px;
     margin-top: 5px;
-    border: none;
     border-radius: 4px;
     box-sizing: border-box;
     font-size: 16px;
@@ -256,9 +255,19 @@ input:hover {
     font-weight: 600;
 }
 
+
+#email {
+    width: 100%;
+    border: 1px solid #ccc;
+}
+
 .error {
-    border: 1px solid red;
     background-color: #fdd;
+}
+
+.policy.error,
+.rules.error {
+    text-decoration: 2px underline red;
 }
 
 .flex-row {

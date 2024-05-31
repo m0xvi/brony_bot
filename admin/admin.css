@@ -46,6 +46,7 @@ html, body {
     align-items: center;
     margin-right: 10px;
     margin-bottom: 10px;
+    position: relative;
 }
 
 .checkbox-container .checkmark {
@@ -54,6 +55,9 @@ html, body {
 
 .checkbox-container div {
     margin-left: 5px;
+    position: absolute;
+    top: -15px;
+    width: 120%;
 }
 
 .items-container {
@@ -75,8 +79,6 @@ html, body {
     position: relative;
     cursor: pointer;
     user-select: none;
-    margin: 15px;
-    padding: 17px;
 }
 
 .items-container label input {
