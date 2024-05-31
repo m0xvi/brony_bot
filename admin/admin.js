@@ -24,7 +24,7 @@ function fetchItems() {
         return;
     }
 
-    fetch(`http://213.226.126.160:3000/api/get-items?type=${itemType}&date=${bookingDate}`)
+    fetch(`/api/get-items?type=${itemType}&date=${bookingDate}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -75,7 +75,7 @@ function updateItems() {
 
     console.log('Updating items:', items); // Логирование
 
-    fetch('http://213.226.126.160:3000/api/admin/update-items', {
+    fetch('/api/admin/update-items', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -107,7 +107,7 @@ function generateUUID() {
 
 
 function resetData() {
-    fetch('http://213.226.126.160:3000/api/reset-data', {
+    fetch('/api/reset-data', {
         method: 'POST'
     })
         .then(response => {
@@ -126,7 +126,7 @@ function resetData() {
 }
 
 function fetchBookings() {
-    fetch('http://213.226.126.160:3000/api/get-bookings')
+    fetch('/api/get-bookings')
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -163,7 +163,7 @@ function addItem() {
     const price = prompt('Введите цену для нового предмета:');
     if (price === null) return; // User canceled the prompt
 
-    fetch('http://213.226.126.160:3000/api/admin/add-item', {
+    fetch('/api/admin/add-item', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ function addItem() {
 
 function removeItem() {
     const itemType = document.getElementById('item-type').value;
-    fetch('http://213.226.126.160:3000/api/admin/remove-item', {
+    fetch('/api/admin/remove-item', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -206,41 +206,3 @@ function removeItem() {
         })
         .catch(error => console.error('Error removing item:', error));
 }
-
-document.addEventListener('DOMContentLoaded', function () {
-    // Скрываем админку и показываем форму авторизации
-    const authModal = document.getElementById('auth-modal');
-    const container = document.querySelector('.container');
-    container.style.display = 'none';
-    authModal.style.display = 'flex';
-
-    // Зашифрованный пароль (создайте его отдельно и вставьте сюда)
-    const hashedPassword = '$2b$10$vofpJTkbMD2vI4NDle7wTOabOki.c2GY.cmAlLuB3CwR68oIK0xEa'; // Пример хэша для пароля "admin123"
-
-    // Функция для проверки логина и пароля
-    window.authenticate = function () {
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-
-        if (username === 'admin') {
-            bcrypt.compare(password, hashedPassword, function (err, result) {
-                if (result) {
-                    authModal.style.display = 'none';
-                    container.style.display = 'flex';
-                } else {
-                    alert('Неверный логин или пароль');
-                }
-            });
-        } else {
-            alert('Неверный логин или пароль');
-        }
-    };
-
-    // Загрузка данных для админки
-    fetchBookings();
-    fetchItems();
-
-    // Установка текущей даты по умолчанию
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('booking-date').value = today;
-});

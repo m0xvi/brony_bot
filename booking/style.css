@@ -15,6 +15,7 @@ body, html {
 
 h2 {
     text-align: center;
+    word-break: break-all;
 }
 
 hr {
@@ -34,6 +35,7 @@ label {
     padding: 30px 0;
     text-align: center;
     border-radius: 10px;
+    align-items: center;
     display: flex;
     justify-content: space-between;
     margin: 20px auto;
@@ -75,6 +77,7 @@ img {
     height: auto;
     border-radius: 5px;
     margin: 0 auto;
+    object-fit: cover;
 }
 
 
@@ -85,10 +88,20 @@ img {
 }
 
 
-.description p, .confirmation p, .description a {
-    margin: 3px 15px;
+.confirmation p {
     padding: 10px;
     font-weight: 600;
+    word-break: break-all;
+}
+
+.description p {
+    font-weight: 600;
+    word-break: break-all;
+    font-size: 22px;
+    margin-top: 10px;
+    margin-bottom: 0;
+    padding: 10px 0;
+    border-radius: 0;
 }
 
 .description p:first-child {
@@ -96,7 +109,7 @@ img {
 }
 
 .price {
-    background-color: #10c44c;
+    background-color: #4bca62;
     color: white;
     border-radius: 5px;
     font-weight: 600;
@@ -106,7 +119,7 @@ img {
 .line {
     z-index: 1001;
     width: 6px;
-    height: auto;
+    height: 150px;
     margin: 0 auto;
     border-radius: 10px;
     background-color: #eee;
@@ -121,16 +134,16 @@ img {
 }
 
 .description {
-    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
     border-radius: 5px;
     /*padding: 10px 30px 40px 30px;*/
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: space-between;
     margin: 0 auto;
     width: 50%;
     height: auto;
     transition: box-shadow 0.5s ease, scale 0.5s ease;
+    background-color: #fbfbfb;
 }
 
 .description a {
@@ -138,10 +151,12 @@ img {
     color: white;
     border: none;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 0 0 4px 4px;
     width: auto;
     text-decoration: none;
-    margin-bottom: 10px;
+    font-weight: 600;
+    word-break: break-all;
+    font-size: 22px;
 }
 
 button {
@@ -162,6 +177,12 @@ button {
 button:hover {
     background-color: #0069c8;
     scale: 101%;
+}
+
+.book-btn {
+    margin-top: auto;
+    padding: 15px 0;
+
 }
 
 button.book-btn {
@@ -538,7 +559,7 @@ select option:checked {
     .book-btn {
         width: 100%;
         font-size: 16px;
-        padding: 10px;
+        padding: 15px 0;
     }
 
     .total p {
@@ -558,7 +579,55 @@ select option:checked {
         width: 50px;
         text-align: center;
     }
+
+    .description {
+        width: 100%;
+        align-items: center;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .description a {
+        font-size: 20px;
+        word-wrap: break-word; /* Перенос длинных слов на новую строку */
+        overflow-wrap: break-word;
+        width: 100%;
+    }
+
+    .description p {
+        font-weight: 600;
+        word-break: break-all;
+        font-size: 22px;
+        margin-top: 10px;
+        margin-bottom: 0;
+        padding: 10px 0;
+        border-radius: 0;
+        width: 100%;
+    }
+
+    .line {
+        z-index: 1001;
+        width: 150px;
+        height: 6px;
+        margin: 0 auto;
+        border-radius: 10px;
+        background-color: #eee;
+    }
+
+    .product {
+        flex-direction: column; /* вертикальное расположение для маленьких экранов */
+        align-items: center;
+    }
+
+
+    .product img {
+        width: 30%;
+        height: 30%;
+        margin-bottom: 20px;
+    }
+
 }
+
 
 .confirmation-details p {
     margin: 0;
@@ -597,9 +666,11 @@ select option:checked {
     font-weight: normal;
     font-size: 15px;
 }
-.policy label a, .rules label a{
-color: #32beff;
+
+.policy label a, .rules label a {
+    color: #32beff;
 }
-.policy label a:hover, .rules label a:hover{
+
+.policy label a:hover, .rules label a:hover {
     background: none;
 }

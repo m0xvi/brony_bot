@@ -3,14 +3,24 @@ const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
-const { v4: uuidv4 } = require('uuid');
+const {v4: uuidv4} = require('uuid');
 require('dotenv').config();
+const YooKassa = require('yookassa');
+const multer = require('multer');
+const upload = multer();
 
 const app = express();
 const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('/var/www/html/booking_pool/booking'));
+
+const yookassa = new YooKassa({
+    shopId: process.env.YOOKASSA_SHOP_ID,
+    secretKey: process.env.YOOKASSA_SECRET_KEY
+});
 
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -27,6 +37,28 @@ db.connect((err) => {
     console.log('Connected to MySQL');
 });
 
+app.post('/api/create-payment', async (req, res) => {
+    try {
+        const payment = await yookassa.createPayment({
+            amount: {
+                value: '100.00', // сумму можно изменить
+                currency: 'RUB'
+            },
+            confirmation: {
+                type: 'embedded'
+            },
+            capture: true,
+            description: 'Оплата заказа №1'
+        });
+
+        res.json({ confirmation_token: payment.confirmation.confirmation_token });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+
 app.post('/api/reset-data', (req, res) => {
     const resetItemStatus = "UPDATE item_status SET is_booked = 0, booking_date = NULL";
     const clearBookings = "DELETE FROM bookings";
@@ -36,14 +68,14 @@ app.post('/api/reset-data', (req, res) => {
     db.beginTransaction(err => {
         if (err) {
             console.error('Error starting transaction', err);
-            return res.status(500).json({ error: 'Error starting transaction' });
+            return res.status(500).json({error: 'Error starting transaction'});
         }
 
         db.query(resetItemStatus, (err, result) => {
             if (err) {
                 console.error('Error resetting item status', err);
                 return db.rollback(() => {
-                    res.status(500).json({ error: 'Error resetting item status' });
+                    res.status(500).json({error: 'Error resetting item status'});
                 });
             }
 
@@ -51,7 +83,7 @@ app.post('/api/reset-data', (req, res) => {
                 if (err) {
                     console.error('Error clearing booking items', err);
                     return db.rollback(() => {
-                        res.status(500).json({ error: 'Error clearing booking items' });
+                        res.status(500).json({error: 'Error clearing booking items'});
                     });
                 }
 
@@ -59,7 +91,7 @@ app.post('/api/reset-data', (req, res) => {
                     if (err) {
                         console.error('Error clearing bookings', err);
                         return db.rollback(() => {
-                            res.status(500).json({ error: 'Error clearing bookings' });
+                            res.status(500).json({error: 'Error clearing bookings'});
                         });
                     }
 
@@ -67,7 +99,7 @@ app.post('/api/reset-data', (req, res) => {
                         if (err) {
                             console.error('Error clearing booking history', err);
                             return db.rollback(() => {
-                                res.status(500).json({ error: 'Error clearing booking history' });
+                                res.status(500).json({error: 'Error clearing booking history'});
                             });
                         }
 
@@ -75,10 +107,10 @@ app.post('/api/reset-data', (req, res) => {
                             if (err) {
                                 console.error('Error committing transaction', err);
                                 return db.rollback(() => {
-                                    res.status(500).json({ error: 'Error committing transaction' });
+                                    res.status(500).json({error: 'Error committing transaction'});
                                 });
                             }
-                            res.json({ message: 'Data reset successfully' });
+                            res.json({message: 'Data reset successfully'});
                         });
                     });
                 });
@@ -92,7 +124,7 @@ app.get('/api/get-items', (req, res) => {
     const date = req.query.date || new Date().toISOString().split('T')[0]; // Default to today's date
 
     if (!date || !type) {
-        return res.status(400).json({ error: 'Invalid date or type' });
+        return res.status(400).json({error: 'Invalid date or type'});
     }
 
     const sql = `
@@ -112,7 +144,7 @@ app.get('/api/get-items', (req, res) => {
     db.query(sql, [date, type], (err, result) => {
         if (err) {
             console.error('Error fetching items:', err);
-            res.status(500).json({ error: 'Error fetching items from database' });
+            res.status(500).json({error: 'Error fetching items from database'});
         } else {
             res.json(result);
         }
@@ -129,7 +161,7 @@ app.get('/api/get-bookings', (req, res) => {
                b.comments,
                b.total_price,
                b.booking_timestamp,
-               GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END) AS beds,
+               GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
                GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
         FROM bookings b
                  LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
@@ -140,7 +172,7 @@ app.get('/api/get-bookings', (req, res) => {
     db.query(sql, (err, result) => {
         if (err) {
             console.error('Error fetching bookings:', err);
-            res.status(500).json({ error: 'Error fetching bookings from database' });
+            res.status(500).json({error: 'Error fetching bookings from database'});
         } else {
             res.json(result);
         }
@@ -157,7 +189,7 @@ app.post('/api/admin/update-items', (req, res) => {
     db.beginTransaction(err => {
         if (err) {
             console.error('Error starting transaction', err);
-            return res.status(500).json({ error: 'Error starting transaction' });
+            return res.status(500).json({error: 'Error starting transaction'});
         }
 
         const updatePromises = items.map(item => {
@@ -198,45 +230,37 @@ app.post('/api/admin/update-items', (req, res) => {
                     if (err) {
                         console.error('Error committing transaction', err);
                         return db.rollback(() => {
-                            res.status(500).json({ error: 'Error committing transaction' });
+                            res.status(500).json({error: 'Error committing transaction'});
                         });
                     }
-                    res.json({ message: 'Items updated successfully' });
+                    res.json({message: 'Items updated successfully'});
                 });
             })
             .catch(err => {
                 db.rollback(() => {
-                    res.status(500).json({ error: 'Error updating items' });
+                    res.status(500).json({error: 'Error updating items'});
                 });
             });
     });
 });
 
 
-
-
-
-
-
-
-
-
 app.post('/api/admin/add-item', (req, res) => {
-    const { item_type, price } = req.body;
+    const {item_type, price} = req.body;
     const sql = "INSERT INTO item_status (item_type, price, is_booked) VALUES (?, ?, 0)";
 
     db.query(sql, [item_type, price], (err, result) => {
         if (err) {
             console.error('Error adding item:', err);
-            res.status(500).json({ error: 'Error adding item to database' });
+            res.status(500).json({error: 'Error adding item to database'});
         } else {
-            res.json({ message: 'Item added successfully', itemId: result.insertId });
+            res.json({message: 'Item added successfully', itemId: result.insertId});
         }
     });
 });
 
 app.post('/api/admin/remove-item', (req, res) => {
-    const { item_type } = req.body;
+    const {item_type} = req.body;
     const sql = `
         DELETE
         FROM item_status
@@ -251,26 +275,26 @@ app.post('/api/admin/remove-item', (req, res) => {
     db.query(sql, [item_type, item_type], (err, result) => {
         if (err) {
             console.error('Error removing item:', err);
-            res.status(500).json({ error: 'Error removing item from database' });
+            res.status(500).json({error: 'Error removing item from database'});
         } else {
-            res.json({ message: 'Item removed successfully' });
+            res.json({message: 'Item removed successfully'});
         }
     });
 });
 
 app.get('/privacy-policy', (req, res) => {
-  res.sendFile(path.join(__dirname, 'privacy-policy.html'));
+    res.sendFile(path.join(__dirname, 'privacy-policy.html'));
 });
 
 app.post('/api/book', (req, res) => {
-    const { name, arrivalDate, items, children, phone, comments, totalPrice } = req.body;
+    const {name, arrivalDate, items, children, phone, comments, totalPrice} = req.body;
     const bookingId = uuidv4();
     const bookingTimestamp = new Date();
 
     db.beginTransaction(err => {
         if (err) {
             console.error('Error starting transaction', err);
-            return res.status(500).json({ error: 'Error starting transaction' });
+            return res.status(500).json({error: 'Error starting transaction'});
         }
 
         const sqlBooking = "INSERT INTO bookings (name, arrival_date, children, phone, comments, total_price, booking_id, booking_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -319,10 +343,10 @@ app.post('/api/book', (req, res) => {
                         if (err) {
                             console.error('Error committing transaction', err);
                             return db.rollback(() => {
-                                res.status(500).json({ error: 'Error committing transaction', details: err.message });
+                                res.status(500).json({error: 'Error committing transaction', details: err.message});
                             });
                         }
-                        res.json({ message: 'Booking saved to database', bookingId, name, arrivalDate, items, children });
+                        res.json({message: 'Booking saved to database', bookingId, name, arrivalDate, items, children});
                     });
                 });
             });
@@ -333,3 +357,5 @@ app.post('/api/book', (req, res) => {
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
+
+

@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Подтверждение бронирования</title>
     <link rel="stylesheet" href="style.css">
     <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
@@ -13,13 +13,9 @@
 <body>
 <div class="container">
     <h2>Подтверждение бронирования</h2>
-    <div id="confirmation-details">
-        <!-- Информация о бронировании будет добавлена здесь через JavaScript -->
-    </div>
-    <div id="booking-id">
-        <!-- Идентификатор бронирования будет добавлен здесь через JavaScript -->
-    </div>
-    <button onclick="goHome()">На главную</button>
+    <div id="confirmation-message"></div>
+    <div id="confirmation-details"></div>
+    <div id="booking-id"></div>
 </div>
 <script src="confirmation.js"></script>
 </body>

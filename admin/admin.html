@@ -6,6 +6,20 @@
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
+
+<?php
+    session_start();
+
+    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+        // Пользователь не аутентифицирован, перенаправить на страницу входа
+        header("Location: admin.php");
+        exit();
+    }
+
+    echo "<h1>Добро пожаловать, " . htmlspecialchars($_SESSION['username']) . "!</h1>";
+    ?>
+    <a href="logout.php">Выйти</a>
+
 <div class="container">
     <div class="admin-control">
         <h2>Панель администратора</h2>
@@ -33,16 +47,6 @@
     <div class="bookings-list">
         <h2>Список бронирований</h2>
         <div id="bookings-container"></div>
-    </div>
-</div>
-<div id="auth-modal" class="auth-modal">
-    <div class="auth-content">
-        <h2>Авторизация</h2>
-        <label for="username">Логин</label>
-        <input type="text" id="username" placeholder="Введите логин">
-        <label for="password">Пароль</label>
-        <input type="password" id="password" placeholder="Введите пароль">
-        <button onclick="authenticate()">Войти</button>
     </div>
 </div>
 <script src="admin.js"></script>
