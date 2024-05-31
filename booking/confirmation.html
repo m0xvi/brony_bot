@@ -11,12 +11,26 @@
     <link rel="manifest" href="/img/site.webmanifest">
 </head>
 <body>
-<div class="container">
-    <h2>Подтверждение бронирования</h2>
+<div class="container" id="cont">
+    <div class="product" id="nav">
+        <div class="nav-buttons">
+            <button onclick="history.back()"><img src="/img/back.svg" alt="back"></button>
+            <h2>Подтверждение бронирования</h2>
+            <button onclick="window.location.href='../home.html'"><img src="/img/home.svg" alt="home"></button>
+        </div>
+    </div>
     <div id="confirmation-message"></div>
     <div id="confirmation-details"></div>
     <div id="booking-id"></div>
 </div>
 <script src="confirmation.js"></script>
+<script>
+    window.onload = function () {
+        let element1 = document.getElementById("cont");
+        let element3 = document.getElementById("nav");
+        element1.classList.add("show");
+        element3.classList.add("show");
+    }
+</script>
 </body>
 </html>

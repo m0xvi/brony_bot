@@ -11,10 +11,15 @@
     <link rel="manifest" href="/img/site.webmanifest">
 </head>
 <body>
-<div class="container">
-    <!-- Карточки товаров -->
 
-    <h2>Бронирование</h2>
+<div class="container">
+    <div class="product" id="nav">
+        <div class="nav-buttons">
+            <button onclick="history.back()"><img src="/img/back.svg" alt="back"></button>
+            <h2>Бронирование</h2>
+            <button onclick="window.location.href='../home.html'"><img src="/img/home.svg" alt="home"></button>
+        </div>
+    </div>
     <div class="product" id="bed">
         <img src="../img/bed.png" alt="Кровать">
         <div class="line"></div>
@@ -40,8 +45,10 @@
     window.onload = function () {
         let element1 = document.getElementById("bed");
         let element2 = document.getElementById("sun-lounger");
+        let element3 = document.getElementById("nav");
         element1.classList.add("show");
         element2.classList.add("show");
+        element3.classList.add("show");
     }
 </script>
 </body>

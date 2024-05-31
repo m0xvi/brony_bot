@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-       document.getElementById('book-button').addEventListener('click', async function (event) {
+    document.getElementById('book-button').addEventListener('click', async function (event) {
         event.preventDefault();
         if (validateForm()) {
             try {
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const checkout = new window.YooMoneyCheckoutWidget({
                         confirmation_token: data.confirmation_token,
                         return_url: 'https://pool.hotelusadba.ru/booking/confirmation.html',
-                        error_callback: function(error) {
+                        error_callback: function (error) {
                             console.error('Error:', error);
                             alert('Произошла ошибка при создании платежа');
                         }
@@ -88,156 +88,153 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-    function populateDateOptions() {
-        const arrivalDateInput = document.getElementById('arrival-date');
-        arrivalDateInput.innerHTML = '';
-        const today = new Date();
-        for (let i = 0; i < 7; i++) {
-            const optionDate = new Date(today);
-            optionDate.setDate(today.getDate() + i);
-            const dayOfWeek = optionDate.toLocaleDateString('ru-RU', {weekday: 'long'});
-            const formattedDate = optionDate.toISOString().split('T')[0];
-            const option = document.createElement('option');
-            option.value = formattedDate;
-            option.text = `${dayOfWeek} ${optionDate.getDate()} ${optionDate.toLocaleDateString('ru-RU', {month: 'long'})}`;
-            arrivalDateInput.appendChild(option);
-        }
+function populateDateOptions() {
+    const arrivalDateInput = document.getElementById('arrival-date');
+    arrivalDateInput.innerHTML = '';
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+        const optionDate = new Date(today);
+        optionDate.setDate(today.getDate() + i);
+        const dayOfWeek = optionDate.toLocaleDateString('ru-RU', {weekday: 'long'});
+        const formattedDate = optionDate.toISOString().split('T')[0];
+        const option = document.createElement('option');
+        option.value = formattedDate;
+        option.text = `${dayOfWeek} ${optionDate.getDate()} ${optionDate.toLocaleDateString('ru-RU', {month: 'long'})}`;
+        arrivalDateInput.appendChild(option);
+    }
+}
+
+function fetchItemsAndDisplay(type, date) {
+    if (!date || !type) {
+        console.error('Invalid date or type');
+        return;
     }
 
-    function fetchItemsAndDisplay(type, date) {
-        if (!date || !type) {
-            console.error('Invalid date or type');
-            return;
-        }
-
-        fetch(`/api/get-items?type=${type}&date=${date}`)
-            .then(response => response.json())
-            .then(items => {
-                const container = type === 'bed' ? 'beds-container' : 'loungers-container';
-                const itemsContainer = document.getElementById(container);
-                itemsContainer.innerHTML = '';
-                items.forEach(item => {
-                    const label = document.createElement('label');
-                    label.className = `checkbox-container ${type}`;
-                    label.innerHTML = `
+    fetch(`/api/get-items?type=${type}&date=${date}`)
+        .then(response => response.json())
+        .then(items => {
+            const container = type === 'bed' ? 'beds-container' : 'loungers-container';
+            const itemsContainer = document.getElementById(container);
+            itemsContainer.innerHTML = '';
+            items.forEach(item => {
+                const label = document.createElement('label');
+                label.className = `checkbox-container ${type}`;
+                label.innerHTML = `
                     <div class="item">
                         <input type="checkbox" id="item-${item.item_id}" name="selectedItems[]" value="${item.item_id}" data-price="${item.price || 0}" ${item.is_booked_today ? 'disabled' : ''}>
                         <span class="checkmark"></span>
                     </div>
                 `;
 
-                    if (item.is_booked_today) {
-                        label.style.color = 'white';
-                    }
-
-                    itemsContainer.appendChild(label);
-                });
-
-                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                    checkbox.addEventListener('change', updateTotalPrice);
-                });
-            })
-            .catch(error => console.error('Failed to load items:', error));
-    }
-
-    function updateTotalPrice() {
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
-        let total = 0;
-        checkboxes.forEach(box => {
-            total += parseFloat(box.dataset.price) || 0;
-        });
-
-        const childrenCheckbox = document.getElementById('children-checkbox');
-        if (childrenCheckbox && childrenCheckbox.checked) {
-            const childrenCount = parseInt(document.getElementById('children').value, 10) || 0;
-            const childPrice = childrenCount * 500;
-            total += childPrice;
-        }
-        document.getElementById('totalPrice').textContent = total;
-        console.log('Updated total price:', total); // Логирование обновленной суммы
-        return total;
-    }
-
-    function validateForm() {
-        let isValid = true;
-        ['name', 'phone', 'arrival-date'].forEach(id => {
-            const input = document.getElementById(id);
-            if (!input.value.trim()) {
-                input.classList.add('error');
-                isValid = false;
-            } else {
-                input.classList.remove('error');
-            }
-        });
-        return isValid;
-    }
-
-    function submitBookingForm() {
-        const selectedItems = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
-            .map(box => parseInt(box.value, 10))
-            .filter(value => !isNaN(value));
-
-        const formData = {
-            name: document.getElementById('name').value,
-            phone: document.getElementById('phone').value,
-            arrivalDate: document.getElementById('arrival-date').value,
-            items: selectedItems,
-            children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 10) || 0 : 0,
-            comments: document.getElementById('comments').value,
-            totalPrice: updateTotalPrice()
-        };
-
-        console.log('Submitting booking with data:', formData);
-
-        fetch('/api/book', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        throw new Error(text)
-                    });
+                if (item.is_booked_today) {
+                    label.style.color = 'white';
                 }
-                return response.json();
-            })
-            .then(data => {
-                localStorage.setItem('bookingConfirmation', JSON.stringify(data));
-                window.location.href = 'confirmation.html';
-            })
-            .catch(error => {
-                console.error('Error submitting booking:', error);
-                alert(`Error submitting booking: ${error.message}`);
+
+                itemsContainer.appendChild(label);
             });
+
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', updateTotalPrice);
+            });
+        })
+        .catch(error => console.error('Failed to load items:', error));
+}
+
+function updateTotalPrice() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
+    let total = 0;
+    checkboxes.forEach(box => {
+        total += parseFloat(box.dataset.price) || 0;
+    });
+
+    const childrenCheckbox = document.getElementById('children-checkbox');
+    if (childrenCheckbox && childrenCheckbox.checked) {
+        const childrenCount = parseInt(document.getElementById('children').value, 10) || 0;
+        const childPrice = childrenCount * 500;
+        total += childPrice;
     }
 
-    function increaseCount(id) {
+    document.getElementById('totalPrice').textContent = total;
+    return total;
+}
+
+function validateForm() {
+    let isValid = true;
+    ['name', 'phone', 'arrival-date'].forEach(id => {
         const input = document.getElementById(id);
-        if (input) {
-            let currentValue = parseInt(input.value, 10);
-            if (currentValue < parseInt(input.max, 10)) {
-                input.value = currentValue + 1;
-                updateTotalPrice();
+        if (!input.value.trim()) {
+            input.classList.add('error');
+            isValid = false;
+        } else {
+            input.classList.remove('error');
+        }
+    });
+    return isValid;
+}
+
+function submitBookingForm() {
+    const selectedItems = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+        .map(box => parseInt(box.value, 10))
+        .filter(value => !isNaN(value));
+
+    const formData = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        arrivalDate: document.getElementById('arrival-date').value,
+        items: selectedItems,
+        children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 10) || 0 : 0,
+        comments: document.getElementById('comments').value,
+        totalPrice: updateTotalPrice()
+    };
+
+    console.log('Submitting booking with data:', formData);
+
+    fetch('/api/book', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text);
+                });
             }
+            return response.json();
+        })
+        .then(data => {
+            localStorage.setItem('bookingConfirmation', JSON.stringify(data));
+            window.location.href = 'confirmation.html';
+        })
+        .catch(error => {
+            console.error('Error submitting booking:', error);
+            alert(`Error submitting booking: ${error.message}`);
+        });
+}
+
+function increaseCount(id) {
+    const input = document.getElementById(id);
+    if (input) {
+        let currentValue = parseInt(input.value, 10);
+        if (currentValue < parseInt(input.max, 10)) {
+            input.value = currentValue + 1;
+            updateTotalPrice();
         }
     }
+}
 
-    function decreaseCount(id) {
-        const input = document.getElementById(id);
-        if (input) {
-            let currentValue = parseInt(input.value, 10);
-            if (currentValue > parseInt(input.min, 10)) {
-                input.value = currentValue - 1;
-                updateTotalPrice();
-            }
+function decreaseCount(id) {
+    const input = document.getElementById(id);
+    if (input) {
+        let currentValue = parseInt(input.value, 10);
+        if (currentValue > parseInt(input.min, 10)) {
+            input.value = currentValue - 1;
+            updateTotalPrice();
         }
     }
+}
 
-    window.onload = function () {
-        let element1 = document.getElementById("form");
-        element1.classList.add("show");
-    }
+
 

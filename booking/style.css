@@ -32,7 +32,7 @@ label {
 
 .product {
     box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
-    padding: 30px 0;
+    padding: 10px 0;
     text-align: center;
     border-radius: 10px;
     align-items: center;
@@ -130,7 +130,7 @@ img {
     height: 6px;
     border-radius: 10px;
     background-color: #eee;
-    margin: 0 20px;
+    margin: 10px 20px;
 }
 
 .description {
@@ -162,7 +162,6 @@ img {
 button {
     font-weight: 600;
     font-size: 16px;
-    padding: 10px;
     background-color: #007BFF;
     color: white;
     border: none;
@@ -626,6 +625,21 @@ select option:checked {
         margin-bottom: 20px;
     }
 
+    .nav-buttons button {
+        width: 40px !important;
+        margin: 10px !important;
+        height: 100% !important;
+    }
+
+    .nav-buttons h2 {
+
+    }
+
+    .nav-buttons button img {
+        width: 100%;
+        height: auto;
+    }
+
 }
 
 
@@ -673,4 +687,31 @@ select option:checked {
 
 .policy label a:hover, .rules label a:hover {
     background: none;
+}
+
+.nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    background-color: white;
+    width: 100%;
+}
+
+.nav-buttons button {
+    width: 45px;
+    height: auto;
+    margin: 20px;
+    padding: 10px;
+}
+
+.nav-buttons button:hover {
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    border-radius: 5px;
+    scale: 105%;
+}
+
+.nav-buttons button img {
+    margin: 0 auto;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
 }
