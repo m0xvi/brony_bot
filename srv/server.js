@@ -8,6 +8,7 @@ require('dotenv').config();
 const YooKassa = require('yookassa');
 const multer = require('multer');
 const upload = multer();
+const nodemailer = require('nodemailer');
 
 const app = express();
 const port = 3000;
@@ -16,6 +17,16 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('/var/www/html/booking_pool/booking'));
+
+const transporter = nodemailer.createTransport({
+    host: 'smtp.mail.ru', // Замените на ваш SMTP сервер
+    port: 587, // Порт вашего SMTP сервера
+    secure: false, // true для 465, false для других портов
+    auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASS
+    }
+});
 
 const yookassa = new YooKassa({
     shopId: process.env.YOOKASSA_SHOP_ID,
@@ -37,26 +48,80 @@ db.connect((err) => {
     console.log('Connected to MySQL');
 });
 
+function sendConfirmationEmail(email, bookingId) {
+    const mailOptions = {
+        from: process.env.SMTP_EMAIL,
+        to: email,
+        subject: 'Подтверждение бронирования',
+        text: `Ваше бронирование подтверждено. Идентификатор бронирования: ${bookingId}`,
+        html: `<p>Ваше бронирование подтверждено.</p><p>Идентификатор бронирования: ${bookingId}</p>`
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return console.error('Error sending email:', error);
+        }
+        console.log('Email sent:', info.response);
+    });
+}
+
 app.post('/api/create-payment', async (req, res) => {
+    const { totalPrice, bookingId, email } = req.body;
+
     try {
         const payment = await yookassa.createPayment({
             amount: {
-                value: '100.00', // сумму можно изменить
+                value: totalPrice.toFixed(2), // Общая сумма бронирования
                 currency: 'RUB'
             },
             confirmation: {
-                type: 'embedded'
+                type: 'embedded' // Используем тип 'embedded' для встраивания виджета
             },
             capture: true,
-            description: 'Оплата заказа №1'
+            description: `Оплата бронирования №${bookingId}`
         });
 
-        res.json({ confirmation_token: payment.confirmation.confirmation_token });
+        if (!payment.confirmation || !payment.confirmation.confirmation_token) {
+            throw new Error('Failed to create payment: confirmation_token is missing');
+        }
+
+        // Отправка подтверждения по email после успешной оплаты
+        if (payment.status === 'succeeded') {
+            sendConfirmationEmail(email, bookingId);
+        }
+
+        res.json({ confirmation_token: payment.confirmation.confirmation_token, paymentId: bookingId });
     } catch (error) {
+        console.error('Error creating payment:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
+app.get('/api/booking/:paymentId', (req, res) => {
+    const paymentId = req.params.paymentId;
+
+    const sql = `
+        SELECT b.booking_id, b.arrival_date, b.phone, b.comments, b.total_price, b.booking_timestamp, 
+               GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END) AS beds, 
+               GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
+        FROM bookings b
+        LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
+        LEFT JOIN item_status i ON bi.item_id = i.item_id
+        WHERE b.booking_id = ?
+        GROUP BY b.booking_id
+    `;
+
+    db.query(sql, [paymentId], (err, result) => {
+        if (err) {
+            console.error('Error fetching booking:', err);
+            res.status(500).json({ error: 'Error fetching booking from database' });
+        } else if (result.length === 0) {
+            res.status(404).json({ error: 'Booking not found' });
+        } else {
+            res.json(result[0]);
+        }
+    });
+});
 
 
 app.post('/api/reset-data', (req, res) => {
@@ -158,6 +223,7 @@ app.get('/api/get-bookings', (req, res) => {
                b.arrival_date,
                b.children,
                b.phone,
+               b.email,
                b.comments,
                b.total_price,
                b.booking_timestamp,
@@ -179,10 +245,11 @@ app.get('/api/get-bookings', (req, res) => {
     });
 });
 
+
 app.post('/api/admin/update-items', (req, res) => {
     const items = req.body.items;
     const sqlUpdateItemStatus = "UPDATE item_status SET is_booked = ?, booking_date = ? WHERE item_id = ?";
-    const sqlInsertBooking = "INSERT INTO bookings (booking_id, name, arrival_date, children, phone, comments, total_price, booking_timestamp) VALUES (?, 'Администратор', ?, 0, 'N/A', 'Администратор изменил статус', 0, NOW())";
+    const sqlInsertBooking = "INSERT INTO bookings (booking_id, name, arrival_date, children, phone, email, comments, total_price, booking_timestamp) VALUES (?, 'Администратор', ?, 0, 'N/A', 'N/A', 'Администратор изменил статус', 0, NOW())";
     const sqlInsertItemBooking = "INSERT INTO item_bookings (item_id, booking_id, booking_date) VALUES (?, ?, ?)";
     const sqlDeleteItemBooking = "DELETE FROM item_bookings WHERE item_id = ? AND booking_date = ?";
 
@@ -287,14 +354,14 @@ app.get('/privacy-policy', (req, res) => {
 });
 
 app.post('/api/book', (req, res) => {
-    const {name, arrivalDate, items, children, phone, email, comments, totalPrice} = req.body;
-    const bookingId = uuidv4();
+    const { name, arrivalDate, items, children, phone, email, comments, totalPrice } = req.body;
+    const bookingId = uuidv4();  // Генерируем один идентификатор для бронирования и платежа
     const bookingTimestamp = new Date();
 
     db.beginTransaction(err => {
         if (err) {
             console.error('Error starting transaction', err);
-            return res.status(500).json({error: 'Error starting transaction'});
+            return res.status(500).json({ error: 'Error starting transaction' });
         }
 
         const sqlBooking = "INSERT INTO bookings (name, arrival_date, children, phone, email, comments, total_price, booking_id, booking_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -343,10 +410,10 @@ app.post('/api/book', (req, res) => {
                         if (err) {
                             console.error('Error committing transaction', err);
                             return db.rollback(() => {
-                                res.status(500).json({error: 'Error committing transaction', details: err.message});
+                                res.status(500).json({ error: 'Error committing transaction', details: err.message });
                             });
                         }
-                        res.json({message: 'Booking saved to database', bookingId, name, arrivalDate, items, children, email});
+                        res.json({ message: 'Booking saved to database', bookingId, name, arrivalDate, items, children, email });
                     });
                 });
             });

@@ -1,12 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Удаление существующих обработчиков перед привязкой новых
-    document.getElementById('item-type').removeEventListener('change', fetchItems);
-    document.getElementById('booking-date').removeEventListener('change', fetchItems);
-    document.getElementById('add-item-btn').removeEventListener('click', addItem);
-    document.getElementById('remove-item-btn').removeEventListener('click', removeItem);
-    document.getElementById('update-items-btn').removeEventListener('click', updateItems);
-    document.getElementById('reset-data-btn').removeEventListener('click', resetData);
-
     fetchBookings(); // Load bookings on page load
     fetchItems(); // Load items on page load
 
@@ -96,35 +88,6 @@ function updateItems() {
         .catch(error => console.error('Error updating items:', error));
 }
 
-
-// Function to generate UUID (can be replaced with a library function if needed)
-function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
-
-function resetData() {
-    fetch('/api/reset-data', {
-        method: 'POST'
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Data reset:', data); // Log the server response after reset
-            alert('Data reset successfully!');
-            fetchItems(); // Reload items after reset
-            fetchBookings(); // Reload bookings after reset
-        })
-        .catch(error => console.error('Error resetting data:', error));
-}
-
 function fetchBookings() {
     fetch('/api/get-bookings')
         .then(response => {
@@ -144,7 +107,8 @@ function fetchBookings() {
                 div.innerHTML = `
                     <p><strong>ID бронирования:</strong> ${booking.booking_id}</p>
                     <p><strong>Имя:</strong> ${booking.name}</p>
-                    <p><strong>Дата бронирования:</strong> ${booking.arrival_date}</p>
+                    <p><strong>Email:</strong> ${booking.email}</p>
+                    <p><strong>Дата прибытия:</strong> ${new Date(booking.arrival_date).toLocaleDateString()}</p>
                     <p><strong>Время бронирования:</strong> ${new Date(booking.booking_timestamp).toLocaleString()}</p>
                     <p><strong>Телефон:</strong> ${booking.phone}</p>
                     <p><strong>Комментарии:</strong> ${booking.comments}</p>
@@ -156,6 +120,14 @@ function fetchBookings() {
             });
         })
         .catch(error => console.error('Failed to load bookings:', error));
+}
+
+// Function to generate UUID (can be replaced with a library function if needed)
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }
 
 function addItem() {
@@ -205,4 +177,23 @@ function removeItem() {
             fetchItems(); // Reload items after update
         })
         .catch(error => console.error('Error removing item:', error));
+}
+
+function resetData() {
+    fetch('/api/reset-data', {
+        method: 'POST'
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Data reset:', data); // Log the server response after reset
+            alert('Data reset successfully!');
+            fetchItems(); // Reload items after reset
+            fetchBookings(); // Reload bookings after reset
+        })
+        .catch(error => console.error('Error resetting data:', error));
 }

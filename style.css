@@ -145,16 +145,14 @@
 
 #iframeContent {
     position: relative;
-    width: 80%;
+    width: 95%;
     max-width: 800px;
     height: 100%;
     border-radius: 10px;
-
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-
 }
 
 #iframeContent iframe {

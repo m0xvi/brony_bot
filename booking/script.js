@@ -65,43 +65,78 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('book-button').addEventListener('click', async function (event) {
         event.preventDefault();
         if (validateAll()) {
-            // Существующий код обработки формы
-            console.log('Form is valid, submitting...');
+            const selectedItems = Array.from(document.querySelectorAll('input[name="selectedItems[]"]:checked'))
+                .map(box => parseInt(box.value, 10))
+                .filter(value => !isNaN(value));
+
+            const formData = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                arrivalDate: document.getElementById('arrival-date').value,
+                items: selectedItems,
+                children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 10) || 0 : 0,
+                comments: document.getElementById('comments').value,
+                totalPrice: updateTotalPrice()
+            };
+
             try {
-                const response = await fetch('/api/create-payment', {
+                const bookingResponse = await fetch('/api/book', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({}) // можно добавить данные о заказе
+                    body: JSON.stringify(formData)
                 });
 
-                const data = await response.json();
-
-                if (data.confirmation_token) {
-                    const checkout = new window.YooMoneyCheckoutWidget({
-                        confirmation_token: data.confirmation_token,
-                        return_url: 'https://pool.hotelusadba.ru/booking/confirmation.html',
-                        error_callback: function (error) {
-                            console.error('Error:', error);
-                            alert('Произошла ошибка при создании платежа');
-                        }
-                    });
-
-                    const paymentFormContainer = document.getElementById('payment-form-container');
-                    paymentFormContainer.style.display = 'flex';
-                    checkout.render('payment-form');
-                } else {
-                    alert('Ошибка получения токена подтверждения');
+                const bookingData = await bookingResponse.json();
+                if (!bookingResponse.ok) {
+                    throw new Error(bookingData.error || 'Ошибка создания бронирования');
                 }
+
+                // Сохраняем данные бронирования в localStorage
+                localStorage.setItem('bookingConfirmation', JSON.stringify(bookingData));
+
+                const paymentResponse = await fetch('/api/create-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        totalPrice: formData.totalPrice,
+                        bookingId: bookingData.bookingId,
+                        email: formData.email
+                    })
+                });
+
+                const paymentData = await paymentResponse.json();
+                if (!paymentResponse.ok) {
+                    throw new Error(paymentData.error || 'Ошибка создания платежа');
+                }
+
+                if (!paymentData.confirmation_token) {
+                    throw new Error('Confirmation token is missing');
+                }
+
+                const checkout = new window.YooMoneyCheckoutWidget({
+                    confirmation_token: paymentData.confirmation_token,
+                    return_url: `https://pool.hotelusadba.ru/booking/confirmation.html?bookingId=${bookingData.bookingId}&status=succeeded`,
+                    error_callback: function (error) {
+                        console.error('Error:', error);
+                        alert('Произошла ошибка при создании платежа');
+                    }
+                });
+
+                const paymentFormContainer = document.getElementById('payment-form-container');
+                paymentFormContainer.style.display = 'flex';
+                checkout.render('payment-form');
             } catch (error) {
                 console.error('Ошибка:', error);
-                alert('Произошла ошибка при создании платежа');
+                alert(`Произошла ошибка: ${error.message}`);
             }
         }
     });
 });
-
 
 function populateDateOptions() {
     const arrivalDateInput = document.getElementById('arrival-date');
@@ -110,11 +145,11 @@ function populateDateOptions() {
     for (let i = 0; i < 7; i++) {
         const optionDate = new Date(today);
         optionDate.setDate(today.getDate() + i);
-        const dayOfWeek = optionDate.toLocaleDateString('ru-RU', {weekday: 'long'});
+        const dayOfWeek = optionDate.toLocaleDateString('ru-RU', { weekday: 'long' });
         const formattedDate = optionDate.toISOString().split('T')[0];
         const option = document.createElement('option');
         option.value = formattedDate;
-        option.text = `${dayOfWeek} ${optionDate.getDate()} ${optionDate.toLocaleDateString('ru-RU', {month: 'long'})}`;
+        option.text = `${dayOfWeek} ${optionDate.getDate()} ${optionDate.toLocaleDateString('ru-RU', { month: 'long' })}`;
         arrivalDateInput.appendChild(option);
     }
 }
@@ -220,50 +255,6 @@ function validateAll() {
     return isValid;
 }
 
-
-function submitBookingForm() {
-    const selectedItems = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
-        .map(box => parseInt(box.value, 10))
-        .filter(value => !isNaN(value));
-
-    const formData = {
-        name: document.getElementById('name').value,
-        phone: document.getElementById('phone').value,
-        email: document.getElementById('email').value,
-        arrivalDate: document.getElementById('arrival-date').value,
-        items: selectedItems,
-        children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 10) || 0 : 0,
-        comments: document.getElementById('comments').value,
-        totalPrice: updateTotalPrice()
-    };
-
-    console.log('Submitting booking with data:', formData);
-
-    fetch('/api/book', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-    })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(text);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            localStorage.setItem('bookingConfirmation', JSON.stringify(data));
-            window.location.href = 'confirmation.html';
-        })
-        .catch(error => {
-            console.error('Error submitting booking:', error);
-            alert(`Error submitting booking: ${error.message}`);
-        });
-}
-
 function increaseCount(id) {
     const input = document.getElementById(id);
     if (input) {
@@ -285,6 +276,3 @@ function decreaseCount(id) {
         }
     }
 }
-
-
-
