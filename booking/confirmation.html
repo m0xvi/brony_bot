@@ -56,11 +56,14 @@
             align-items: center;
             padding: 10px 10px;
             border-radius: 10px;
+            font-size: 22px;
         }
 
         .confirmation-details img {
             width: 7%;
             margin: 0 20px;
+            margin-block: auto;
+            height: max-content;
         }
 
         .details {
@@ -72,9 +75,9 @@
         .confirmation-details p {
             margin: 0;
             padding: 0 0 10px;
-            font-size: 18px;
             text-decoration: underline;
             font-weight: 600;
+            font-size: 16px;
         }
 
         hr {
@@ -89,16 +92,16 @@
 <body>
 <div class="confirmation-container" id="cont">
     <!-- Панель навигации только для страницы -->
-    <div class="product" id="nav">
-        <div class="nav-buttons">
-            <button onclick="history.back()"><img src="/img/back.svg" alt="back"></button>
-            <h2>Подтверждение бронирования</h2>
-            <button onclick="window.location.href='https://pool.hotelusadba.ru/'"><img src="/img/home.svg" alt="home">
-            </button>
-        </div>
-    </div>
+    <!--    <div class="product" id="nav">-->
+    <!--        <div class="nav-buttons">-->
+    <!--            <button onclick="history.back()"><img src="/img/back.svg" alt="back"></button>-->
+    <!--            <h2>Подтверждение бронирования</h2>-->
+    <!--            <button onclick="window.location.href='https://pool.hotelusadba.ru/'"><img src="/img/home.svg" alt="home">-->
+    <!--            </button>-->
+    <!--        </div>-->
+    <!--    </div>-->
     <div class="confirmation-details">
-        <h3><img src="https://pool.hotelusadba.ru/img/tick.svg" alt="tick"> Ваше бронирование успешно подтверждено</h3>
+        <h3><img src="https://pool.hotelusadba.ru/img/tick.png" alt="tick"> Ваше бронирование успешно подтверждено</h3>
         <div class="details">
             <p>Бронирование №</p>
             <span id="booking_id">{{booking_id}}</span>

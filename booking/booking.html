@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Бронирование шезлонгов - Отель «Усадьба» - Agroup">
-    <meta property="og:description" content="Прайс лист на пользование бассейном в отеле «Усадьба» · Шезлонг — 2200₽ · Кровать — 4500₽. Купание детей до 14 лет 500₽. Здесь вы можете забронировать лучшее место для отдыха у бассейна с летним баром. Бронь по телефону +7 (4012) 38-48-50.">
+    <meta property="og:description"
+          content="Прайс лист на пользование бассейном в отеле «Усадьба» · Шезлонг — 2200₽ · Кровать — 4500₽. Купание детей до 14 лет 500₽. Здесь вы можете забронировать лучшее место для отдыха у бассейна с летним баром. Бронь по телефону +7 (4012) 38-48-50.">
     <meta property="og:site_name" content="Бронирование шезлонгов - Отель «Усадьба» - Agroup">
     <meta property="og:locale" content="ru-RU">
     <title>Форма бронирования</title>
@@ -98,7 +99,8 @@
             </div>
             <div class="rules">
                 <input type="checkbox" id="rules-checkbox" required>
-                <label for="rules-checkbox">Я ознакомлен(а) с <a href="https://pool.hotelusadba.ru/rules.html">правилами посещения бассейна</a></label>
+                <label for="rules-checkbox">Я ознакомлен(а) с <a href="https://pool.hotelusadba.ru/rules.html">правилами
+                    посещения бассейна</a></label>
             </div>
         </div>
         <div class="line_h"></div>
@@ -109,7 +111,9 @@
     </div>
 </div>
 <div id="payment-form-container">
-    <div id="payment-form"></div>
+    <div id="payment-form">
+        <button id="closeBtn">&times;</button>
+    </div>
 </div>
 <script>
     window.onload = function () {
@@ -130,6 +134,11 @@
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(param);
     }
+
+    document.getElementById('closeBtn').addEventListener('click', function () {
+        var paymentContainer = document.getElementById('payment-form-container');
+        paymentContainer.style.display = 'none';
+    });
 </script>
 </body>
 </html>

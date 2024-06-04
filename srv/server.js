@@ -111,7 +111,7 @@ function sendBookingDetailsToReception(bookingData) {
     const subject = `Новое бронирование №${bookingData.booking_id}`;
     const htmlContent = `
         <div class="confirmation-details">
-            <h3><img src="https://pool.hotelusadba.ru/img/tick.svg" alt="tick"> Новое бронирование</h3>
+            <h3>Новое бронирование</h3>
             <div class="details">
                 <p>Бронирование №</p>
                 <span id="booking_id">${bookingData.booking_id}</span>
@@ -119,11 +119,18 @@ function sendBookingDetailsToReception(bookingData) {
                 <p>Дата</p>
                 <span id="arrival_date">${new Date(bookingData.arrival_date).toLocaleDateString()}</span>
                 <hr>
+                <p>Имя</p>
+                <span id="name">${bookingData.name}</span>
+                <hr>
+                <p>Телефон</p>
+                <span id="phone">${bookingData.phone}</span>
+                <hr>
                 <p>Кровати</p>
                 <span id="beds">${bookingData.beds ? bookingData.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : 'Нет'}</span>
                 <hr>
                 <p>Шезлонги</p>
                 <span id="loungers">${bookingData.loungers ? bookingData.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : 'Нет'}</span>
+       
             </div>
         </div>
     `;
@@ -151,45 +158,82 @@ app.post('/api/payment-webhook', async (req, res) => {
 
     if (object && object.status === 'succeeded') {
         const paymentId = object.id;
-        const bookingId = object.description.split('№')[1].trim();
-        const email = object.receipt.customer.email;
+        const bookingData = JSON.parse(object.metadata.bookingData); // Получаем данные бронирования из метаданных платежа
+
+        const bookingId = uuidv4(); // Генерируем новый ID для бронирования
 
         console.log(`Оплата успешна для бронирования ID: ${bookingId}`);
 
-        const sql = `
-            SELECT b.booking_id,
-                   b.arrival_date,
-                   b.phone,
-                   b.comments,
-                   b.total_price,
-                   b.booking_timestamp,
-                   GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
-                   GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
-            FROM bookings b
-                     LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
-                     LEFT JOIN item_status i ON bi.item_id = i.item_id
-            WHERE b.booking_id = ?
-            GROUP BY b.booking_id
-        `;
-
-        db.query(sql, [bookingId], (err, result) => {
+        db.beginTransaction(err => {
             if (err) {
-                console.error('Ошибка получения бронирования:', err);
-                return res.status(500).json({ error: 'Ошибка получения бронирования из базы данных' });
-            } else if (result.length === 0) {
-                return res.status(404).json({ error: 'Бронирование не найдено' });
-            } else {
-                const bookingData = result[0];
-                sendConfirmationEmail(email, bookingId, bookingData);
-                sendBookingDetailsToReception(bookingData);
-                res.status(200).send('OK');
+                console.error('Error starting transaction', err);
+                return res.status(500).json({ error: 'Error starting transaction' });
             }
+
+            const sqlBooking = "INSERT INTO bookings (name, arrival_date, children, phone, email, comments, total_price, booking_id, booking_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            db.query(sqlBooking, [bookingData.name, bookingData.arrivalDate, bookingData.children, bookingData.phone, bookingData.email, bookingData.comments, bookingData.totalPrice, bookingId, new Date()], (err, result) => {
+                if (err) {
+                    console.error('Error saving booking to database (sqlBooking)', err);
+                    return db.rollback(() => {
+                        res.status(500).json({
+                            error: 'Error saving booking to database (sqlBooking)',
+                            details: err.message
+                        });
+                    });
+                }
+
+                console.log(`Booking ID: ${bookingId} inserted into bookings table`);
+
+                const bookingItems = bookingData.items.map(itemId => [bookingId, itemId, new Date(bookingData.arrivalDate).toISOString().slice(0, 19).replace('T', ' ')]);
+
+                const sqlBookingItems = "INSERT INTO item_bookings (booking_id, item_id, booking_date) VALUES ?";
+                db.query(sqlBookingItems, [bookingItems], (err, result) => {
+                    if (err) {
+                        console.error('Error saving booking items to database (sqlBookingItems)', err);
+                        return db.rollback(() => {
+                            res.status(500).json({
+                                error: 'Error saving booking items to database (sqlBookingItems)',
+                                details: err.message
+                            });
+                        });
+                    }
+
+                    console.log(`Booking items for Booking ID: ${bookingId} inserted into item_bookings table`);
+
+                    const sqlUpdateItems = "UPDATE item_status SET is_booked = TRUE WHERE item_id IN (?)";
+                    db.query(sqlUpdateItems, [bookingData.items], (err, result) => {
+                        if (err) {
+                            console.error('Error updating item status (sqlUpdateItems)', err);
+                            return db.rollback(() => {
+                                res.status(500).json({
+                                    error: 'Error updating item status (sqlUpdateItems)',
+                                    details: err.message
+                                });
+                            });
+                        }
+
+                        db.commit(err => {
+                            if (err) {
+                                console.error('Error committing transaction', err);
+                                return db.rollback(() => {
+                                    res.status(500).json({ error: 'Error committing transaction', details: err.message });
+                                });
+                            }
+
+                            sendConfirmationEmail(bookingData.email, bookingId, bookingData);
+                            sendBookingDetailsToReception(bookingData);
+                            res.status(200).send('OK');
+                        });
+                    });
+                });
+            });
         });
     } else {
         console.log('Необработанный статус оплаты:', object.status);
         res.status(200).send('Статус оплаты не обработан');
     }
 });
+
 
 async function checkPaymentStatus(paymentId, bookingId, email) {
     try {
@@ -247,20 +291,20 @@ app.post('/api/create-payment', async (req, res) => {
                 type: 'embedded'
             },
             capture: true,
-            description: `Оплата бронирования №${bookingId}`,
+            description: `Аренда шезлонга`,
             receipt: {
                 customer: {
                     email: email
                 },
                 items: [
                     {
-                        description: `Бронирование №${bookingId}`,
+                        description: `Аренда шезлонга`,
                         quantity: 1,
                         amount: {
                             value: totalPrice.toFixed(2),
                             currency: 'RUB'
                         },
-                        vat_code: 2,
+                        vat_code: 1,
                         payment_mode: "full_payment",
                         payment_subject: "service"
                     }
