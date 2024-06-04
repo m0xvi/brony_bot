@@ -9,18 +9,110 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
     <link rel="manifest" href="/img/site.webmanifest">
+    <style>
+        body, html {
+            font-family: Arial, sans-serif;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .confirmation-container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header button {
+            background: none;
+            border: none;
+        }
+
+        .header img {
+            width: 30px;
+            height: 30px;
+        }
+
+        .confirmation-details {
+            background: #e7eee7;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .confirmation-details h3 {
+            color: #3c763d;
+            margin: 0 auto 15px;
+            display: flex;
+            text-align: center;
+            background-color: #c9e1bc;
+            align-items: center;
+            padding: 10px 10px;
+            border-radius: 10px;
+        }
+
+        .confirmation-details img {
+            width: 7%;
+            margin: 0 20px;
+        }
+
+        .details {
+            border-radius: 10px;
+            padding: 10px;
+            color: #3c763d;
+        }
+
+        .confirmation-details p {
+            margin: 0;
+            padding: 0 0 10px;
+            font-size: 18px;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: #ced9c0;
+        }
+
+
+    </style>
 </head>
 <body>
-<div class="container" id="cont">
+<div class="confirmation-container" id="cont">
+    <!-- Панель навигации только для страницы -->
     <div class="product" id="nav">
         <div class="nav-buttons">
             <button onclick="history.back()"><img src="/img/back.svg" alt="back"></button>
             <h2>Подтверждение бронирования</h2>
-            <button onclick="window.location.href='https://pool.hotelusadba.ru/'"><img src="/img/home.svg" alt="home"></button>
+            <button onclick="window.location.href='https://pool.hotelusadba.ru/'"><img src="/img/home.svg" alt="home">
+            </button>
         </div>
     </div>
-    <div id="confirmation-message"></div>
-    <div id="booking-details"></div>
+    <div class="confirmation-details">
+        <h3><img src="https://pool.hotelusadba.ru/img/tick.svg" alt="tick"> Ваше бронирование успешно подтверждено</h3>
+        <div class="details">
+            <p>Бронирование №</p>
+            <span id="booking_id">{{booking_id}}</span>
+            <hr>
+            <p>Дата</p>
+            <span id="arrival_date">{{arrival_date}}</span>
+            <hr>
+            <p>Кровати</p>
+            <span id="beds">{{beds}}</span>
+            <hr>
+            <p>Шезлонги</p>
+            <span id="loungers">{{loungers}}</span>
+        </div>
+    </div>
 </div>
 <script src="confirmation.js"></script>
 <script>

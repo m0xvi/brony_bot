@@ -34,6 +34,11 @@ document.addEventListener('DOMContentLoaded', function () {
         mask: '+{7}(000)000-00-00'
     });
 
+    const emailInput = document.getElementById('email');
+    IMask(emailInput, {
+        mask: /^\S*@?\S*$/
+    });
+
     arrivalDateInput.addEventListener('change', function () {
         if (type) {
             fetchItemsAndDisplay(type, arrivalDateInput.value);
@@ -145,11 +150,11 @@ function populateDateOptions() {
     for (let i = 0; i < 7; i++) {
         const optionDate = new Date(today);
         optionDate.setDate(today.getDate() + i);
-        const dayOfWeek = optionDate.toLocaleDateString('ru-RU', { weekday: 'long' });
+        const dayOfWeek = optionDate.toLocaleDateString('ru-RU', {weekday: 'long'});
         const formattedDate = optionDate.toISOString().split('T')[0];
         const option = document.createElement('option');
         option.value = formattedDate;
-        option.text = `${dayOfWeek} ${optionDate.getDate()} ${optionDate.toLocaleDateString('ru-RU', { month: 'long' })}`;
+        option.text = `${dayOfWeek} ${optionDate.getDate()} ${optionDate.toLocaleDateString('ru-RU', {month: 'long'})}`;
         arrivalDateInput.appendChild(option);
     }
 }
@@ -221,6 +226,15 @@ function validateAll() {
         }
     });
 
+        const emailInput = document.getElementById('email');
+    if (!validateEmail(emailInput.value)) {
+        emailInput.classList.add('error');
+        isValid = false;
+    } else {
+        emailInput.classList.remove('error');
+    }
+
+
     const checkboxes = document.querySelectorAll('input[name="selectedItems[]"]:checked');
     const bedsContainer = document.getElementById('beds-container');
     const loungersContainer = document.getElementById('loungers-container');
@@ -253,6 +267,11 @@ function validateAll() {
     }
 
     return isValid;
+}
+
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
 }
 
 function increaseCount(id) {
