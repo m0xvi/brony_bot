@@ -86,6 +86,22 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             try {
+                const bookingResponse = await fetch('/api/book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const bookingData = await bookingResponse.json();
+                if (!bookingResponse.ok) {
+                    throw new Error(bookingData.error || 'Ошибка создания бронирования');
+                }
+
+                // Сохраняем данные бронирования в localStorage
+                localStorage.setItem('bookingConfirmation', JSON.stringify(bookingData));
+
                 const paymentResponse = await fetch('/api/create-payment', {
                     method: 'POST',
                     headers: {
@@ -93,7 +109,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     body: JSON.stringify({
                         totalPrice: formData.totalPrice,
-                        bookingData: formData // Передаем данные для создания бронирования после успешной оплаты
+                        bookingId: bookingData.bookingId,
+                        email: formData.email
                     })
                 });
 
@@ -108,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const checkout = new window.YooMoneyCheckoutWidget({
                     confirmation_token: paymentData.confirmation_token,
-                    return_url: `https://pool.hotelusadba.ru/booking/confirmation.html?bookingId=${paymentData.bookingId}&status=succeeded`,
+                    return_url: `https://pool.hotelusadba.ru/booking/confirmation.html?bookingId=${bookingData.bookingId}&status=succeeded`,
                     error_callback: function (error) {
                         console.error('Error:', error);
                         alert('Произошла ошибка при создании платежа');
@@ -125,7 +142,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
-
 
 function populateDateOptions() {
     const arrivalDateInput = document.getElementById('arrival-date');
@@ -210,7 +226,7 @@ function validateAll() {
         }
     });
 
-    const emailInput = document.getElementById('email');
+        const emailInput = document.getElementById('email');
     if (!validateEmail(emailInput.value)) {
         emailInput.classList.add('error');
         isValid = false;
