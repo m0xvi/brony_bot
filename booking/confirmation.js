@@ -1,27 +1,51 @@
 document.addEventListener('DOMContentLoaded', function () {
     const params = new URLSearchParams(window.location.search);
-    const bookingId = params.get('bookingId'); // Ensure this matches with the parameter in the URL
+    const paymentStatus = params.get('status');
+    const bookingId = params.get('bookingId');
 
-    if (!bookingId) {
-        document.querySelector('.confirmation-details').innerHTML = '<p>Идентификатор бронирования не найден.</p>';
+    if (paymentStatus !== 'succeeded') {
+        document.querySelector('.confirmation-details').innerHTML = '<p>Оплата не завершена. Пожалуйста, завершите оплату.</p>';
         return;
     }
 
-    fetch(`/api/booking/${bookingId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                document.querySelector('.confirmation-details').innerHTML = '<p>Ошибка: ' + data.error + '</p>';
-                return;
-            }
+    // Загрузить данные бронирования из localStorage
+    const formData = JSON.parse(localStorage.getItem('bookingData'));
+    if (!formData || formData.bookingId !== bookingId) {
+        document.querySelector('.confirmation-details').innerHTML = '<p>Ошибка: данные бронирования не найдены.</p>';
+        return;
+    }
 
-            document.querySelector('#booking_id').textContent = data.booking_id;
-            document.querySelector('#arrival_date').textContent = new Date(data.arrival_date).toLocaleDateString();
-            document.querySelector('#beds').textContent = data.beds ? data.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : 'Нет';
-            document.querySelector('#loungers').textContent = data.loungers ? data.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : 'Нет';
-        })
-        .catch(error => {
-            console.error('Error fetching booking:', error);
-            document.querySelector('.confirmation-details').innerHTML = '<p>Ошибка загрузки данных бронирования.</p>';
-        });
+    formData.bookingId = bookingId; // Убедимся, что bookingId из URL используется
+
+    fetch('/api/book', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            document.querySelector('.confirmation-details').innerHTML = '<p>Ошибка: ' + data.error + '</p>';
+            return;
+        }
+
+        // Удаляем bookingId из localStorage после успешного бронирования
+        localStorage.removeItem('bookingId');
+
+        document.querySelector('#booking_id').textContent = data.bookingId;
+        document.querySelector('#arrival_date').textContent = new Date(data.arrivalDate).toLocaleDateString();
+
+        // Убедитесь, что data.items является объектом с ключами 'beds' и 'loungers'
+        const beds = data.items.beds ? data.items.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : 'Нет';
+        const loungers = data.items.loungers ? data.items.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : 'Нет';
+
+        document.querySelector('#beds').textContent = beds || 'Нет';
+        document.querySelector('#loungers').textContent = loungers || 'Нет';
+    })
+    .catch(error => {
+        console.error('Error creating booking:', error);
+        document.querySelector('.confirmation-details').innerHTML = '<p>Ошибка создания бронирования.</p>';
+    });
 });

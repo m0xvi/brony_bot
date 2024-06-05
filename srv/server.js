@@ -45,8 +45,8 @@ transporter.verify(function (error, success) {
 });
 
 const yookassa = new YooKassa({
-    shopId: process.env.TEST_YOOKASSA_SHOP_ID,
-    secretKey: process.env.TEST_YOOKASSA_SECRET_KEY
+    shopId: process.env.YOOKASSA_SHOP_ID,
+    secretKey: process.env.YOOKASSA_SECRET_KEY
 });
 
 const db = mysql.createConnection({
@@ -199,6 +199,7 @@ app.post('/api/payment-webhook', async (req, res) => {
     }
 });
 
+
 async function checkPaymentStatus(paymentId, bookingId, email) {
     try {
         const payment = await yookassa.getPayment(paymentId);
@@ -245,6 +246,8 @@ async function checkPaymentStatus(paymentId, bookingId, email) {
 app.post('/api/create-payment', async (req, res) => {
     const { totalPrice, bookingId, email } = req.body;
 
+    console.log('Создание платежа с параметрами:', { totalPrice, bookingId, email });
+
     try {
         const payment = await yookassa.createPayment({
             amount: {
@@ -282,15 +285,25 @@ app.post('/api/create-payment', async (req, res) => {
 
         console.log(`Payment created with status: ${payment.status}`);
         console.log(`Payment ID: ${payment.id}`);
+        console.log(`Confirmation token: ${payment.confirmation.confirmation_token}`);
 
         checkPaymentStatus(payment.id, bookingId, email);
 
-        res.json({ confirmation_token: payment.confirmation.confirmation_token, paymentId: bookingId });
+        res.json({ confirmation_token: payment.confirmation.confirmation_token, bookingId });
     } catch (error) {
         console.error('Error creating payment:', error);
         res.status(500).json({ error: error.message });
     }
 });
+
+
+
+
+
+
+
+
+
 
 app.get('/api/booking/:paymentId', (req, res) => {
     const paymentId = req.params.paymentId;
@@ -551,8 +564,7 @@ app.get('/privacy-policy', (req, res) => {
 });
 
 app.post('/api/book', (req, res) => {
-    const { name, arrivalDate, items, children, phone, email, comments, totalPrice } = req.body;
-    const bookingId = uuidv4();  // Генерируем один идентификатор для бронирования и платежа
+    const { name, arrivalDate, items, children, phone, email, comments, totalPrice, bookingId } = req.body;
     const bookingTimestamp = new Date();
 
     db.beginTransaction(err => {
@@ -573,11 +585,9 @@ app.post('/api/book', (req, res) => {
                 });
             }
 
-            console.log(`Booking ID: ${bookingId} inserted into bookings table`);
-
             const bookingItems = items.map(itemId => [bookingId, itemId, new Date(arrivalDate).toISOString().slice(0, 19).replace('T', ' ')]);
-
             const sqlBookingItems = "INSERT INTO item_bookings (booking_id, item_id, booking_date) VALUES ?";
+
             db.query(sqlBookingItems, [bookingItems], (err, result) => {
                 if (err) {
                     console.error('Error saving booking items to database (sqlBookingItems)', err);
@@ -588,8 +598,6 @@ app.post('/api/book', (req, res) => {
                         });
                     });
                 }
-
-                console.log(`Booking items for Booking ID: ${bookingId} inserted into item_bookings table`);
 
                 const sqlUpdateItems = "UPDATE item_status SET is_booked = TRUE WHERE item_id IN (?)";
                 db.query(sqlUpdateItems, [items], (err, result) => {
@@ -603,21 +611,46 @@ app.post('/api/book', (req, res) => {
                         });
                     }
 
-                    db.commit(err => {
+                    const getBookingDetails = `
+                        SELECT b.booking_id,
+                               b.arrival_date,
+                               b.phone,
+                               b.comments,
+                               b.total_price,
+                               b.booking_timestamp,
+                               GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END) AS beds,
+                               GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
+                        FROM bookings b
+                        LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
+                        LEFT JOIN item_status i ON bi.item_id = i.item_id
+                        WHERE b.booking_id = ?
+                        GROUP BY b.booking_id
+                    `;
+
+                    db.query(getBookingDetails, [bookingId], (err, bookingDetails) => {
                         if (err) {
-                            console.error('Error committing transaction', err);
-                            return db.rollback(() => {
-                                res.status(500).json({ error: 'Error committing transaction', details: err.message });
-                            });
+                            console.error('Error fetching booking details', err);
+                            return res.status(500).json({ error: 'Error fetching booking details' });
                         }
-                        res.json({
-                            message: 'Booking saved to database',
-                            bookingId,
-                            name,
-                            arrivalDate,
-                            items,
-                            children,
-                            email
+
+                        db.commit(err => {
+                            if (err) {
+                                console.error('Error committing transaction', err);
+                                return db.rollback(() => {
+                                    res.status(500).json({ error: 'Error committing transaction', details: err.message });
+                                });
+                            }
+                            res.json({
+                                message: 'Booking saved to database',
+                                bookingId,
+                                arrivalDate,
+                                items: {
+                                    beds: bookingDetails[0].beds,
+                                    loungers: bookingDetails[0].loungers
+                                },
+                                children,
+                                email
+                            });
                         });
                     });
                 });
@@ -625,6 +658,9 @@ app.post('/api/book', (req, res) => {
         });
     });
 });
+
+
+
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

@@ -67,12 +67,17 @@ document.addEventListener('DOMContentLoaded', function () {
         fetchItemsAndDisplay(type, today);
     }
 
+    const {v4: uuidv4} = uuid;
+
     document.getElementById('book-button').addEventListener('click', async function (event) {
         event.preventDefault();
         if (validateAll()) {
             const selectedItems = Array.from(document.querySelectorAll('input[name="selectedItems[]"]:checked'))
                 .map(box => parseInt(box.value, 10))
                 .filter(value => !isNaN(value));
+
+            // Генерируем новый bookingId для каждого бронирования
+            const bookingId = uuidv4();
 
             const formData = {
                 name: document.getElementById('name').value,
@@ -82,26 +87,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 items: selectedItems,
                 children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 10) || 0 : 0,
                 comments: document.getElementById('comments').value,
-                totalPrice: updateTotalPrice()
+                totalPrice: updateTotalPrice(),
+                bookingId: bookingId // Используем новый bookingId
             };
 
+            console.log('Данные формы для бронирования:', formData);
+
+            // Сохраняем данные формы в localStorage
+            localStorage.setItem('bookingData', JSON.stringify(formData));
+            localStorage.setItem('bookingId', bookingId); // Сохраняем новый bookingId в localStorage
+
             try {
-                const bookingResponse = await fetch('/api/book', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const bookingData = await bookingResponse.json();
-                if (!bookingResponse.ok) {
-                    throw new Error(bookingData.error || 'Ошибка создания бронирования');
-                }
-
-                // Сохраняем данные бронирования в localStorage
-                localStorage.setItem('bookingConfirmation', JSON.stringify(bookingData));
-
                 const paymentResponse = await fetch('/api/create-payment', {
                     method: 'POST',
                     headers: {
@@ -109,23 +105,29 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     body: JSON.stringify({
                         totalPrice: formData.totalPrice,
-                        bookingId: bookingData.bookingId,
-                        email: formData.email
+                        email: formData.email,
+                        bookingId: formData.bookingId // Передаем новый bookingId
                     })
                 });
 
                 const paymentData = await paymentResponse.json();
+                console.log('Ответ от create-payment:', paymentData);
+
                 if (!paymentResponse.ok) {
                     throw new Error(paymentData.error || 'Ошибка создания платежа');
                 }
 
-                if (!paymentData.confirmation_token) {
+                // Здесь извлекаем token подтверждения
+                const confirmationToken = paymentData.confirmation_token;
+                if (!confirmationToken) {
                     throw new Error('Confirmation token is missing');
                 }
 
+                console.log(`Получен confirmation_token: ${confirmationToken}`);
+
                 const checkout = new window.YooMoneyCheckoutWidget({
-                    confirmation_token: paymentData.confirmation_token,
-                    return_url: `https://pool.hotelusadba.ru/booking/confirmation.html?bookingId=${bookingData.bookingId}&status=succeeded`,
+                    confirmation_token: confirmationToken,
+                    return_url: `https://pool.hotelusadba.ru/booking/confirmation.html?status=succeeded&bookingId=${bookingId}`, // Передаем новый bookingId
                     error_callback: function (error) {
                         console.error('Error:', error);
                         alert('Произошла ошибка при создании платежа');
@@ -142,6 +144,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
 
 function populateDateOptions() {
     const arrivalDateInput = document.getElementById('arrival-date');
@@ -226,7 +229,7 @@ function validateAll() {
         }
     });
 
-        const emailInput = document.getElementById('email');
+    const emailInput = document.getElementById('email');
     if (!validateEmail(emailInput.value)) {
         emailInput.classList.add('error');
         isValid = false;
