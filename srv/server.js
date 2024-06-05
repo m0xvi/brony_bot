@@ -106,6 +106,8 @@ function sendConfirmationEmail(email, bookingId, bookingData) {
     });
 }
 
+
+
 function sendBookingDetailsToReception(bookingData) {
     const receptionEmail = 'pool@hotelusadba.ru';
     const subject = `Новое бронирование №${bookingData.booking_id}`;
@@ -113,25 +115,16 @@ function sendBookingDetailsToReception(bookingData) {
         <div class="confirmation-details">
             <h3>Новое бронирование</h3>
             <div class="details">
-                <p>Бронирование №</p>
-                <span id="booking_id">${bookingData.booking_id}</span>
-                <hr>
-                <p>Дата</p>
-                <span id="arrival_date">${new Date(bookingData.arrival_date).toLocaleDateString()}</span>
-                <hr>
-                <p>Имя</p>
-                <span id="name">${bookingData.name}</span>
-                <hr>
-                <p>Телефон</p>
-                <span id="phone">${bookingData.phone}</span>
-                <hr>
-                <p>Кровати</p>
-                <span id="beds">${bookingData.beds ? bookingData.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : 'Нет'}</span>
-                <hr>
-                <p>Шезлонги</p>
-                <span id="loungers">${bookingData.loungers ? bookingData.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : 'Нет'}</span>
-                
-                
+                <p>Бронирование №: ${bookingData.booking_id}</p>
+                <p>Имя: ${bookingData.name}</p>
+                <p>Email: ${bookingData.email}</p>
+                <p>Телефон: ${bookingData.phone}</p>
+                <p>Дата прибытия: ${new Date(bookingData.arrival_date).toLocaleDateString()}</p>
+                <p>Время бронирования: ${new Date(bookingData.booking_timestamp).toLocaleString()}</p>
+                <p>Комментарии: ${bookingData.comments}</p>
+                <p>Общая цена: ${bookingData.total_price} ₽</p>
+                <p>Кровати: ${bookingData.beds ? bookingData.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : 'Нет'}</p>
+                <p>Шезлонги: ${bookingData.loungers ? bookingData.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : 'Нет'}</p>
             </div>
         </div>
     `;
@@ -151,6 +144,7 @@ function sendBookingDetailsToReception(bookingData) {
         console.log('Письмо на рецепцию отправлено:', info.response);
     });
 }
+
 
 app.post('/api/payment-webhook', async (req, res) => {
     console.log('Получен вебхук:', req.body);
@@ -613,9 +607,11 @@ app.post('/api/book', (req, res) => {
 
                     const getBookingDetails = `
                         SELECT b.booking_id,
-                               b.arrival_date,
+                               b.name,
                                b.phone,
+                               b.email,
                                b.comments,
+                               b.arrival_date,
                                b.total_price,
                                b.booking_timestamp,
                                GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END) AS beds,
@@ -640,6 +636,26 @@ app.post('/api/book', (req, res) => {
                                     res.status(500).json({ error: 'Error committing transaction', details: err.message });
                                 });
                             }
+
+                            const bookingData = {
+                                booking_id: bookingId,
+                                arrival_date: arrivalDate,
+                                name: name,
+                                phone: phone,
+                                email: email,
+                                comments: comments,
+                                total_price: totalPrice,
+                                booking_timestamp: bookingTimestamp,
+                                beds: bookingDetails[0].beds,
+                                loungers: bookingDetails[0].loungers
+                            };
+
+                            // Отправка письма с подтверждением пользователю
+                            sendConfirmationEmail(email, bookingId, bookingData);
+
+                            // Отправка данных бронирования на рецепцию
+                            sendBookingDetailsToReception(bookingData);
+
                             res.json({
                                 message: 'Booking saved to database',
                                 bookingId,
