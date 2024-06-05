@@ -31,13 +31,15 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Обновляем статус оплаты
+        localStorage.setItem('paymentCompleted', true);
+
         // Удаляем bookingId из localStorage после успешного бронирования
         localStorage.removeItem('bookingId');
 
         document.querySelector('#booking_id').textContent = data.bookingId;
         document.querySelector('#arrival_date').textContent = new Date(data.arrivalDate).toLocaleDateString();
 
-        // Убедитесь, что data.items является объектом с ключами 'beds' и 'loungers'
         const beds = data.items.beds ? data.items.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : 'Нет';
         const loungers = data.items.loungers ? data.items.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : 'Нет';
 

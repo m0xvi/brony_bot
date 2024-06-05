@@ -194,6 +194,7 @@ app.post('/api/payment-webhook', async (req, res) => {
 });
 
 
+
 async function checkPaymentStatus(paymentId, bookingId, email) {
     try {
         const payment = await yookassa.getPayment(paymentId);
@@ -557,6 +558,59 @@ app.get('/privacy-policy', (req, res) => {
     res.sendFile(path.join(__dirname, 'privacy-policy.html'));
 });
 
+app.delete('/api/cancel-booking/:bookingId', (req, res) => {
+    const bookingId = req.params.bookingId;
+
+    const sqlDeleteBooking = "DELETE FROM bookings WHERE booking_id = ?";
+    const sqlDeleteItemBooking = "DELETE FROM item_bookings WHERE booking_id = ?";
+    const sqlUpdateItems = "UPDATE item_status SET is_booked = FALSE WHERE item_id IN (SELECT item_id FROM item_bookings WHERE booking_id = ?)";
+
+    db.beginTransaction(err => {
+        if (err) {
+            console.error('Error starting transaction', err);
+            return res.status(500).json({ error: 'Error starting transaction' });
+        }
+
+        db.query(sqlUpdateItems, [bookingId], (err, result) => {
+            if (err) {
+                console.error('Error updating item status', err);
+                return db.rollback(() => {
+                    res.status(500).json({ error: 'Error updating item status' });
+                });
+            }
+
+            db.query(sqlDeleteItemBooking, [bookingId], (err, result) => {
+                if (err) {
+                    console.error('Error deleting item booking', err);
+                    return db.rollback(() => {
+                        res.status(500).json({ error: 'Error deleting item booking' });
+                    });
+                }
+
+                db.query(sqlDeleteBooking, [bookingId], (err, result) => {
+                    if (err) {
+                        console.error('Error deleting booking', err);
+                        return db.rollback(() => {
+                            res.status(500).json({ error: 'Error deleting booking' });
+                        });
+                    }
+
+                    db.commit(err => {
+                        if (err) {
+                            console.error('Error committing transaction', err);
+                            return db.rollback(() => {
+                                res.status(500).json({ error: 'Error committing transaction' });
+                            });
+                        }
+                        res.status(200).json({ message: 'Booking cancelled successfully' });
+                    });
+                });
+            });
+        });
+    });
+});
+
+
 app.post('/api/book', (req, res) => {
     const { name, arrivalDate, items, children, phone, email, comments, totalPrice, bookingId } = req.body;
     const bookingTimestamp = new Date();
@@ -567,105 +621,130 @@ app.post('/api/book', (req, res) => {
             return res.status(500).json({ error: 'Error starting transaction' });
         }
 
-        const sqlBooking = "INSERT INTO bookings (name, arrival_date, children, phone, email, comments, total_price, booking_id, booking_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        db.query(sqlBooking, [name, arrivalDate, children, phone, email, comments, totalPrice, bookingId, bookingTimestamp], (err, result) => {
+        const sqlCheckBooking = "SELECT booking_id FROM bookings WHERE booking_id = ?";
+        const sqlInsertBooking = "INSERT INTO bookings (name, arrival_date, children, phone, email, comments, total_price, booking_id, booking_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        const sqlUpdateBooking = "UPDATE bookings SET name = ?, arrival_date = ?, children = ?, phone = ?, email = ?, comments = ?, total_price = ?, booking_timestamp = ? WHERE booking_id = ?";
+
+        db.query(sqlCheckBooking, [bookingId], (err, results) => {
             if (err) {
-                console.error('Error saving booking to database (sqlBooking)', err);
+                console.error('Error checking booking existence', err);
                 return db.rollback(() => {
-                    res.status(500).json({
-                        error: 'Error saving booking to database (sqlBooking)',
-                        details: err.message
-                    });
+                    res.status(500).json({ error: 'Error checking booking existence' });
                 });
             }
 
-            const bookingItems = items.map(itemId => [bookingId, itemId, new Date(arrivalDate).toISOString().slice(0, 19).replace('T', ' ')]);
-            const sqlBookingItems = "INSERT INTO item_bookings (booking_id, item_id, booking_date) VALUES ?";
+            const isExistingBooking = results.length > 0;
+            const sqlBooking = isExistingBooking ? sqlUpdateBooking : sqlInsertBooking;
+            const bookingParams = isExistingBooking
+                ? [name, arrivalDate, children, phone, email, comments, totalPrice, bookingTimestamp, bookingId]
+                : [name, arrivalDate, children, phone, email, comments, totalPrice, bookingId, bookingTimestamp];
 
-            db.query(sqlBookingItems, [bookingItems], (err, result) => {
+            db.query(sqlBooking, bookingParams, (err, result) => {
                 if (err) {
-                    console.error('Error saving booking items to database (sqlBookingItems)', err);
+                    console.error(`Error saving booking to database (${isExistingBooking ? 'sqlUpdateBooking' : 'sqlInsertBooking'})`, err);
                     return db.rollback(() => {
                         res.status(500).json({
-                            error: 'Error saving booking items to database (sqlBookingItems)',
+                            error: `Error saving booking to database (${isExistingBooking ? 'sqlUpdateBooking' : 'sqlInsertBooking'})`,
                             details: err.message
                         });
                     });
                 }
 
-                const sqlUpdateItems = "UPDATE item_status SET is_booked = TRUE WHERE item_id IN (?)";
-                db.query(sqlUpdateItems, [items], (err, result) => {
+                const bookingItems = items.map(itemId => [bookingId, itemId, new Date(arrivalDate).toISOString().slice(0, 19).replace('T', ' ')]);
+                const sqlDeleteOldItems = "DELETE FROM item_bookings WHERE booking_id = ?";
+                const sqlInsertBookingItems = "INSERT INTO item_bookings (booking_id, item_id, booking_date) VALUES ?";
+
+                db.query(sqlDeleteOldItems, [bookingId], (err) => {
                     if (err) {
-                        console.error('Error updating item status (sqlUpdateItems)', err);
+                        console.error('Error deleting old booking items', err);
                         return db.rollback(() => {
                             res.status(500).json({
-                                error: 'Error updating item status (sqlUpdateItems)',
+                                error: 'Error deleting old booking items',
                                 details: err.message
                             });
                         });
                     }
 
-                    const getBookingDetails = `
-                        SELECT b.booking_id,
-                               b.name,
-                               b.phone,
-                               b.email,
-                               b.comments,
-                               b.arrival_date,
-                               b.total_price,
-                               b.booking_timestamp,
-                               GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END) AS beds,
-                               GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
-                        FROM bookings b
-                        LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
-                        LEFT JOIN item_status i ON bi.item_id = i.item_id
-                        WHERE b.booking_id = ?
-                        GROUP BY b.booking_id
-                    `;
-
-                    db.query(getBookingDetails, [bookingId], (err, bookingDetails) => {
+                    db.query(sqlInsertBookingItems, [bookingItems], (err, result) => {
                         if (err) {
-                            console.error('Error fetching booking details', err);
-                            return res.status(500).json({ error: 'Error fetching booking details' });
+                            console.error('Error saving booking items to database (sqlInsertBookingItems)', err);
+                            return db.rollback(() => {
+                                res.status(500).json({
+                                    error: 'Error saving booking items to database (sqlInsertBookingItems)',
+                                    details: err.message
+                                });
+                            });
                         }
 
-                        db.commit(err => {
+                        const sqlUpdateItems = "UPDATE item_status SET is_booked = TRUE WHERE item_id IN (?)";
+                        db.query(sqlUpdateItems, [items], (err, result) => {
                             if (err) {
-                                console.error('Error committing transaction', err);
+                                console.error('Error updating item status (sqlUpdateItems)', err);
                                 return db.rollback(() => {
-                                    res.status(500).json({ error: 'Error committing transaction', details: err.message });
+                                    res.status(500).json({
+                                        error: 'Error updating item status (sqlUpdateItems)',
+                                        details: err.message
+                                    });
                                 });
                             }
 
-                            const bookingData = {
-                                booking_id: bookingId,
-                                arrival_date: arrivalDate,
-                                name: name,
-                                phone: phone,
-                                email: email,
-                                comments: comments,
-                                total_price: totalPrice,
-                                booking_timestamp: bookingTimestamp,
-                                beds: bookingDetails[0].beds,
-                                loungers: bookingDetails[0].loungers
-                            };
+                            const getBookingDetails = `
+                                SELECT b.booking_id,
+                                       b.name,
+                                       b.phone,
+                                       b.email,
+                                       b.comments,
+                                       b.arrival_date,
+                                       b.total_price,
+                                       b.booking_timestamp,
+                                       GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END) AS beds,
+                                       GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
+                                FROM bookings b
+                                LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
+                                LEFT JOIN item_status i ON bi.item_id = i.item_id
+                                WHERE b.booking_id = ?
+                                GROUP BY b.booking_id
+                            `;
 
-                            // Отправка письма с подтверждением пользователю
-                            sendConfirmationEmail(email, bookingId, bookingData);
+                            db.query(getBookingDetails, [bookingId], (err, bookingDetails) => {
+                                if (err) {
+                                    console.error('Error fetching booking details', err);
+                                    return res.status(500).json({ error: 'Error fetching booking details' });
+                                }
 
-                            // Отправка данных бронирования на рецепцию
-                            sendBookingDetailsToReception(bookingData);
+                                db.commit(err => {
+                                    if (err) {
+                                        console.error('Error committing transaction', err);
+                                        return db.rollback(() => {
+                                            res.status(500).json({ error: 'Error committing transaction', details: err.message });
+                                        });
+                                    }
 
-                            res.json({
-                                message: 'Booking saved to database',
-                                bookingId,
-                                arrivalDate,
-                                items: {
-                                    beds: bookingDetails[0].beds,
-                                    loungers: bookingDetails[0].loungers
-                                },
-                                children,
-                                email
+                                    const bookingData = {
+                                        booking_id: bookingId,
+                                        arrival_date: arrivalDate,
+                                        name: name,
+                                        phone: phone,
+                                        email: email,
+                                        comments: comments,
+                                        total_price: totalPrice,
+                                        booking_timestamp: bookingTimestamp,
+                                        beds: bookingDetails[0].beds,
+                                        loungers: bookingDetails[0].loungers
+                                    };
+
+                                    res.json({
+                                        message: 'Booking saved to database',
+                                        bookingId,
+                                        arrivalDate,
+                                        items: {
+                                            beds: bookingDetails[0].beds,
+                                            loungers: bookingDetails[0].loungers
+                                        },
+                                        children,
+                                        email
+                                    });
+                                });
                             });
                         });
                     });
@@ -674,6 +753,8 @@ app.post('/api/book', (req, res) => {
         });
     });
 });
+
+
 
 
 

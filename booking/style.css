@@ -713,3 +713,6 @@ select option:checked {
     z-index: 1000;
 }
 
+#comments::-webkit-scrollbar {
+    width: 0;
+}

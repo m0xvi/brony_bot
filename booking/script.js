@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const {v4: uuidv4} = uuid;
 
+
     document.getElementById('book-button').addEventListener('click', async function (event) {
         event.preventDefault();
         if (validateAll()) {
@@ -97,7 +98,21 @@ document.addEventListener('DOMContentLoaded', function () {
             localStorage.setItem('bookingData', JSON.stringify(formData));
             localStorage.setItem('bookingId', bookingId); // Сохраняем новый bookingId в localStorage
 
+            document.getElementById('booking-id').value = bookingId;
+
             try {
+                const bookingResponse = await fetch('/api/book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!bookingResponse.ok) {
+                    throw new Error('Ошибка создания бронирования');
+                }
+
                 const paymentResponse = await fetch('/api/create-payment', {
                     method: 'POST',
                     headers: {
@@ -116,6 +131,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!paymentResponse.ok) {
                     throw new Error(paymentData.error || 'Ошибка создания платежа');
                 }
+
+                // Устанавливаем таймер на 10 минут для удаления брони
+                setTimeout(() => {
+                    if (!localStorage.getItem('paymentCompleted')) {
+                        fetch(`/api/cancel-booking/${bookingId}`, {
+                            method: 'DELETE'
+                        }).then(() => {
+                            localStorage.removeItem('bookingId');
+                            alert('Бронь была удалена из-за неоплаты в течение 10 минут.');
+                            window.location.reload();
+                        });
+                    }
+                }, 600000);
 
                 // Здесь извлекаем token подтверждения
                 const confirmationToken = paymentData.confirmation_token;
