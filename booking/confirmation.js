@@ -40,11 +40,11 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelector('#booking_id').textContent = data.bookingId;
         document.querySelector('#arrival_date').textContent = new Date(data.arrivalDate).toLocaleDateString();
 
-        const beds = data.items.beds ? data.items.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : 'Нет';
-        const loungers = data.items.loungers ? data.items.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : 'Нет';
+        const beds = data.items.beds ? data.items.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : '';
+        const loungers = data.items.loungers ? data.items.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : '';
 
-        document.querySelector('#beds').textContent = beds || 'Нет';
-        document.querySelector('#loungers').textContent = loungers || 'Нет';
+        document.querySelector('#beds').textContent = beds || '';
+        document.querySelector('#loungers').textContent = loungers || '';
     })
     .catch(error => {
         console.error('Error creating booking:', error);

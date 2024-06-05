@@ -77,9 +77,15 @@ function populateTemplate(html, data) {
     return html
         .replace('{{booking_id}}', data.booking_id)
         .replace('{{arrival_date}}', new Date(data.arrival_date).toLocaleDateString())
-        .replace('{{beds}}', data.beds ? data.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : 'Нет')
-        .replace('{{loungers}}', data.loungers ? data.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : 'Нет');
+        .replace('{{name}}', data.name || 'Не указано')
+        .replace('{{email}}', data.email || 'Не указано')
+        .replace('{{phone}}', data.phone || 'Не указано')
+        .replace('{{comments}}', data.comments || 'Нет')
+        .replace('{{total_price}}', data.total_price || '0')
+        .replace('{{beds}}', data.beds ? data.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : '')
+        .replace('{{loungers}}', data.loungers ? data.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : '');
 }
+
 
 function sendConfirmationEmail(email, bookingId, bookingData) {
     readHtmlTemplate('/var/www/html/booking_pool/booking/confirmation.html', (err, html) => {
@@ -123,8 +129,8 @@ function sendBookingDetailsToReception(bookingData) {
                 <p>Время бронирования: ${new Date(bookingData.booking_timestamp).toLocaleString()}</p>
                 <p>Комментарии: ${bookingData.comments}</p>
                 <p>Общая цена: ${bookingData.total_price} ₽</p>
-                <p>Кровати: ${bookingData.beds ? bookingData.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : 'Нет'}</p>
-                <p>Шезлонги: ${bookingData.loungers ? bookingData.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : 'Нет'}</p>
+                <p>Кровати: ${bookingData.beds ? bookingData.beds.split(',').map(id => `ID: ${id}`).join(', ') : ''}</p>
+                <p>Шезлонги: ${bookingData.loungers ? bookingData.loungers.split(',').map(id => `ID: ${id}`).join(', ') : ''}</p>
             </div>
         </div>
     `;
@@ -165,6 +171,8 @@ app.post('/api/payment-webhook', async (req, res) => {
                    b.comments,
                    b.total_price,
                    b.booking_timestamp,
+                   b.name,
+                   b.email,
                    GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
                    GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
             FROM bookings b
@@ -182,6 +190,13 @@ app.post('/api/payment-webhook', async (req, res) => {
                 return res.status(404).json({ error: 'Бронирование не найдено' });
             } else {
                 const bookingData = result[0];
+                console.log('Booking data:', bookingData); // Логирование данных бронирования для отладки
+
+                // Проверим, есть ли в данных необходимые поля
+                if (!bookingData.name || !bookingData.email) {
+                    console.error('Недостающие данные бронирования:', bookingData);
+                }
+
                 sendConfirmationEmail(email, bookingId, bookingData);
                 sendBookingDetailsToReception(bookingData);
                 res.status(200).send('OK');
@@ -192,6 +207,7 @@ app.post('/api/payment-webhook', async (req, res) => {
         res.status(200).send('Статус оплаты не обработан');
     }
 });
+
 
 
 
@@ -615,6 +631,8 @@ app.post('/api/book', (req, res) => {
     const { name, arrivalDate, items, children, phone, email, comments, totalPrice, bookingId } = req.body;
     const bookingTimestamp = new Date();
 
+    console.log('Booking request data:', { name, arrivalDate, items, children, phone, email, comments, totalPrice, bookingId });
+
     db.beginTransaction(err => {
         if (err) {
             console.error('Error starting transaction', err);
@@ -733,6 +751,8 @@ app.post('/api/book', (req, res) => {
                                         loungers: bookingDetails[0].loungers
                                     };
 
+                                    console.log('Final booking data:', bookingData); // Логирование финальных данных бронирования для отладки
+
                                     res.json({
                                         message: 'Booking saved to database',
                                         bookingId,
@@ -753,6 +773,7 @@ app.post('/api/book', (req, res) => {
         });
     });
 });
+
 
 
 
