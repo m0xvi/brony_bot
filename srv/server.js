@@ -620,6 +620,23 @@ app.delete('/api/cancel-booking/:bookingId', (req, res) => {
     });
 });
 
+// Добавим этот маршрут в начале файла server.js
+app.delete('/api/cancel-payment-book/:bookingId', (req, res) => {
+    const bookingId = req.params.bookingId;
+
+    const deleteBookingQuery = `
+        DELETE FROM bookings WHERE booking_id = ?
+    `;
+    db.query(deleteBookingQuery, [bookingId], (err, results) => {
+        if (err) {
+            console.error('Ошибка при удалении временной записи бронирования:', err);
+            return res.status(500).json({ error: 'Ошибка при удалении временной записи бронирования' });
+        }
+        res.status(200).json({ message: 'Временная запись бронирования удалена' });
+    });
+});
+
+
 
 app.post('/api/book', (req, res) => {
     const { name, arrivalDate, items, children, phone, email, comments, totalPrice, bookingId } = req.body;

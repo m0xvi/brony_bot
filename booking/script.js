@@ -167,11 +167,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 paymentFormContainer.style.display = 'flex';
                 checkout.render('payment-form');
 
-                // Close button handler
+                // Обработчик закрытия виджета оплаты
                 document.getElementById('closeBtn').addEventListener('click', function () {
                     if (checkout) {
                         checkout.destroy();
                         paymentFormContainer.style.display = 'none';
+                        cancelBooking(bookingId);  // Вызов функции для удаления временной записи бронирования
                     }
                 });
             } catch (error) {
@@ -180,6 +181,21 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
+
+    async function cancelBooking(bookingId) {
+        try {
+            const response = await fetch(`/api/cancel-payment-book/${bookingId}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                throw new Error('Ошибка удаления временного бронирования');
+            }
+            console.log('Временное бронирование удалено');
+            localStorage.removeItem('bookingId');
+        } catch (error) {
+            console.error('Ошибка при удалении временного бронирования:', error);
+        }
+    }
 });
 
 
