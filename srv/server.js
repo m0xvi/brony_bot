@@ -97,7 +97,7 @@ function sendConfirmationEmail(email, bookingId, bookingData) {
         const renderedHtml = populateTemplate(html, bookingData);
 
         const mailOptions = {
-            from: process.env.SMTP_EMAIL,
+            from: '"Усадьба Бассейн" <pool@hotelusadba.ru>',
             to: email,
             subject: 'Подтверждение бронирования',
             html: renderedHtml
@@ -118,7 +118,7 @@ function sendConfirmationEmail(email, bookingId, bookingData) {
 function sendBookingDetailsToReception(bookingData) {
     console.log('Отправка данных в рецепцию:', bookingData);
 
-    const receptionEmail = 'pool@hotelusadba.ru';
+    const receptionEmail = 'reception@hotelusadba.ru';
     const subject = `Новое бронирование №${bookingData.booking_id}`;
     const htmlContent = `
         <div class="confirmation-details">
@@ -277,7 +277,7 @@ app.post('/api/create-payment', async (req, res) => {
                 },
                 items: [
                     {
-                        description: `Бронирование №${bookingId}`,
+                        description: `Аренда Шезлонга`,
                         quantity: 1,
                         amount: {
                             value: totalPrice.toFixed(2),
