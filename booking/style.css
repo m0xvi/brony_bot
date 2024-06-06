@@ -6,13 +6,11 @@ body, html {
 }
 
 .container {
-    /*width: 450px; !* Используем ширину в процентах для более гибкого масштабирования *!*/
-    /*margin: 20px auto;*/
     padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     background-color: #fff;
     border-radius: 8px;
-    box-sizing: border-box; /* Учитываем внешние отступы и рамку в общей ширине элемента */
+    box-sizing: border-box;
     max-width: 600px;
     min-width: 450px;
 }
