@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const {v4: uuidv4} = uuid;
 
+    let checkout;
 
     document.getElementById('book-button').addEventListener('click', async function (event) {
         event.preventDefault();
@@ -153,9 +154,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 console.log(`Получен confirmation_token: ${confirmationToken}`);
 
-                const checkout = new window.YooMoneyCheckoutWidget({
+                checkout = new window.YooMoneyCheckoutWidget({
                     confirmation_token: confirmationToken,
-                    return_url: `https://pool.hotelusadba.ru/booking/confirmation.html?status=succeeded&bookingId=${bookingId}`, // Передаем новый bookingId
+                    return_url: `https://pool.hotelusadba.ru/booking/confirmation.html?status=succeeded&bookingId=${bookingId}`,
                     error_callback: function (error) {
                         console.error('Error:', error);
                         alert('Произошла ошибка при создании платежа');
@@ -165,6 +166,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 const paymentFormContainer = document.getElementById('payment-form-container');
                 paymentFormContainer.style.display = 'flex';
                 checkout.render('payment-form');
+
+                // Close button handler
+                document.getElementById('closeBtn').addEventListener('click', function () {
+                    if (checkout) {
+                        checkout.destroy();
+                        paymentFormContainer.style.display = 'none';
+                    }
+                });
             } catch (error) {
                 console.error('Ошибка:', error);
                 alert(`Произошла ошибка: ${error.message}`);
