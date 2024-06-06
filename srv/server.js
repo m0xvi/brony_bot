@@ -87,6 +87,7 @@ function populateTemplate(html, data) {
 }
 
 
+
 function sendConfirmationEmail(email, bookingId, bookingData) {
     readHtmlTemplate('/var/www/html/booking_pool/booking/confirmation.html', (err, html) => {
         if (err) {
@@ -115,6 +116,8 @@ function sendConfirmationEmail(email, bookingId, bookingData) {
 
 
 function sendBookingDetailsToReception(bookingData) {
+    console.log('Отправка данных в рецепцию:', bookingData);
+
     const receptionEmail = 'pool@hotelusadba.ru';
     const subject = `Новое бронирование №${bookingData.booking_id}`;
     const htmlContent = `
@@ -129,8 +132,8 @@ function sendBookingDetailsToReception(bookingData) {
                 <p>Время бронирования: ${new Date(bookingData.booking_timestamp).toLocaleString()}</p>
                 <p>Комментарии: ${bookingData.comments}</p>
                 <p>Общая цена: ${bookingData.total_price} ₽</p>
-                <p>Кровати: ${bookingData.beds ? bookingData.beds.split(',').map(id => `ID: ${id}`).join(', ') : ''}</p>
-                <p>Шезлонги: ${bookingData.loungers ? bookingData.loungers.split(',').map(id => `ID: ${id}`).join(', ') : ''}</p>
+                <p>Кровати: ${bookingData.beds ? bookingData.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : ''}</p>
+                <p>Шезлонги: ${bookingData.loungers ? bookingData.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : ''}</p>
             </div>
         </div>
     `;
@@ -152,6 +155,8 @@ function sendBookingDetailsToReception(bookingData) {
 }
 
 
+
+
 app.post('/api/payment-webhook', async (req, res) => {
     console.log('Получен вебхук:', req.body);
 
@@ -166,13 +171,13 @@ app.post('/api/payment-webhook', async (req, res) => {
 
         const sql = `
             SELECT b.booking_id,
-                   b.arrival_date,
-                   b.phone,
-                   b.comments,
-                   b.total_price,
-                   b.booking_timestamp,
                    b.name,
                    b.email,
+                   b.phone,
+                   b.comments,
+                   b.arrival_date,
+                   b.total_price,
+                   b.booking_timestamp,
                    GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
                    GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
             FROM bookings b
@@ -190,12 +195,7 @@ app.post('/api/payment-webhook', async (req, res) => {
                 return res.status(404).json({ error: 'Бронирование не найдено' });
             } else {
                 const bookingData = result[0];
-                console.log('Booking data:', bookingData); // Логирование данных бронирования для отладки
-
-                // Проверим, есть ли в данных необходимые поля
-                if (!bookingData.name || !bookingData.email) {
-                    console.error('Недостающие данные бронирования:', bookingData);
-                }
+                console.log('Данные бронирования:', bookingData);
 
                 sendConfirmationEmail(email, bookingId, bookingData);
                 sendBookingDetailsToReception(bookingData);
@@ -210,7 +210,6 @@ app.post('/api/payment-webhook', async (req, res) => {
 
 
 
-
 async function checkPaymentStatus(paymentId, bookingId, email) {
     try {
         const payment = await yookassa.getPayment(paymentId);
@@ -219,6 +218,8 @@ async function checkPaymentStatus(paymentId, bookingId, email) {
             const sql = `
                 SELECT b.booking_id,
                        b.arrival_date,
+                       b.name,
+                       b.email,
                        b.phone,
                        b.comments,
                        b.total_price,
@@ -307,21 +308,14 @@ app.post('/api/create-payment', async (req, res) => {
     }
 });
 
-
-
-
-
-
-
-
-
-
 app.get('/api/booking/:paymentId', (req, res) => {
     const paymentId = req.params.paymentId;
 
     const sql = `
         SELECT b.booking_id,
                b.arrival_date,
+               b.name,
+               b.email,
                b.phone,
                b.comments,
                b.total_price,
