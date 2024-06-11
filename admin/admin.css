@@ -44,9 +44,18 @@ html, body {
 .checkbox-container {
     display: flex;
     align-items: center;
-    margin-right: 10px;
-    margin-bottom: 10px;
     position: relative;
+    cursor: pointer;
+    font-size: 14px;
+    user-select: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    transition: background-color 0.3s;
+    border: 1px solid #ccc;
+    margin: 10px;
+    justify-content: center;
 }
 
 .checkbox-container .checkmark {
@@ -54,10 +63,9 @@ html, body {
 }
 
 .checkbox-container div {
-    margin-left: 5px;
+    margin: 0 auto;
     position: absolute;
-    top: -15px;
-    width: 120%;
+    border-radius: 5px;
 }
 
 .items-container {
@@ -79,6 +87,7 @@ html, body {
     position: relative;
     cursor: pointer;
     user-select: none;
+    justify-content: center;
 }
 
 .items-container label input {
@@ -106,26 +115,20 @@ html, body {
     scale: 101%;
 }
 
+.checkbox-container input {
+    display: none;
+}
+
 .items-container .checkmark:hover {
     background-color: #ccc;
 }
 
-.items-container .bed input:not(:checked) ~ .checkmark {
-    background-image: url('../img/bed-icon.svg');
-}
-
 .items-container .bed input:checked ~ .checkmark {
-    background-image: url('../img/bed-icon.svg');
     background-color: #ff8987;
     border: 1px solid red;
 }
 
-.items-container .lounger input:not(:checked) ~ .checkmark {
-    background-image: url('../img/lounger-icon.svg');
-}
-
 .items-container .lounger input:checked ~ .checkmark {
-    background-image: url('../img/lounger-icon.svg');
     background-color: #ff8987;
     border: 1px solid red;
 }
@@ -262,31 +265,11 @@ button:hover {
     gap: 10px;
 }
 
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    cursor: pointer;
-    font-size: 14px;
-    user-select: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    transition: background-color 0.3s;
-}
-
-.checkbox-container input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-    height: 0;
-    width: 0;
-}
-
 .checkbox-container input:checked ~ .checkmark {
-    background-color: #4CAF50;
+    background-color: #ff8987;
+    border-radius: 5px;
+    position: absolute;
+    border: 2px solid red;
 }
 
 .checkbox-container .checkmark {
@@ -295,20 +278,6 @@ button:hover {
     background-color: transparent;
 }
 
-.checkbox-container .checkmark:after {
-    content: "";
-    position: absolute;
-    display: none;
-}
 
-.checkbox-container input:checked ~ .checkmark:after {
-    display: none;
-}
 
-.checkbox-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 5px;
-}
 

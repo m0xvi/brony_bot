@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     fetchBookings(); // Load bookings on page load
     fetchItems(); // Load items on page load
+    document.getElementById('custom-price-checkbox').addEventListener('change', toggleCustomPrice);
 
     // Set default date to current
     const today = new Date().toISOString().split('T')[0];
@@ -47,7 +48,7 @@ function fetchItems() {
                 label.innerHTML = `
                     <input type="checkbox" data-id="${item.item_id}" ${item.is_booked_today ? 'checked' : ''}>
                     <span class="checkmark"></span>
-                    <div>${index + 1} (ID: ${item.item_id})</div>
+                    <div><b>ID:</b> ${item.item_id} <br> ${item.price} ₽</div>
                 `;
                 itemsContainer.appendChild(label);
             });
@@ -130,31 +131,6 @@ function generateUUID() {
     });
 }
 
-function addItem() {
-    const itemType = document.getElementById('item-type').value;
-    const price = prompt('Введите цену для нового предмета:');
-    if (price === null) return; // User canceled the prompt
-
-    fetch('/api/admin/add-item', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({item_type: itemType, price: parseFloat(price)})
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Item added:', data); // Log the server response after addition
-            alert('Item added successfully!');
-            fetchItems(); // Reload items after update
-        })
-        .catch(error => console.error('Error adding item:', error));
-}
 
 function removeItem() {
     const itemType = document.getElementById('item-type').value;

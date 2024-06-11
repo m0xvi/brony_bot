@@ -714,3 +714,7 @@ select option:checked {
 #comments::-webkit-scrollbar {
     width: 0;
 }
+
+.hidden {
+    display: none;
+}
