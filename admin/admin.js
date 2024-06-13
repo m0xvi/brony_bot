@@ -90,7 +90,7 @@ function updateItems() {
 }
 
 function fetchBookings() {
-    fetch('/api/get-bookings')
+    fetch('/api/admin/get-bookings')
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');

@@ -428,7 +428,7 @@ app.get('/api/get-items', (req, res) => {
     });
 });
 
-app.get('/api/get-bookings', (req, res) => {
+app.get('/api/admin/get-bookings', (req, res) => {
     const sql = `
         SELECT b.booking_id,
                b.name,
@@ -444,6 +444,7 @@ app.get('/api/get-bookings', (req, res) => {
         FROM bookings b
                  LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
                  LEFT JOIN item_status i ON bi.item_id = i.item_id
+        WHERE b.admin_updated = 0 OR b.admin_updated IS NULL
         GROUP BY b.booking_id
         ORDER BY b.booking_timestamp DESC
     `;
@@ -460,7 +461,7 @@ app.get('/api/get-bookings', (req, res) => {
 app.post('/api/admin/update-items', (req, res) => {
     const items = req.body.items;
     const sqlUpdateItemStatus = "UPDATE item_status SET is_booked = ?, booking_date = ? WHERE item_id = ?";
-    const sqlInsertBooking = "INSERT INTO bookings (booking_id, name, arrival_date, children, phone, email, comments, total_price, booking_timestamp) VALUES (?, 'Администратор', ?, 0, 'N/A', 'N/A', 'Администратор изменил статус', 0, NOW())";
+    const sqlInsertBooking = "INSERT INTO bookings (booking_id, name, arrival_date, children, phone, email, comments, total_price, booking_timestamp, admin_updated) VALUES (?, 'Администратор', ?, 0, 'N/A', 'N/A', 'Администратор изменил статус', 0, NOW(), 1)";
     const sqlInsertItemBooking = "INSERT INTO item_bookings (item_id, booking_id, booking_date) VALUES (?, ?, ?)";
     const sqlDeleteItemBooking = "DELETE FROM item_bookings WHERE item_id = ? AND booking_date = ?";
 
@@ -542,32 +543,28 @@ app.post('/api/admin/add-items', (req, res) => {
 
 
 app.post('/api/admin/remove-items', (req, res) => {
-    const { item_ids } = req.body;
+    const {item_ids} = req.body;
     if (!Array.isArray(item_ids) || item_ids.length === 0) {
-        return res.status(400).json({ error: 'Invalid input data' });
+        return res.status(400).json({error: 'Invalid input data'});
     }
 
     const deleteBookingsSql = 'DELETE FROM item_bookings WHERE item_id IN (?)';
     db.query(deleteBookingsSql, [item_ids], (err, result) => {
         if (err) {
             console.error('Ошибка выполнения запроса на удаление бронирований:', err);
-            return res.status(500).json({ error: 'Failed to remove item bookings', details: err });
+            return res.status(500).json({error: 'Failed to remove item bookings', details: err});
         }
 
         const deleteItemsSql = 'DELETE FROM item_status WHERE item_id IN (?)';
         db.query(deleteItemsSql, [item_ids], (err, result) => {
             if (err) {
                 console.error('Ошибка выполнения запроса на удаление предметов:', err);
-                return res.status(500).json({ error: 'Failed to remove items', details: err });
+                return res.status(500).json({error: 'Failed to remove items', details: err});
             }
-            res.json({ message: 'Items removed successfully', result });
+            res.json({message: 'Items removed successfully', result});
         });
     });
 });
-
-
-
-
 
 
 app.get('/privacy-policy', (req, res) => {
