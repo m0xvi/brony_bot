@@ -47,13 +47,9 @@
         .hidden {
             display: none;
         }
-
-
-
     </style>
 </head>
 <body>
-
 <div class="container">
     <div class="admin-control">
         <h2>Панель администратора</h2>
@@ -67,15 +63,17 @@
             <input type="date" id="booking-date">
             <button onclick="fetchItems()">Показать</button>
         </div>
-        <div id="beds-container" class="items-container"></div>
-        <div id="loungers-container" class="items-container"></div>
+        <div class="item_cont">
+            <div id="beds-container" class="items-container"></div>
+            <div id="loungers-container" class="items-container"></div>
+            <div class="btn_ad_rm">
+                <button id="add-item-btn" onclick="openModal()">+</button>
+                <button id="remove-item-btn" onclick="openRemoveModal()">-</button>
+            </div>
+        </div>
         <div class="admin-buttons">
-            <button id="add-item-btn" onclick="openModal()">Добавить</button>
-            <button id="remove-item-btn" onclick="openRemoveModal()">Удалить</button>
-            <br>
             <button id="update-items-btn" onclick="updateItems()">Обновить</button>
-            <br>
-            <button id="reset-data-btn" onclick="resetData()">Сбросить данные</button>
+            <button id="reset-data-btn" onclick="resetData()">Сбросить</button>
         </div>
     </div>
     <div class="bookings-list">

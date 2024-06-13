@@ -127,17 +127,11 @@
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('arrival-date').value = today;
         fetchItemsAndDisplay(getQueryParam('type'), today);
-
-        const itemsContainers = document.querySelectorAll('.items-container');
-        itemsContainers.forEach(container => container.style.display = 'flex');
     }
-
     function getQueryParam(param) {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(param);
     }
-
-
 </script>
 </body>
 </html>

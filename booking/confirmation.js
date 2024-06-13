@@ -40,11 +40,12 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelector('#booking_id').textContent = data.bookingId;
         document.querySelector('#arrival_date').textContent = new Date(data.arrivalDate).toLocaleDateString();
 
-        const beds = data.items.beds ? data.items.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : '';
-        const loungers = data.items.loungers ? data.items.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : '';
+        // Подсчитываем количество кроватей и шезлонгов
+        const beds = data.items.beds ? data.items.beds.split(',').length : 0;
+        const loungers = data.items.loungers ? data.items.loungers.split(',').length : 0;
 
-        document.querySelector('#beds').textContent = beds || '';
-        document.querySelector('#loungers').textContent = loungers || '';
+        document.querySelector('#beds').textContent = beds > 0 ? `Вы забронировали ${beds} кровать(-и)` : '';
+        document.querySelector('#loungers').textContent = loungers > 0 ? `Вы забронировали ${loungers} шезлонг(-ов)` : '';
     })
     .catch(error => {
         console.error('Error creating booking:', error);

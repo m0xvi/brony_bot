@@ -411,7 +411,7 @@ textarea {
 }
 
 .items-container {
-    display: flex;
+    display: none;
     flex-wrap: wrap;
     border: 1px solid #ccc;
     border-radius: 5px;

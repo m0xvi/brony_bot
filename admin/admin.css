@@ -23,6 +23,7 @@ html, body {
     background-color: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
+    border: 1px solid #eee;
 }
 
 .admin-control button, .admin-control select, .admin-control input[type="date"] {
@@ -33,12 +34,18 @@ html, body {
     margin: 5px 0;
 }
 
+.admin-buttons {
+    display: flex;
+}
+
 
 .bookings-list {
     width: 65%;
     background-color: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
+    border: 1px solid #eee;
+    margin-left: 50px;
 }
 
 .checkbox-container {
@@ -76,6 +83,7 @@ html, body {
     justify-content: center;
     transition: background-color 0.3s;
     padding: 10px;
+    width: 90%;
 }
 
 .items-container .item {
@@ -260,7 +268,7 @@ button:hover {
 }
 
 .items-container {
-    display: grid;
+    display: none;
     grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
     gap: 10px;
 }
@@ -279,5 +287,29 @@ button:hover {
 }
 
 
+#remove-item-btn, #add-item-btn {
+    font-size: 20px;
+}
+
+#update-items-btn, #reset-data-btn {
+    width: 100%;
+    margin: 5px;
+}
+
+.item_cont {
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn_ad_rm {
+    display: grid;
+    width: 10%;
+    margin-left: 10px;
+}
+
+#bookings-container {
+    display: -webkit-box;
+    max-width: 50%;
+}
 
 

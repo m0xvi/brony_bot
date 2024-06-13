@@ -90,14 +90,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 10) || 0 : 0,
                 comments: document.getElementById('comments').value,
                 totalPrice: updateTotalPrice(),
-                bookingId: bookingId // Используем новый bookingId
+                bookingId: bookingId
             };
 
             console.log('Данные формы для бронирования:', formData);
 
-            // Сохраняем данные формы в localStorage
             localStorage.setItem('bookingData', JSON.stringify(formData));
-            localStorage.setItem('bookingId', bookingId); // Сохраняем новый bookingId в localStorage
+            localStorage.setItem('bookingId', bookingId);
 
             document.getElementById('booking-id').value = bookingId;
 
@@ -122,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     body: JSON.stringify({
                         totalPrice: formData.totalPrice,
                         email: formData.email,
-                        bookingId: formData.bookingId // Передаем новый bookingId
+                        bookingId: formData.bookingId
                     })
                 });
 
@@ -133,7 +132,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     throw new Error(paymentData.error || 'Ошибка создания платежа');
                 }
 
-                // Устанавливаем таймер на 10 минут для удаления брони
                 setTimeout(() => {
                     if (!localStorage.getItem('paymentCompleted')) {
                         fetch(`/api/cancel-booking/${bookingId}`, {
@@ -146,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }, 600000);
 
-                // Здесь извлекаем token подтверждения
                 const confirmationToken = paymentData.confirmation_token;
                 if (!confirmationToken) {
                     throw new Error('Confirmation token is missing');
@@ -167,12 +164,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 paymentFormContainer.style.display = 'flex';
                 checkout.render('payment-form');
 
-                // Обработчик закрытия виджета оплаты
+
                 document.getElementById('closeBtn').addEventListener('click', function () {
                     if (checkout) {
                         checkout.destroy();
                         paymentFormContainer.style.display = 'none';
-                        cancelBooking(bookingId);  // Вызов функции для удаления временной записи бронирования
+                        cancelBooking(bookingId);
                     }
                 });
             } catch (error) {
