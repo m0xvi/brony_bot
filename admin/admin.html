@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>Админка</title>
     <link rel="stylesheet" href="admin.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="/admin/img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/admin/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/admin/img/favicon-16x16.png">
+    <link rel="manifest" href="/admin/img/site.webmanifest">
     <style>
         #add-item-modal, #remove-item-modal {
             display: none;
@@ -50,6 +54,21 @@
     </style>
 </head>
 <body>
+
+
+<?php
+    session_start();
+
+    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+        // Пользователь не аутентифицирован, перенаправить на страницу входа
+        header("Location: admin.php");
+        exit();
+    }
+
+    echo "<h1>Добро пожаловать, " . htmlspecialchars($_SESSION['username']) . "!</h1>";
+?>
+<a href="logout.php">Выйти</a>
+
 <div class="container">
     <div class="admin-control">
         <h2>Панель администратора</h2>
