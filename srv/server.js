@@ -74,16 +74,26 @@ function inlineCss(html, css) {
 }
 
 function populateTemplate(html, data) {
+
     return html
         .replace('{{booking_id}}', data.booking_id)
-        .replace('{{arrival_date}}', new Date(data.arrival_date).toLocaleDateString())
+        .replace('{{arrival_date}}', new Date(data.arrival_date).toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }))
         .replace('{{name}}', data.name || 'Не указано')
         .replace('{{email}}', data.email || 'Не указано')
         .replace('{{phone}}', data.phone || 'Не указано')
         .replace('{{comments}}', data.comments || 'Нет')
         .replace('{{total_price}}', data.total_price || '0')
-        .replace('{{beds}}', data.beds ? data.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : '')
-        .replace('{{loungers}}', data.loungers ? data.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : '');
+        .replace('{{beds}}', data.beds ? data.beds.split(',').map(id => `Кровать`).join(', ') : '')
+        .replace('{{loungers}}', data.loungers ? data.loungers.split(',').map(id => `Шезлонг`).join(', ') : '')
+        .replace('{{booking_timestamp}}', new Date(data.booking_timestamp).toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }))
 }
 
 
@@ -116,7 +126,7 @@ function sendConfirmationEmail(email, bookingId, bookingData) {
 function sendBookingDetailsToReception(bookingData) {
     console.log('Отправка данных в рецепцию:', bookingData);
 
-    const receptionEmail = 'reception@hotelusadba.ru';
+    const receptionEmail = 'pool@hotelusadba.ru';
     const subject = `Новое бронирование №${bookingData.booking_id}`;
     const htmlContent = `
         <div class="confirmation-details">
@@ -126,8 +136,16 @@ function sendBookingDetailsToReception(bookingData) {
                 <p>Имя: ${bookingData.name}</p>
                 <p>Email: ${bookingData.email}</p>
                 <p>Телефон: ${bookingData.phone}</p>
-                <p>Дата прибытия: ${new Date(bookingData.arrival_date).toLocaleDateString()}</p>
-                <p>Время бронирования: ${new Date(bookingData.booking_timestamp).toLocaleString()}</p>
+                <p>Дата прибытия: ${new Date(bookingData.arrival_date).toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    })}</p>
+                <p>Время бронирования: ${new Date(bookingData.booking_timestamp).toLocaleString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    })}</p>
                 <p>Комментарии: ${bookingData.comments}</p>
                 <p>Общая цена: ${bookingData.total_price} ₽</p>
                 <p>Кровати: ${bookingData.beds ? bookingData.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : ''}</p>
@@ -340,8 +358,6 @@ app.post('/api/reset-data', (req, res) => {
     const resetItemStatus = "UPDATE item_status SET is_booked = 0, booking_date = NULL";
     const clearBookings = "DELETE FROM bookings";
     const clearBookingItems = "DELETE FROM item_bookings";
-    const clearBookingHistory = "DELETE FROM booking_history";
-
     db.beginTransaction(err => {
         if (err) {
             console.error('Error starting transaction', err);
@@ -364,32 +380,14 @@ app.post('/api/reset-data', (req, res) => {
                     });
                 }
 
-                db.query(clearBookings, (err, result) => {
+                db.commit(err => {
                     if (err) {
-                        console.error('Error clearing bookings', err);
+                        console.error('Error committing transaction', err);
                         return db.rollback(() => {
-                            res.status(500).json({error: 'Error clearing bookings'});
+                            res.status(500).json({error: 'Error committing transaction'});
                         });
                     }
-
-                    db.query(clearBookingHistory, (err, result) => {
-                        if (err) {
-                            console.error('Error clearing booking history', err);
-                            return db.rollback(() => {
-                                res.status(500).json({error: 'Error clearing booking history'});
-                            });
-                        }
-
-                        db.commit(err => {
-                            if (err) {
-                                console.error('Error committing transaction', err);
-                                return db.rollback(() => {
-                                    res.status(500).json({error: 'Error committing transaction'});
-                                });
-                            }
-                            res.json({message: 'Data reset successfully'});
-                        });
-                    });
+                    res.json({message: 'Data reset successfully'});
                 });
             });
         });
@@ -444,7 +442,8 @@ app.get('/api/admin/get-bookings', (req, res) => {
         FROM bookings b
                  LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
                  LEFT JOIN item_status i ON bi.item_id = i.item_id
-        WHERE b.admin_updated = 0 OR b.admin_updated IS NULL
+        WHERE b.admin_updated = 0
+           OR b.admin_updated IS NULL
         GROUP BY b.booking_id
         ORDER BY b.booking_timestamp DESC
     `;
