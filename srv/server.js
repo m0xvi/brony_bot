@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const cors = require('cors');
-const { v4: uuidv4 } = require('uuid');
+const {v4: uuidv4} = require('uuid');
 const fs = require('fs');
 require('dotenv').config();
 const YooKassa = require('yookassa');
@@ -15,7 +15,7 @@ const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static('/var/www/html/booking_pool/booking'));
 
 const transporter = nodemailer.createTransport({
@@ -51,7 +51,7 @@ const yookassa = new YooKassa({
 
 // Создание пула соединений
 const dbPool = mysql.createPool({
-    connectionLimit: 10,
+    connectionLimit: 60,
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
@@ -175,7 +175,7 @@ function sendBookingDetailsToReception(bookingData) {
 app.post('/api/payment-webhook', async (req, res) => {
     console.log('Получен вебхук:', req.body);
 
-    const { object } = req.body;
+    const {object} = req.body;
 
     if (object && object.status === 'succeeded') {
         const paymentId = object.id;
@@ -205,16 +205,16 @@ app.post('/api/payment-webhook', async (req, res) => {
         dbPool.getConnection((err, connection) => {
             if (err) {
                 console.error('Error getting DB connection', err);
-                return res.status(500).json({ error: 'Error getting DB connection' });
+                return res.status(500).json({error: 'Error getting DB connection'});
             }
 
             connection.query(sql, [bookingId], (err, result) => {
                 connection.release();
                 if (err) {
                     console.error('Ошибка получения бронирования:', err);
-                    return res.status(500).json({ error: 'Ошибка получения бронирования из базы данных' });
+                    return res.status(500).json({error: 'Ошибка получения бронирования из базы данных'});
                 } else if (result.length === 0) {
-                    return res.status(404).json({ error: 'Бронирование не найдено' });
+                    return res.status(404).json({error: 'Бронирование не найдено'});
                 } else {
                     const bookingData = result[0];
                     console.log('Данные бронирования:', bookingData);
@@ -275,7 +275,29 @@ async function checkPaymentStatus(paymentId, bookingId, email) {
             });
         } else if (payment.status === 'pending') {
             console.log(`Payment status: still pending for booking ID: ${bookingId}`);
-            setTimeout(() => checkPaymentStatus(paymentId, bookingId, email), 60000);
+            setTimeout(() => {
+                const sqlCheckBooking = `
+                    SELECT booking_id
+                    FROM bookings
+                    WHERE booking_id = ?
+                `;
+                dbPool.getConnection((err, connection) => {
+                    if (err) {
+                        console.error('Error getting DB connection', err);
+                        return;
+                    }
+                    connection.query(sqlCheckBooking, [bookingId], (err, results) => {
+                        connection.release();
+                        if (err) {
+                            console.error('Error checking booking existence:', err);
+                        } else if (results.length === 0) {
+                            console.log(`Booking ID: ${bookingId} no longer exists. Stopping payment status checks.`);
+                        } else {
+                            checkPaymentStatus(paymentId, bookingId, email);
+                        }
+                    });
+                });
+            }, 60000);
         } else {
             console.log(`Payment status: ${payment.status} for booking ID: ${bookingId}`);
         }
@@ -285,9 +307,9 @@ async function checkPaymentStatus(paymentId, bookingId, email) {
 }
 
 app.post('/api/create-payment', async (req, res) => {
-    const { totalPrice, bookingId, email } = req.body;
+    const {totalPrice, bookingId, email} = req.body;
 
-    console.log('Создание платежа с параметрами:', { totalPrice, bookingId, email });
+    console.log('Создание платежа с параметрами:', {totalPrice, bookingId, email});
 
     try {
         const payment = await yookassa.createPayment({
@@ -330,10 +352,10 @@ app.post('/api/create-payment', async (req, res) => {
 
         checkPaymentStatus(payment.id, bookingId, email);
 
-        res.json({ confirmation_token: payment.confirmation.confirmation_token, bookingId });
+        res.json({confirmation_token: payment.confirmation.confirmation_token, bookingId});
     } catch (error) {
         console.error('Error creating payment:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({error: error.message});
     }
 });
 
@@ -361,16 +383,16 @@ app.get('/api/booking/:paymentId', (req, res) => {
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({ error: 'Error getting DB connection' });
+            return res.status(500).json({error: 'Error getting DB connection'});
         }
 
         connection.query(sql, [paymentId], (err, result) => {
             connection.release();
             if (err) {
                 console.error('Error fetching booking:', err);
-                res.status(500).json({ error: 'Error fetching booking from database' });
+                res.status(500).json({error: 'Error fetching booking from database'});
             } else if (result.length === 0) {
-                res.status(404).json({ error: 'Booking not found' });
+                res.status(404).json({error: 'Booking not found'});
             } else {
                 res.json(result[0]);
             }
@@ -386,14 +408,14 @@ app.post('/api/reset-data', (req, res) => {
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({ error: 'Error getting DB connection' });
+            return res.status(500).json({error: 'Error getting DB connection'});
         }
 
         connection.beginTransaction(err => {
             if (err) {
                 console.error('Error starting transaction', err);
                 connection.release();
-                return res.status(500).json({ error: 'Error starting transaction' });
+                return res.status(500).json({error: 'Error starting transaction'});
             }
 
             connection.query(resetItemStatus, (err) => {
@@ -401,7 +423,7 @@ app.post('/api/reset-data', (req, res) => {
                     console.error('Error resetting item status', err);
                     return connection.rollback(() => {
                         connection.release();
-                        res.status(500).json({ error: 'Error resetting item status' });
+                        res.status(500).json({error: 'Error resetting item status'});
                     });
                 }
 
@@ -410,7 +432,7 @@ app.post('/api/reset-data', (req, res) => {
                         console.error('Error clearing booking items', err);
                         return connection.rollback(() => {
                             connection.release();
-                            res.status(500).json({ error: 'Error clearing booking items' });
+                            res.status(500).json({error: 'Error clearing booking items'});
                         });
                     }
 
@@ -419,7 +441,7 @@ app.post('/api/reset-data', (req, res) => {
                             console.error('Error clearing bookings', err);
                             return connection.rollback(() => {
                                 connection.release();
-                                res.status(500).json({ error: 'Error clearing bookings' });
+                                res.status(500).json({error: 'Error clearing bookings'});
                             });
                         }
 
@@ -428,11 +450,11 @@ app.post('/api/reset-data', (req, res) => {
                                 console.error('Error committing transaction', err);
                                 return connection.rollback(() => {
                                     connection.release();
-                                    res.status(500).json({ error: 'Error committing transaction' });
+                                    res.status(500).json({error: 'Error committing transaction'});
                                 });
                             }
                             connection.release();
-                            res.json({ message: 'Data reset successfully' });
+                            res.json({message: 'Data reset successfully'});
                         });
                     });
                 });
@@ -446,7 +468,7 @@ app.get('/api/get-items', (req, res) => {
     const date = req.query.date || new Date().toISOString().split('T')[0]; // Default to today's date
 
     if (!date || !type) {
-        return res.status(400).json({ error: 'Invalid date or type' });
+        return res.status(400).json({error: 'Invalid date or type'});
     }
 
     const sql = `
@@ -467,14 +489,14 @@ app.get('/api/get-items', (req, res) => {
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({ error: 'Error getting DB connection' });
+            return res.status(500).json({error: 'Error getting DB connection'});
         }
 
         connection.query(sql, [date, type], (err, result) => {
             connection.release();
             if (err) {
                 console.error('Error fetching items:', err);
-                res.status(500).json({ error: 'Error fetching items from database' });
+                res.status(500).json({error: 'Error fetching items from database'});
             } else {
                 res.json(result);
             }
@@ -507,14 +529,14 @@ app.get('/api/admin/get-bookings', (req, res) => {
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({ error: 'Error getting DB connection' });
+            return res.status(500).json({error: 'Error getting DB connection'});
         }
 
         connection.query(sql, (err, result) => {
             connection.release();
             if (err) {
                 console.error('Error fetching bookings:', err);
-                res.status(500).json({ error: 'Error fetching bookings from database' });
+                res.status(500).json({error: 'Error fetching bookings from database'});
             } else {
                 res.json(result);
             }
@@ -532,14 +554,14 @@ app.post('/api/admin/update-items', (req, res) => {
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({ error: 'Error getting DB connection' });
+            return res.status(500).json({error: 'Error getting DB connection'});
         }
 
         connection.beginTransaction(err => {
             if (err) {
                 console.error('Error starting transaction', err);
                 connection.release();
-                return res.status(500).json({ error: 'Error starting transaction' });
+                return res.status(500).json({error: 'Error starting transaction'});
             }
 
             const updatePromises = items.map(item => {
@@ -567,7 +589,8 @@ app.post('/api/admin/update-items', (req, res) => {
                             if (err) {
                                 console.error('Error deleting item booking', err);
                                 return reject(err);
-                            }                             resolve();
+                            }
+                            resolve();
                         });
                     });
                 }
@@ -580,17 +603,17 @@ app.post('/api/admin/update-items', (req, res) => {
                             console.error('Error committing transaction', err);
                             return connection.rollback(() => {
                                 connection.release();
-                                res.status(500).json({ error: 'Error committing transaction' });
+                                res.status(500).json({error: 'Error committing transaction'});
                             });
                         }
                         connection.release();
-                        res.json({ message: 'Items updated successfully' });
+                        res.json({message: 'Items updated successfully'});
                     });
                 })
                 .catch(err => {
                     connection.rollback(() => {
                         connection.release();
-                        res.status(500).json({ error: 'Error updating items' });
+                        res.status(500).json({error: 'Error updating items'});
                     });
                 });
         });
@@ -598,9 +621,9 @@ app.post('/api/admin/update-items', (req, res) => {
 });
 
 app.post('/api/admin/add-items', (req, res) => {
-    const { item_type, prices } = req.body;
+    const {item_type, prices} = req.body;
     if (!item_type || !Array.isArray(prices)) {
-        return res.status(400).json({ error: 'Invalid input data' });
+        return res.status(400).json({error: 'Invalid input data'});
     }
 
     let items = prices.map(price => [item_type, price, 0]); // 0 - item is not booked
@@ -610,24 +633,24 @@ app.post('/api/admin/add-items', (req, res) => {
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({ error: 'Error getting DB connection' });
+            return res.status(500).json({error: 'Error getting DB connection'});
         }
 
         connection.query(sql, [items], (err, result) => {
             connection.release();
             if (err) {
                 console.error('Ошибка выполнения запроса:', err);
-                return res.status(500).json({ error: 'Failed to add items', details: err });
+                return res.status(500).json({error: 'Failed to add items', details: err});
             }
-            res.json({ message: 'Items added successfully', result });
+            res.json({message: 'Items added successfully', result});
         });
     });
 });
 
 app.post('/api/admin/remove-items', (req, res) => {
-    const { item_ids } = req.body;
+    const {item_ids} = req.body;
     if (!Array.isArray(item_ids) || item_ids.length === 0) {
-        return res.status(400).json({ error: 'Invalid input data' });
+        return res.status(400).json({error: 'Invalid input data'});
     }
 
     const deleteBookingsSql = 'DELETE FROM item_bookings WHERE item_id IN (?)';
@@ -636,7 +659,7 @@ app.post('/api/admin/remove-items', (req, res) => {
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({ error: 'Error getting DB connection' });
+            return res.status(500).json({error: 'Error getting DB connection'});
         }
 
         connection.query(deleteBookingsSql, [item_ids], (err) => {
@@ -644,7 +667,7 @@ app.post('/api/admin/remove-items', (req, res) => {
                 console.error('Ошибка выполнения запроса на удаление бронирований:', err);
                 return connection.rollback(() => {
                     connection.release();
-                    res.status(500).json({ error: 'Failed to remove item bookings', details: err });
+                    res.status(500).json({error: 'Failed to remove item bookings', details: err});
                 });
             }
 
@@ -652,9 +675,9 @@ app.post('/api/admin/remove-items', (req, res) => {
                 connection.release();
                 if (err) {
                     console.error('Ошибка выполнения запроса на удаление предметов:', err);
-                    return res.status(500).json({ error: 'Failed to remove items', details: err });
+                    return res.status(500).json({error: 'Failed to remove items', details: err});
                 }
-                res.json({ message: 'Items removed successfully', result });
+                res.json({message: 'Items removed successfully', result});
             });
         });
     });
@@ -663,6 +686,7 @@ app.post('/api/admin/remove-items', (req, res) => {
 app.get('/privacy-policy', (req, res) => {
     res.sendFile(path.join(__dirname, 'privacy-policy.html'));
 });
+
 
 app.delete('/api/cancel-booking/:bookingId', (req, res) => {
     const bookingId = req.params.bookingId;
@@ -674,14 +698,14 @@ app.delete('/api/cancel-booking/:bookingId', (req, res) => {
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({ error: 'Error getting DB connection' });
+            return res.status(500).json({error: 'Error getting DB connection'});
         }
 
         connection.beginTransaction(err => {
             if (err) {
                 console.error('Error starting transaction', err);
                 connection.release();
-                return res.status(500).json({ error: 'Error starting transaction' });
+                return res.status(500).json({error: 'Error starting transaction'});
             }
 
             connection.query(sqlUpdateItems, [bookingId], (err) => {
@@ -689,7 +713,7 @@ app.delete('/api/cancel-booking/:bookingId', (req, res) => {
                     console.error('Error updating item status', err);
                     return connection.rollback(() => {
                         connection.release();
-                        res.status(500).json({ error: 'Error updating item status' });
+                        res.status(500).json({error: 'Error updating item status'});
                     });
                 }
 
@@ -698,7 +722,7 @@ app.delete('/api/cancel-booking/:bookingId', (req, res) => {
                         console.error('Error deleting item booking', err);
                         return connection.rollback(() => {
                             connection.release();
-                            res.status(500).json({ error: 'Error deleting item booking' });
+                            res.status(500).json({error: 'Error deleting item booking'});
                         });
                     }
 
@@ -707,7 +731,7 @@ app.delete('/api/cancel-booking/:bookingId', (req, res) => {
                             console.error('Error deleting booking', err);
                             return connection.rollback(() => {
                                 connection.release();
-                                res.status(500).json({ error: 'Error deleting booking' });
+                                res.status(500).json({error: 'Error deleting booking'});
                             });
                         }
 
@@ -716,11 +740,11 @@ app.delete('/api/cancel-booking/:bookingId', (req, res) => {
                                 console.error('Error committing transaction', err);
                                 return connection.rollback(() => {
                                     connection.release();
-                                    res.status(500).json({ error: 'Error committing transaction' });
+                                    res.status(500).json({error: 'Error committing transaction'});
                                 });
                             }
                             connection.release();
-                            res.status(200).json({ message: 'Booking cancelled successfully' });
+                            res.status(200).json({message: 'Booking cancelled successfully'});
                         });
                     });
                 });
@@ -728,6 +752,7 @@ app.delete('/api/cancel-booking/:bookingId', (req, res) => {
         });
     });
 });
+
 
 app.delete('/api/cancel-payment-book/:bookingId', (req, res) => {
     const bookingId = req.params.bookingId;
@@ -741,22 +766,22 @@ app.delete('/api/cancel-payment-book/:bookingId', (req, res) => {
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({ error: 'Error getting DB connection' });
+            return res.status(500).json({error: 'Error getting DB connection'});
         }
 
         connection.query(deleteBookingQuery, [bookingId], (err, results) => {
             connection.release();
             if (err) {
                 console.error('Ошибка при удалении временной записи бронирования:', err);
-                return res.status(500).json({ error: 'Ошибка при удалении временной записи бронирования' });
+                return res.status(500).json({error: 'Ошибка при удалении временной записи бронирования'});
             }
-            res.status(200).json({ message: 'Временная запись бронирования удалена' });
+            res.status(200).json({message: 'Временная запись бронирования удалена'});
         });
     });
 });
 
 app.post('/api/book', (req, res) => {
-    const { name, arrivalDate, items, children, phone, email, comments, totalPrice, bookingId } = req.body;
+    const {name, arrivalDate, items, children, phone, email, comments, totalPrice, bookingId} = req.body;
     const bookingTimestamp = new Date();
 
     console.log('Booking request data:', {
@@ -774,14 +799,14 @@ app.post('/api/book', (req, res) => {
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({ error: 'Error getting DB connection' });
+            return res.status(500).json({error: 'Error getting DB connection'});
         }
 
         connection.beginTransaction(err => {
             if (err) {
                 console.error('Error starting transaction', err);
                 connection.release();
-                return res.status(500).json({ error: 'Error starting transaction' });
+                return res.status(500).json({error: 'Error starting transaction'});
             }
 
             const sqlCheckBooking = "SELECT booking_id FROM bookings WHERE booking_id = ?";
@@ -793,7 +818,7 @@ app.post('/api/book', (req, res) => {
                     console.error('Error checking booking existence', err);
                     return connection.rollback(() => {
                         connection.release();
-                        res.status(500).json({ error: 'Error checking booking existence' });
+                        res.status(500).json({error: 'Error checking booking existence'});
                     });
                 }
 
@@ -879,7 +904,7 @@ app.post('/api/book', (req, res) => {
                                         console.error('Error fetching booking details', err);
                                         return connection.rollback(() => {
                                             connection.release();
-                                            res.status(500).json({ error: 'Error fetching booking details' });
+                                            res.status(500).json({error: 'Error fetching booking details'});
                                         });
                                     }
 
@@ -895,7 +920,7 @@ app.post('/api/book', (req, res) => {
                                             });
                                         }
                                         connection.release();
-                                        res.json({ bookingId, ...bookingDetails[0] });
+                                        res.json({bookingId, ...bookingDetails[0]});
                                     });
                                 });
                             });

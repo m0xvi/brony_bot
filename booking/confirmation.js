@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    formData.bookingId = bookingId; // Убедимся, что bookingId из URL используется
+    formData.bookingId = bookingId;
 
     console.log('formData.items:', formData.items);
 

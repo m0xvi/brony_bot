@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const {v4: uuidv4} = uuid;
 
     let checkout;
+    let timeoutId;
 
     document.getElementById('book-button').addEventListener('click', async function (event) {
         event.preventDefault();
@@ -96,6 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             localStorage.setItem('bookingData', JSON.stringify(formData));
             localStorage.setItem('bookingId', bookingId);
+            localStorage.setItem('paymentCompleted', 'false');
 
             document.getElementById('booking-id').value = bookingId;
 
@@ -130,17 +132,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     throw new Error(paymentData.error || 'Ошибка создания платежа');
                 }
 
-                setTimeout(() => {
-                    if (!localStorage.getItem('paymentCompleted')) {
+                const timeoutId = setTimeout(() => {
+                    if (localStorage.getItem('paymentCompleted') !== 'true') {
+                        console.log(`Время ожидания истекло для бронирования ID: ${bookingId}. Удаление временного бронирования.`);
                         fetch(`/api/cancel-booking/${bookingId}`, {
                             method: 'DELETE'
                         }).then(() => {
                             localStorage.removeItem('bookingId');
                             alert('Бронь была удалена из-за неоплаты в течение 10 минут.');
                             window.location.reload();
+                        }).catch(error => {
+                            console.error('Ошибка при удалении временного бронирования:', error);
                         });
+                    } else {
+                        console.log(`Оплата завершена для бронирования ID: ${bookingId}, временное бронирование не будет удалено.`);
                     }
                 }, 600000);
+
 
                 const confirmationToken = paymentData.confirmation_token;
                 if (!confirmationToken) {
@@ -173,8 +181,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Ошибка:', error);
                 alert(`Произошла ошибка: ${error.message}`);
             }
+
+            window.addEventListener('beforeunload', function () {
+                const bookingId = localStorage.getItem('bookingId');
+                if (bookingId) {
+                    cancelBooking(bookingId);
+                    clearTimeout(timeoutId);
+                }
+            });
         }
     });
+
 
     async function cancelBooking(bookingId) {
         try {
