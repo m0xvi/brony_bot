@@ -48,8 +48,8 @@ document.addEventListener('DOMContentLoaded', function () {
             document.querySelector('#total_price').textContent = formData.totalPrice;
 
 
-            const typeBeds = data.items.beds ? data.items.beds.split(',').map(id => `Кровать`).join(', ') : '';
-            const typeLoungers = data.items.loungers ? data.items.loungers.split(',').map(id => `Шезлонг`).join(', ') : '';
+            const typeBeds = data.items.beds ? data.items.beds.split(',').map(id => `Кровать`) : '';
+            const typeLoungers = data.items.loungers ? data.items.loungers.split(',').map(id => `Шезлонг`) : '';
 
             document.querySelector('#type_beds').textContent = typeBeds || '';
             document.querySelector('#type_loungers').textContent = typeLoungers || '';

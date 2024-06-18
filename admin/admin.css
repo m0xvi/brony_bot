@@ -308,8 +308,8 @@ button:hover {
 }
 
 #bookings-container {
-    display: -webkit-box;
-    max-width: 50%;
+    display:flex;
+    flex-wrap: wrap;
 }
 
 

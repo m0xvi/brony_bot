@@ -73,7 +73,7 @@ function inlineCss(html, css) {
     return html.replace('</head>', `${styleTag}</head>`);
 }
 
-function populateTemplate(html, data) {
+function populateTemplate(html, data, bookingData) {
 
     return html
         .replace('{{booking_id}}', data.booking_id)
@@ -87,13 +87,10 @@ function populateTemplate(html, data) {
         .replace('{{phone}}', data.phone || 'Не указано')
         .replace('{{comments}}', data.comments || 'Нет')
         .replace('{{total_price}}', data.total_price || '0')
-        .replace('{{beds}}', data.beds ? data.beds.split(',').map(id => `Кровать`).join(', ') : '')
-        .replace('{{loungers}}', data.loungers ? data.loungers.split(',').map(id => `Шезлонг`).join(', ') : '')
-        .replace('{{booking_timestamp}}', new Date(data.booking_timestamp).toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        }))
+        .replace('{{type_beds}}', data.beds ? data.beds.split(',').map(id => `Кровать`) : '')
+        .replace('{{type_loungers}}', data.loungers ? data.loungers.split(',').map(id => `Шезлонг`) : '')
+        .replace('{{beds}}', data.beds ? data.beds.split(',').length : '')
+        .replace('{{loungers}}', data.loungers ? data.loungers.split(',').length : '')
 }
 
 
@@ -358,6 +355,7 @@ app.post('/api/reset-data', (req, res) => {
     const resetItemStatus = "UPDATE item_status SET is_booked = 0, booking_date = NULL";
     const clearBookings = "DELETE FROM bookings";
     const clearBookingItems = "DELETE FROM item_bookings";
+
     db.beginTransaction(err => {
         if (err) {
             console.error('Error starting transaction', err);
@@ -380,14 +378,23 @@ app.post('/api/reset-data', (req, res) => {
                     });
                 }
 
-                db.commit(err => {
+                db.query(clearBookings, (err, result) => {
                     if (err) {
-                        console.error('Error committing transaction', err);
+                        console.error('Error clearing bookings', err);
                         return db.rollback(() => {
-                            res.status(500).json({error: 'Error committing transaction'});
+                            res.status(500).json({error: 'Error clearing bookings'});
                         });
                     }
-                    res.json({message: 'Data reset successfully'});
+
+                    db.commit(err => {
+                        if (err) {
+                            console.error('Error committing transaction', err);
+                            return db.rollback(() => {
+                                res.status(500).json({error: 'Error committing transaction'});
+                            });
+                        }
+                        res.json({message: 'Data reset successfully'});
+                    });
                 });
             });
         });
