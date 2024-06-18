@@ -93,7 +93,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 bookingId: bookingId
             };
 
-            console.log('Данные формы для бронирования:', formData);
 
             localStorage.setItem('bookingData', JSON.stringify(formData));
             localStorage.setItem('bookingId', bookingId);
@@ -126,7 +125,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 const paymentData = await paymentResponse.json();
-                console.log('Ответ от create-payment:', paymentData);
 
                 if (!paymentResponse.ok) {
                     throw new Error(paymentData.error || 'Ошибка создания платежа');
@@ -149,7 +147,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     throw new Error('Confirmation token is missing');
                 }
 
-                console.log(`Получен confirmation_token: ${confirmationToken}`);
 
                 checkout = new window.YooMoneyCheckoutWidget({
                     confirmation_token: confirmationToken,
@@ -187,7 +184,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!response.ok) {
                 throw new Error('Ошибка удаления временного бронирования');
             }
-            console.log('Временное бронирование удалено');
             localStorage.removeItem('bookingId');
         } catch (error) {
             console.error('Ошибка при удалении временного бронирования:', error);
@@ -214,7 +210,6 @@ function populateDateOptions() {
 
 function fetchItemsAndDisplay(type, date) {
     if (!date || !type) {
-        console.error('Invalid date or type');
         return;
     }
 
