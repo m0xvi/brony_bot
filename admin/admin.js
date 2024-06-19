@@ -101,11 +101,12 @@ function fetchBookings() {
             const bookingsContainer = document.getElementById('bookings-container');
             bookingsContainer.innerHTML = '';
             bookings.forEach((booking, index) => {
-                const beds = booking.beds ? booking.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : null;
-                const loungers = booking.loungers ? booking.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : null;
+                const beds = booking.beds ? booking.beds.split(',').map(id => `ID: ${id}`).join(', ') : null;
+                const loungers = booking.loungers ? booking.loungers.split(',').map(id => `ID: ${id}`).join(', ') : null;
                 const div = document.createElement('div');
                 div.className = 'booking-item';
                 div.innerHTML = `
+                    <button class="hide-btn" onclick="hideBooking('${booking.booking_id}')">&times;</button>
                     <p><strong>ID бронирования:</strong> ${booking.booking_id}</p>
                     <p><strong>Имя:</strong> ${booking.name}</p>
                     <p><strong>Email:</strong> ${booking.email}</p>
@@ -113,6 +114,7 @@ function fetchBookings() {
                     <p><strong>Время бронирования:</strong> ${new Date(booking.booking_timestamp).toLocaleString()}</p>
                     <p><strong>Телефон:</strong> ${booking.phone}</p>
                     <p><strong>Комментарии:</strong> ${booking.comments}</p>
+                    <p><strong>Количество детей:</strong> ${booking.children}</p>
                     <p><strong>Общая цена:</strong> ${booking.total_price} ₽</p>
                     ${beds ? `<p><strong>Кровати:</strong> ${beds}</p>` : ''}
                     ${loungers ? `<p><strong>Шезлонги:</strong> ${loungers}</p>` : ''}
@@ -123,7 +125,7 @@ function fetchBookings() {
         .catch(error => console.error('Failed to load bookings:', error));
 }
 
-// Function to generate UUID (can be replaced with a library function if needed)
+
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);

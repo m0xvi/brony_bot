@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 email: document.getElementById('email').value,
                 arrivalDate: document.getElementById('arrival-date').value,
                 items: selectedItems,
-                children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 10) || 0 : 0,
+                children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 5) || 0 : 0,
                 comments: document.getElementById('comments').value,
                 totalPrice: updateTotalPrice(),
                 bookingId: bookingId

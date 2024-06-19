@@ -397,6 +397,11 @@
                 width: 414px !important
             }
         }
+
+        .hide-on-confirmation {
+            display: none;
+        }
+
     </style>
 </head>
 <body style="width:100%;font-family:arial, 'helvetica neue', helvetica, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0">
@@ -581,15 +586,10 @@
                                                                         <td align="center"
                                                                             style="padding:0;Margin:0;font-size:0px">
                                                                             <div class="image-container">
-                                                                                <img id="image_beds" class="adapt-img"
-                                                                                     src=""
-                                                                                     alt="Фото товара"
-                                                                                     style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-size:12px"
-                                                                                     width="70" title="Фото товара"/>
-                                                                                <img id="image_loungers"
+                                                                                <img src="{{item_image}}"
+                                                                                     id="item_image"
+                                                                                     alt="img_type"
                                                                                      class="adapt-img"
-                                                                                     src=""
-                                                                                     alt="Фото товара"
                                                                                      style="display:block;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-size:12px"
                                                                                      width="70" title="Фото товара"/>
                                                                             </div>
@@ -663,7 +663,8 @@
                                                                     <tr>
                                                                         <td align="right" style="padding:0;Margin:0"><p
                                                                                 style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;font-size:14px">
-                                                                            <span id="total_price">{{total_price}}</span> ₽</p></td>
+                                                                            <span id="total_price">{{total_price}}</span>
+                                                                            ₽</p></td>
                                                                     </tr>
                                                                 </table>
                                                             </td>
@@ -694,9 +695,15 @@
                                                                     style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;font-size:14px">
                                                                 Номер бронирования: <b><span id="booking_id">{{booking_id}}</span></b>
                                                             </p>
+                                                                <p id="hid_chid"
+                                                                   style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;font-size:14px">
+                                                                    Количество детей: <b><span id="children"></span></b>
+                                                                </p>
+
                                                                 <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;font-size:14px">
                                                                     Ждем Вас: <b><span id="arrival_date">{{arrival_date}}</span></b>
                                                                 </p>
+
                                                                 <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-family:arial, 'helvetica neue', helvetica, sans-serif;line-height:21px;color:#333333;font-size:14px">
                                                                     <br></p></td>
                                                         </tr>

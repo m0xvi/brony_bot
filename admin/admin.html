@@ -253,6 +253,13 @@
             })
             .catch(error => console.error('Error removing items:', error));
     }
+
+    function hideBooking(bookingId) {
+        const bookingElement = document.querySelector(`.booking-item button[onclick="hideBooking('${bookingId}')"]`).parentElement;
+        if (bookingElement) {
+            bookingElement.style.display = 'none';
+        }
+    }
 </script>
 </body>
 </html>

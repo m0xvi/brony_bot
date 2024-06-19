@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
     })
         .then(response => response.json())
         .then(data => {
+            console.log('Data received from API:', data);
             if (data.error) {
                 document.querySelector('.confirmation-details').innerHTML = '<p>Ошибка: ' + data.error + '</p>';
                 return;
@@ -40,48 +41,63 @@ document.addEventListener('DOMContentLoaded', function () {
             localStorage.removeItem('bookingId');
 
             document.querySelector('#booking_id').textContent = data.bookingId;
-            document.querySelector('#arrival_date').textContent = new Date(data.arrivalDate).toLocaleDateString('ru-RU', {
+            document.querySelector('#arrival_date').textContent = new Date(data.arrival_date).toLocaleDateString('ru-RU', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             });
             document.querySelector('#total_price').textContent = formData.totalPrice;
 
+            const beds = data.beds ? data.beds.split(',') : [];
+            const loungers = data.loungers ? data.loungers.split(',') : [];
 
-            const typeBeds = data.items.beds ? data.items.beds.split(',').map(id => `Кровать`) : '';
-            const typeLoungers = data.items.loungers ? data.items.loungers.split(',').map(id => `Шезлонг`) : '';
+            const typeBeds = beds.length > 0 ? 'Кровать' : '';
+            const typeLoungers = loungers.length > 0 ? 'Шезлонг' : '';
 
-            document.querySelector('#type_beds').textContent = typeBeds || '';
-            document.querySelector('#type_loungers').textContent = typeLoungers || '';
+            const typeBedsElement = document.querySelector('#type_beds');
+            const typeLoungersElement = document.querySelector('#type_loungers');
 
-            const imgBeds = data.items.beds ? data.items.beds.split(',').map(id => `https://pool.hotelusadba.ru/img/bed.png`).join(', ') : '';
-            const imgLoungers = data.items.loungers ? data.items.loungers.split(',').map(id => `https://pool.hotelusadba.ru/img/lounger.png`).join(', ') : '';
-
-
-            const imageBedsElement = document.querySelector('#image_beds');
-            const imageLoungersElement = document.querySelector('#image_loungers');
-
-            if (imgBeds) {
-                document.querySelector('#image_beds').src = imgBeds;
-            } else {
-                imageBedsElement.style.display = 'none';
+            if (typeBedsElement) {
+                typeBedsElement.textContent = typeBeds;
+            }
+            if (typeLoungersElement) {
+                typeLoungersElement.textContent = typeLoungers;
             }
 
-            if (imgLoungers) {
-                document.querySelector('#image_loungers').src = imgLoungers;
-            } else {
-                imageLoungersElement.style.display = 'none';
+            const imageSrc = beds.length > 0 ? 'https://pool.hotelusadba.ru/img/bed.png' : (loungers.length > 0 ? 'https://pool.hotelusadba.ru/img/lounger.png' : '');
+
+            const imageElement = document.querySelector('#item_image');
+
+            if (imageElement) {
+                if (imageSrc) {
+                    imageElement.src = imageSrc;
+                } else {
+                    imageElement.style.display = 'none';
+                }
             }
 
-            // Подсчитываем количество кроватей и шезлонгов
-            const beds = data.items.beds ? data.items.beds.split(',').length : 0;
-            const loungers = data.items.loungers ? data.items.loungers.split(',').length : 0;
+            const bedsElement = document.querySelector('#beds');
+            const loungersElement = document.querySelector('#loungers');
+            const childrenElement = document.querySelector('#children');
+            const childrenHidElement = document.querySelector('#hid_chid');
 
-            document.querySelector('#beds').textContent = beds > 0 ? `${beds}` : '';
-            document.querySelector('#loungers').textContent = loungers > 0 ? `${loungers}` : '';
+
+            if (bedsElement) {
+                bedsElement.textContent = beds.length > 0 ? `${beds.length}` : '';
+            }
+            if (loungersElement) {
+                loungersElement.textContent = loungers.length > 0 ? `${loungers.length}` : '';
+            }
+            if (data.children !== 0) {
+                childrenElement.textContent = data.children;
+            } else {
+                childrenHidElement.style.display = 'none';
+            }
+
         })
         .catch(error => {
             console.error('Error creating booking:', error);
             document.querySelector('.confirmation-details').innerHTML = '<p>Ошибка создания бронирования.</p>';
         });
-});
+})
+;

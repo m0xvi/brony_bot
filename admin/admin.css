@@ -312,4 +312,13 @@ button:hover {
     flex-wrap: wrap;
 }
 
+.hide-btn {
+    border: none;
+    font-size: 20px;
+    color: white;
+    cursor: pointer;
+    float: right;
+    padding: 3px 8px;
+}
+
 

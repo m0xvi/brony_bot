@@ -82,6 +82,10 @@ function inlineCss(html, css) {
 }
 
 function populateTemplate(html, data) {
+    const imgBeds = data.beds ? 'https://pool.hotelusadba.ru/img/bed.png' : '';
+    const imgLoungers = data.loungers ? 'https://pool.hotelusadba.ru/img/lounger.png' : '';
+
+    const imageSrc = data.beds ? imgBeds : (data.loungers ? imgLoungers : '');
     return html
         .replace('{{booking_id}}', data.booking_id)
         .replace('{{arrival_date}}', new Date(data.arrival_date).toLocaleDateString('ru-RU', {
@@ -93,11 +97,13 @@ function populateTemplate(html, data) {
         .replace('{{email}}', data.email || 'Не указано')
         .replace('{{phone}}', data.phone || 'Не указано')
         .replace('{{comments}}', data.comments || 'Нет')
-        .replace('{{total_price}}', data.total_price || '0')
+        .replace('{{children}}', data.children || '')
+        .replace('{{total_price}}', data.total_price || '')
         .replace('{{type_beds}}', data.beds ? data.beds.split(',').map(() => `Кровать`) : '')
         .replace('{{type_loungers}}', data.loungers ? data.loungers.split(',').map(() => `Шезлонг`) : '')
         .replace('{{beds}}', data.beds ? data.beds.split(',').length : '')
         .replace('{{loungers}}', data.loungers ? data.loungers.split(',').length : '')
+        .replace('{{item_image}}', imageSrc);
 }
 
 function sendConfirmationEmail(email, bookingId, bookingData) {
@@ -128,7 +134,7 @@ function sendConfirmationEmail(email, bookingId, bookingData) {
 function sendBookingDetailsToReception(bookingData) {
     console.log('Отправка данных в рецепцию:', bookingData);
 
-    const receptionEmail = 'pool@hotelusadba.ru';
+    const receptionEmail = 'reception@hotelusadba.ru';
     const subject = `Новое бронирование №${bookingData.booking_id}`;
     const htmlContent = `
         <div class="confirmation-details">
@@ -149,6 +155,7 @@ function sendBookingDetailsToReception(bookingData) {
         day: 'numeric'
     })}</p>
                 <p>Комментарии: ${bookingData.comments}</p>
+                <p>Количество детей: ${bookingData.children}</p>
                 <p>Общая цена: ${bookingData.total_price} ₽</p>
                 <p>Кровати: ${bookingData.beds ? bookingData.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : ''}</p>
                 <p>Шезлонги: ${bookingData.loungers ? bookingData.loungers.split(',').map(id => `Шезлонг ID: ${id}`).join(', ') : ''}</p>
@@ -191,6 +198,7 @@ app.post('/api/payment-webhook', async (req, res) => {
                    b.phone,
                    b.comments,
                    b.arrival_date,
+                   b.children,
                    b.total_price,
                    b.booking_timestamp,
                    GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
@@ -241,6 +249,7 @@ async function checkPaymentStatus(paymentId, bookingId, email) {
                        b.arrival_date,
                        b.name,
                        b.email,
+                       b.children,
                        b.phone,
                        b.comments,
                        b.total_price,
@@ -369,6 +378,7 @@ app.get('/api/booking/:paymentId', (req, res) => {
                b.email,
                b.phone,
                b.comments,
+               b.children,
                b.total_price,
                b.booking_timestamp,
                GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
@@ -550,6 +560,7 @@ app.post('/api/admin/update-items', (req, res) => {
     const sqlInsertBooking = "INSERT INTO bookings (booking_id, name, arrival_date, children, phone, email, comments, total_price, booking_timestamp, admin_updated) VALUES (?, 'Администратор', ?, 0, 'N/A', 'N/A', 'Администратор изменил статус', 0, NOW(), 1)";
     const sqlInsertItemBooking = "INSERT INTO item_bookings (item_id, booking_id, booking_date) VALUES (?, ?, ?)";
     const sqlDeleteItemBooking = "DELETE FROM item_bookings WHERE item_id = ? AND booking_date = ?";
+    const sqlUpdateBookingAdminFlag = "UPDATE bookings SET admin_updated = 1 WHERE booking_id = ?";
 
     dbPool.getConnection((err, connection) => {
         if (err) {
@@ -590,7 +601,13 @@ app.post('/api/admin/update-items', (req, res) => {
                                 console.error('Error deleting item booking', err);
                                 return reject(err);
                             }
-                            resolve();
+                            connection.query(sqlUpdateBookingAdminFlag, [item.booking_id], (err) => {
+                                if (err) {
+                                    console.error('Error updating booking admin_updated flag', err);
+                                    return reject(err);
+                                }
+                                resolve();
+                            });
                         });
                     });
                 }
@@ -619,6 +636,7 @@ app.post('/api/admin/update-items', (req, res) => {
         });
     });
 });
+
 
 app.post('/api/admin/add-items', (req, res) => {
     const {item_type, prices} = req.body;
@@ -887,6 +905,7 @@ app.post('/api/book', (req, res) => {
                                            b.phone,
                                            b.email,
                                            b.comments,
+                                           b.children,
                                            b.arrival_date,
                                            b.total_price,
                                            b.booking_timestamp,
@@ -931,6 +950,7 @@ app.post('/api/book', (req, res) => {
         });
     });
 });
+
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
