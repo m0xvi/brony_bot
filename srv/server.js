@@ -665,6 +665,72 @@ app.post('/api/admin/add-items', (req, res) => {
     });
 });
 
+app.delete('/api/admin/remove-booking/:bookingId', (req, res) => {
+    const bookingId = req.params.bookingId;
+
+    const sqlDeleteBooking = "DELETE FROM bookings WHERE booking_id = ?";
+    const sqlDeleteItemBooking = "DELETE FROM item_bookings WHERE booking_id = ?";
+    const sqlUpdateItems = "UPDATE item_status SET is_booked = FALSE WHERE item_id IN (SELECT item_id FROM item_bookings WHERE booking_id = ?)";
+
+    dbPool.getConnection((err, connection) => {
+        if (err) {
+            console.error('Error getting DB connection', err);
+            return res.status(500).json({ error: 'Error getting DB connection' });
+        }
+
+        connection.beginTransaction(err => {
+            if (err) {
+                console.error('Error starting transaction', err);
+                connection.release();
+                return res.status(500).json({ error: 'Error starting transaction' });
+            }
+
+            connection.query(sqlDeleteItemBooking, [bookingId], (err) => {
+                if (err) {
+                    console.error('Error deleting item bookings', err);
+                    return connection.rollback(() => {
+                        connection.release();
+                        res.status(500).json({ error: 'Error deleting item bookings' });
+                    });
+                }
+
+                connection.query(sqlUpdateItems, [bookingId], (err) => {
+                    if (err) {
+                        console.error('Error updating item status', err);
+                        return connection.rollback(() => {
+                            connection.release();
+                            res.status(500).json({ error: 'Error updating item status' });
+                        });
+                    }
+
+                    connection.query(sqlDeleteBooking, [bookingId], (err) => {
+                        if (err) {
+                            console.error('Error deleting booking', err);
+                            return connection.rollback(() => {
+                                connection.release();
+                                res.status(500).json({ error: 'Error deleting booking' });
+                            });
+                        }
+
+                        connection.commit(err => {
+                            if (err) {
+                                console.error('Error committing transaction', err);
+                                return connection.rollback(() => {
+                                    connection.release();
+                                    res.status(500).json({ error: 'Error committing transaction' });
+                                });
+                            }
+                            connection.release();
+                            res.json({ message: 'Booking deleted successfully' });
+                        });
+                    });
+                });
+            });
+        });
+    });
+});
+
+
 app.post('/api/admin/remove-items', (req, res) => {
     const {item_ids} = req.body;
     if (!Array.isArray(item_ids) || item_ids.length === 0) {

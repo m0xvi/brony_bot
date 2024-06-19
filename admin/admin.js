@@ -175,3 +175,21 @@ function resetData() {
         })
         .catch(error => console.error('Error resetting data:', error));
 }
+
+
+function hideBooking(bookingId) {
+    fetch(`/api/admin/remove-booking/${bookingId}`, {
+        method: 'DELETE'
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Booking removed:', data);
+            fetchBookings(); // Reload bookings after deletion
+        })
+        .catch(error => console.error('Error deleting booking:', error));
+}

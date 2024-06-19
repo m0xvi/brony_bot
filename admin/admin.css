@@ -7,15 +7,18 @@ html, body {
     display: flex;
     flex-direction: column;
 }
+body::-webkit-scrollbar {
+    width: 0;
+}
 
 .container {
     display: flex;
+    height: 100%;
     justify-content: space-between;
     padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     background-color: #fff;
     border-radius: 8px;
-    box-sizing: border-box;
 }
 
 .admin-control, .bookings-list {
@@ -24,7 +27,13 @@ html, body {
     padding: 20px;
     border-radius: 8px;
     border: 1px solid #eee;
+    box-sizing: border-box;
 }
+
+.booking_item {
+    word-break: break-all;
+}
+
 
 .admin-control button, .admin-control select, .admin-control input[type="date"] {
     margin-top: 10px;
@@ -45,6 +54,7 @@ html, body {
     padding: 20px;
     border-radius: 8px;
     border: 1px solid #eee;
+    overflow-y: auto;
     margin-left: 50px;
 }
 
@@ -308,8 +318,8 @@ button:hover {
 }
 
 #bookings-container {
-    display:flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(30%, 2fr));
 }
 
 .hide-btn {
