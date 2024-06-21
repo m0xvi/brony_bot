@@ -9,6 +9,9 @@ const YooKassa = require('yookassa');
 const multer = require('multer');
 const upload = multer();
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
+const session = require('express-session');
+const path = require('path');
 
 const app = express();
 const port = 3000;
@@ -17,6 +20,112 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static('/var/www/html/booking_pool/booking'));
+
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: true }
+}));
+
+
+const yookassa = new YooKassa({
+    shopId: process.env.YOOKASSA_SHOP_ID,
+    secretKey: process.env.YOOKASSA_SECRET_KEY
+});
+
+const dbPool = mysql.createPool({
+    connectionLimit: 60,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+});
+
+dbPool.on('connection', (connection) => {
+    console.log('New DB connection established');
+
+    connection.on('error', (err) => {
+        console.error('DB Connection Error:', err);
+        connection.release();
+    });
+
+    connection.on('close', (err) => {
+        console.error('DB Connection Closed:', err);
+        connection.release();
+    });
+});
+
+//
+// const username = process.env.USER_NAME_AUTH;
+// const password = process.env.USER_PASS_AUTH;
+// const role = process.env.USER_ROLE_AUTH;
+//
+// bcrypt.hash(password, 10, (err, hash) => {
+//     if (err) throw err;
+//     const query = 'INSERT INTO users (username, password, role) VALUES (?, ?, ?)';
+//     dbPool.getConnection((err, connection) => {
+//         if (err) throw err;
+//         connection.query(query, [username, hash, role], (error, results) => {
+//             connection.release();
+//             if (error) throw error;
+//             console.log('User inserted successfully');
+//         });
+//     });
+// });
+
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    if (username && password) {
+        dbPool.getConnection((err, connection) => {
+            if (err) {
+                console.error('Error getting DB connection', err);
+                return res.status(500).json({ error: 'Error getting DB connection' });
+            }
+            connection.query('SELECT * FROM users WHERE username = ?', [username], (error, results) => {
+                connection.release();
+                if (error) throw error;
+                if (results.length > 0) {
+                    bcrypt.compare(password, results[0].password, (err, result) => {
+                        if (result) {
+                            req.session.loggedin = true;
+                            req.session.username = username;
+                            req.session.role = results[0].role;
+                            res.json({ success: true });
+                        } else {
+                            res.json({ success: false, message: 'Incorrect Username and/or Password!' });
+                        }
+                    });
+                } else {
+                    res.json({ success: false, message: 'Incorrect Username and/or Password!' });
+                }
+            });
+        });
+    } else {
+        res.json({ success: false, message: 'Please enter Username and Password!' });
+    }
+});
+
+app.get('/api/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/api/login');
+});
+
+app.get('/api/admin', (req, res) => {
+    if (req.session.loggedin && req.session.role === 'Admin') {
+        res.sendFile(path.join(__dirname, 'admin.html'));
+    } else {
+        res.redirect('/api/login');
+    }
+});
+
+app.get('/api/check-session', (req, res) => {
+    if (req.session.loggedin && req.session.role === 'Admin') {
+        res.json({ loggedin: true, role: req.session.role });
+    } else {
+        res.json({ loggedin: false });
+    }
+});
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.mail.ru', // Замените на ваш SMTP сервер
@@ -42,34 +151,6 @@ transporter.verify(function (error, success) {
     } else {
         console.log('SMTP server is ready to take our messages:', success);
     }
-});
-
-const yookassa = new YooKassa({
-    shopId: process.env.YOOKASSA_SHOP_ID,
-    secretKey: process.env.YOOKASSA_SECRET_KEY
-});
-
-// Создание пула соединений
-const dbPool = mysql.createPool({
-    connectionLimit: 60,
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
-
-dbPool.on('connection', (connection) => {
-    console.log('New DB connection established');
-
-    connection.on('error', (err) => {
-        console.error('DB Connection Error:', err);
-        connection.release();
-    });
-
-    connection.on('close', (err) => {
-        console.error('DB Connection Closed:', err);
-        connection.release();
-    });
 });
 
 function readHtmlTemplate(filePath, callback) {

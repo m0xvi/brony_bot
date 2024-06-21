@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     fetchBookings(); // Load bookings on page load
     fetchItems(); // Load items on page load
+
     document.getElementById('custom-price-checkbox').addEventListener('change', toggleCustomPrice);
 
     // Set default date to current
@@ -193,3 +194,4 @@ function hideBooking(bookingId) {
         })
         .catch(error => console.error('Error deleting booking:', error));
 }
+

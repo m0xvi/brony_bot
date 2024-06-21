@@ -19,6 +19,7 @@ body::-webkit-scrollbar {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     background-color: #fff;
     border-radius: 8px;
+    position: relative;
 }
 
 .admin-control, .bookings-list {
@@ -329,6 +330,12 @@ button:hover {
     cursor: pointer;
     float: right;
     padding: 3px 8px;
+}
+
+.logout-btn {
+    position: absolute;
+    left: 93%;
+    top: 15px;
 }
 
 
