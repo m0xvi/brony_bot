@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Админка</title>
-<!--    <link rel="stylesheet" href="admin.css">-->
+    <!--    <link rel="stylesheet" href="admin.css">-->
     <link rel="apple-touch-icon" sizes="180x180" href="/admin/img/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/admin/img/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/admin/img/favicon-16x16.png">
@@ -435,20 +435,6 @@
     </style>
 </head>
 <body>
-<div id="authModal" class="modalAd" style="background: white">
-    <div class="modal-content-ad">
-        <form id="loginForm">
-            <h2>Авторизация</h2>
-            <label for="username">Логин</label>
-            <input type="text" id="username" name="username" required>
-            <label for="password">Пароль</label>
-            <input type="password" id="password" name="password" required>
-            <br>
-            <button type="submit">Войти</button>
-            <div class="error-message" id="errorMessage"></div>
-        </form>
-    </div>
-</div>
 
 
 <div class="container">
@@ -544,23 +530,23 @@
 <script src="admin.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-    fetchBookings(); // Load bookings on page load
-    fetchItems(); // Load items on page load
+        fetchBookings(); // Load bookings on page load
+        fetchItems(); // Load items on page load
 
-    document.getElementById('custom-price-checkbox').addEventListener('change', toggleCustomPrice);
+        document.getElementById('custom-price-checkbox').addEventListener('change', toggleCustomPrice);
 
-    // Set default date to current
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('booking-date').value = today;
+        // Set default date to current
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('booking-date').value = today;
 
-    document.getElementById('create-booking-form').addEventListener('submit', function (event) {
-        event.preventDefault();
-        createBooking();
+        document.getElementById('create-booking-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            createBooking();
+        });
+
+        document.getElementById('create-item-type').addEventListener('change', fetchCreateItems);
+        document.getElementById('create-arrival-date').addEventListener('change', fetchCreateItems);
     });
-
-    document.getElementById('create-item-type').addEventListener('change', fetchCreateItems);
-    document.getElementById('create-arrival-date').addEventListener('change', fetchCreateItems);
-});
 
     function openModal() {
         document.getElementById('add-item-modal').style.display = 'flex';
@@ -690,141 +676,118 @@
         document.getElementById('create-booking-modal').style.display = 'none';
     }
 
-   function createBooking() {
-    const formData = new FormData(document.getElementById('create-booking-form'));
-    const items = [];
-    const itemType = formData.get('item-type');
-    const checkboxes = document.querySelectorAll(`#create-${itemType}-container input[type="checkbox"]:checked`);
+    function createBooking() {
+        const formData = new FormData(document.getElementById('create-booking-form'));
+        const items = [];
+        const itemType = formData.get('item-type');
+        const checkboxes = document.querySelectorAll(`#create-${itemType}-container input[type="checkbox"]:checked`);
 
-    checkboxes.forEach(checkbox => {
-        items.push({
-            item_id: checkbox.getAttribute('data-id'),
-            price: parseFloat(checkbox.nextElementSibling.textContent.split(' ')[1])
+        checkboxes.forEach(checkbox => {
+            items.push({
+                item_id: checkbox.getAttribute('data-id'),
+                price: parseFloat(checkbox.nextElementSibling.textContent.split(' ')[1])
+            });
         });
-    });
 
-    const total_price = items.reduce((total, item) => total + item.price, 0);
+        const total_price = items.reduce((total, item) => total + item.price, 0);
 
-    const bookingData = {
-        name: formData.get('name'),
-        phone: formData.get('phone'),
-        email: formData.get('email'),
-        arrival_date: formData.get('arrival-date'),
-        item_type: itemType,
-        comments: formData.get('comments'),
-        children: formData.get('children'),
-        booking_id: generateUUID(),
-        items: items,
-        total_price: total_price
-    };
+        const bookingData = {
+            name: formData.get('name'),
+            phone: formData.get('phone'),
+            email: formData.get('email'),
+            arrival_date: formData.get('arrival-date'),
+            item_type: itemType,
+            comments: formData.get('comments'),
+            children: formData.get('children'),
+            booking_id: generateUUID(),
+            items: items,
+            total_price: total_price
+        };
 
-    fetch('/api/admin/create-booking', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(bookingData)
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
+        fetch('/api/admin/create-booking', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(bookingData)
         })
-        .then(data => {
-            alert('Booking created successfully!');
-            fetchBookings(); // Reload bookings after creation
-            closeCreateBookingModal();
-        })
-        .catch(error => console.error('Error creating booking:', error));
-}
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Booking created successfully!');
+                fetchBookings(); // Reload bookings after creation
+                closeCreateBookingModal();
+            })
+            .catch(error => console.error('Error creating booking:', error));
+    }
 
 
     function fetchCreateItems() {
-    const itemType = document.getElementById('create-item-type').value;
-    const bookingDate = document.getElementById('create-arrival-date').value;
+        const itemType = document.getElementById('create-item-type').value;
+        const bookingDate = document.getElementById('create-arrival-date').value;
 
-    if (!bookingDate || !itemType) {
-        console.error('Invalid date or type');
-        return;
-    }
+        if (!bookingDate || !itemType) {
+            console.error('Invalid date or type');
+            return;
+        }
 
-    fetch(`/api/get-items?type=${itemType}&date=${bookingDate}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(items => {
-            const bedsContainer = document.getElementById('create-beds-container');
-            const loungersContainer = document.getElementById('create-loungers-container');
+        fetch(`/api/get-items?type=${itemType}&date=${bookingDate}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(items => {
+                const bedsContainer = document.getElementById('create-beds-container');
+                const loungersContainer = document.getElementById('create-loungers-container');
 
-            bedsContainer.innerHTML = '';
-            loungersContainer.innerHTML = '';
+                bedsContainer.innerHTML = '';
+                loungersContainer.innerHTML = '';
 
-            if (itemType === 'bed') {
-                loungersContainer.style.display = 'none';
-                bedsContainer.style.display = 'flex';
-                bedsContainer.style.flexWrap = 'wrap';
-            } else {
-                bedsContainer.style.display = 'none';
-                loungersContainer.style.display = 'flex';
-                loungersContainer.style.flexWrap = 'wrap';
-            }
+                if (itemType === 'bed') {
+                    loungersContainer.style.display = 'none';
+                    bedsContainer.style.display = 'flex';
+                    bedsContainer.style.flexWrap = 'wrap';
+                } else {
+                    bedsContainer.style.display = 'none';
+                    loungersContainer.style.display = 'flex';
+                    loungersContainer.style.flexWrap = 'wrap';
+                }
 
-            const itemsContainer = itemType === 'bed' ? bedsContainer : loungersContainer;
-            items.forEach((item) => {
-                const label = document.createElement('label');
-                label.className = `checkbox-container ${itemType}`;
-                label.innerHTML = `
+                const itemsContainer = itemType === 'bed' ? bedsContainer : loungersContainer;
+                items.forEach((item) => {
+                    const label = document.createElement('label');
+                    label.className = `checkbox-container ${itemType}`;
+                    label.innerHTML = `
                     <input type="checkbox" data-id="${item.item_id}" ${item.is_booked_today ? 'checked disabled' : ''}>
                     <span class="checkmark"></span>
                     <div><b>ID:</b> ${item.item_id} <br> ${item.price} ₽</div>
                 `;
-                itemsContainer.appendChild(label);
-            });
-        })
-        .catch(error => console.error('Failed to load items:', error));
-}
-
+                    itemsContainer.appendChild(label);
+                });
+            })
+            .catch(error => console.error('Failed to load items:', error));
+    }
 
     window.onload = function () {
-        // Проверка авторизации
         fetch('/api/check-session')
             .then(response => response.json())
             .then(data => {
                 if (!data.loggedin || data.role !== 'Admin') {
-                    document.getElementById('authModal').style.display = 'flex';
-                } else {
-                    document.getElementById('authModal').style.display = 'none';
+                    window.location.href = '/admin/login.html';
                 }
             });
     };
 
-    document.getElementById('loginForm').addEventListener('submit', function (event) {
-        event.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-
-        fetch('/api/login', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username, password})
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('authModal').style.display = 'none';
-                } else {
-                    document.getElementById('errorMessage').innerText = data.message;
-                }
-            });
-    });
 
     function logout() {
         fetch('/api/logout')
-            .then(() => window.location.reload());
+            .then(() => window.location.href = '/admin/login.html');
     }
 </script>
 </body>
