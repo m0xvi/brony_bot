@@ -101,31 +101,70 @@ function fetchBookings() {
         .then(bookings => {
             const bookingsContainer = document.getElementById('bookings-container');
             bookingsContainer.innerHTML = '';
-            bookings.forEach((booking, index) => {
-                const beds = booking.beds ? booking.beds.split(',').map(id => `ID: ${id}`).join(', ') : null;
-                const loungers = booking.loungers ? booking.loungers.split(',').map(id => `ID: ${id}`).join(', ') : null;
-                const div = document.createElement('div');
-                div.className = 'booking-item';
-                div.innerHTML = `
-                    <button class="hide-btn" onclick="hideBooking('${booking.booking_id}')">&times;</button>
-                    <p><strong>ID бронирования:</strong> ${booking.booking_id}</p>
-                    <p><strong>Имя:</strong> ${booking.name}</p>
-                    <p><strong>Email:</strong> ${booking.email}</p>
-                    <p><strong>Дата прибытия:</strong> ${new Date(booking.arrival_date).toLocaleDateString()}</p>
-                    <p><strong>Время бронирования:</strong> ${new Date(booking.booking_timestamp).toLocaleString()}</p>
-                    <p><strong>Телефон:</strong> ${booking.phone}</p>
-                    <p><strong>Комментарии:</strong> ${booking.comments}</p>
-                    <p><strong>Количество детей:</strong> ${booking.children}</p>
-                    <p><strong>Общая цена:</strong> ${booking.total_price} ₽</p>
-                    ${beds ? `<p><strong>Кровати:</strong> ${beds}</p>` : ''}
-                    ${loungers ? `<p><strong>Шезлонги:</strong> ${loungers}</p>` : ''}
-                `;
-                bookingsContainer.appendChild(div);
-            });
+
+            const bookingsByDate = groupBookingsByDate(bookings);
+
+            for (const [date, dailyBookings] of Object.entries(bookingsByDate)) {
+                const dayContainer = document.createElement('div');
+                dayContainer.className = 'day-container';
+                const dayHead = document.createElement('h3');
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHead.textContent = `${formatDate(date)}`;
+
+                dayHeader.style.display='grid';
+                dayHeader.style.gridTemplateColumns='repeat(auto-fill, minmax(30%, 2fr))';
+
+                dayContainer.appendChild(dayHead);
+                dayContainer.appendChild(dayHeader);
+
+
+
+                dailyBookings.forEach(booking => {
+                    const div = document.createElement('div');
+                    div.className = 'booking-item';
+                    div.innerHTML = `
+                        <button class="hide-btn" onclick="hideBooking('${booking.booking_id}')">&times;</button>
+                        <p><strong>ID бронирования:</strong> ${booking.booking_id}</p>
+                        <p><strong>Имя:</strong> ${booking.name}</p>
+                        <p><strong>Email:</strong> ${booking.email}</p>
+                        <p><strong>Дата прибытия:</strong> ${new Date(booking.arrival_date).toLocaleDateString()}</p>
+                        <p><strong>Время бронирования:</strong> ${new Date(booking.booking_timestamp).toLocaleString()}</p>
+                        <p><strong>Телефон:</strong> ${booking.phone}</p>
+                        <p><strong>Комментарии:</strong> ${booking.comments}</p>
+                        <p><strong>Количество детей:</strong> ${booking.children}</p>
+                        <p><strong>Общая цена:</strong> ${booking.total_price} ₽</p>
+                        ${booking.beds ? `<p><strong>Кровати:</strong> ${booking.beds.split(',').map(id => `ID: ${id}`).join(', ')}</p>` : ''}
+                        ${booking.loungers ? `<p><strong>Шезлонги:</strong> ${booking.loungers.split(',').map(id => `ID: ${id}`).join(', ')}</p>` : ''}
+                    `;
+                    dayHeader.appendChild(div);
+                });
+
+                bookingsContainer.appendChild(dayContainer);
+            }
         })
         .catch(error => console.error('Failed to load bookings:', error));
 }
 
+function groupBookingsByDate(bookings) {
+    return bookings.reduce((acc, booking) => {
+        const date = new Date(booking.arrival_date).toLocaleDateString('en-CA'); // Ensure date is correct
+        if (!acc[date]) {
+            acc[date] = [];
+        }
+        acc[date].push(booking);
+        return acc;
+    }, {});
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+    });
+}
 
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -194,4 +233,5 @@ function hideBooking(bookingId) {
         })
         .catch(error => console.error('Error deleting booking:', error));
 }
+
 

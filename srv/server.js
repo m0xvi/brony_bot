@@ -614,7 +614,7 @@ app.get('/api/admin/get-bookings', (req, res) => {
         WHERE b.admin_updated = 0
            OR b.admin_updated IS NULL
         GROUP BY b.booking_id
-        ORDER BY b.booking_timestamp DESC
+        ORDER BY b.arrival_date, b.booking_timestamp DESC
     `;
 
     dbPool.getConnection((err, connection) => {
@@ -633,6 +633,15 @@ app.get('/api/admin/get-bookings', (req, res) => {
             }
         });
     });
+});
+
+app.post('/api/admin/create-booking', (req, res) => {
+    const { name, phone, email, arrival_date, item_type, comments, children, booking_id } = req.body;
+    dbPool.query('INSERT INTO bookings (name, phone, email, arrival_date, item_type, comments, children, booking_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [name, phone, email, arrival_date, item_type, comments, children, booking_id], (err, results) => {
+            if (err) throw err;
+            res.json({ success: true });
+        });
 });
 
 app.post('/api/admin/update-items', (req, res) => {

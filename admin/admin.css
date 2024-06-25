@@ -318,11 +318,6 @@ button:hover {
     margin-left: 10px;
 }
 
-#bookings-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(30%, 2fr));
-}
-
 .hide-btn {
     border: none;
     font-size: 20px;
@@ -337,5 +332,20 @@ button:hover {
     left: 93%;
     top: 15px;
 }
+
+.day-container {
+    background-color: #a8cca833;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.day-container h3 {
+    background-color: #bddfa9;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 0 0 20px;
+}
+
 
 

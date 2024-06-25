@@ -85,7 +85,7 @@
     </style>
 </head>
 <body>
-<div id="authModal" class="modalAd">
+<div id="authModal" class="modalAd" style="background: white">
     <div class="modal-content-ad">
         <form id="loginForm">
             <h2>Авторизация</h2>
@@ -126,6 +126,7 @@
         <div class="admin-buttons">
             <button id="update-items-btn" onclick="updateItems()">Обновить</button>
             <button id="reset-data-btn" style="display: none" onclick="resetData()">Сбросить</button>
+            <button id="create-booking-btn" onclick="openCreateBookingModal()">Создать бронирование</button>
         </div>
     </div>
     <div class="bookings-list">
@@ -159,6 +160,35 @@
         <h2>Удалить предметы</h2>
         <div id="items-list"></div>
         <button onclick="submitRemoveItems()">Удалить</button>
+    </div>
+</div>
+
+<div id="create-booking-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeCreateBookingModal()">&times;</span>
+        <h2>Создать бронирование</h2>
+        <form id="create-booking-form">
+            <label for="name">Имя</label>
+            <input type="text" id="name" name="name" required>
+            <label for="phone">Телефон</label>
+            <input type="tel" id="phone" name="phone" required>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+            <label for="arrival-date">Дата прибытия</label>
+            <input type="date" id="arrival-date" name="arrival-date" required>
+            <label for="item-type">Тип предмета</label>
+            <select id="item-type" name="item-type" required>
+                <option value="bed">Кровать</option>
+                <option value="lounger">Шезлонг</option>
+            </select>
+            <div id="beds-container" class="items-container"></div>
+            <div id="loungers-container" class="items-container"></div>
+            <label for="comments">Комментарии</label>
+            <textarea id="comments" name="comments"></textarea>
+            <label for="children">Количество детей</label>
+            <input type="number" id="children" name="children" min="0" value="0">
+            <button type="submit" onclick="createBooking()">Создать</button>
+        </form>
     </div>
 </div>
 <script src="admin.js"></script>
@@ -284,6 +314,50 @@
                 closeRemoveModal();
             })
             .catch(error => console.error('Error removing items:', error));
+    }
+
+
+    function openCreateBookingModal() {
+        document.getElementById('create-booking-modal').style.display = 'flex';
+    }
+
+    function closeCreateBookingModal() {
+        document.getElementById('create-booking-modal').style.display = 'none';
+    }
+
+
+    function createBooking() {
+        const formData = new FormData(document.getElementById('create-booking-form'));
+        const bookingData = {
+            name: formData.get('name'),
+            phone: formData.get('phone'),
+            email: formData.get('email'),
+            arrival_date: formData.get('arrival-date'),
+            item_type: formData.get('item-type'),
+            comments: formData.get('comments'),
+            children: formData.get('children'),
+            booking_id: generateUUID()
+        };
+
+        fetch('/api/admin/create-booking', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(bookingData)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Booking created successfully!');
+                fetchBookings(); // Reload bookings after creation
+                closeCreateBookingModal();
+            })
+            .catch(error => console.error('Error creating booking:', error));
     }
 
     window.onload = function () {
