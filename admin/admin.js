@@ -1,14 +1,3 @@
-document.addEventListener('DOMContentLoaded', function () {
-    fetchBookings(); // Load bookings on page load
-    fetchItems(); // Load items on page load
-
-    document.getElementById('custom-price-checkbox').addEventListener('change', toggleCustomPrice);
-
-    // Set default date to current
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('booking-date').value = today;
-});
-
 function fetchItems() {
     const itemType = document.getElementById('item-type').value;
     const bookingDate = document.getElementById('booking-date').value;
@@ -112,12 +101,11 @@ function fetchBookings() {
                 dayHeader.className = 'day-header';
                 dayHead.textContent = `${formatDate(date)}`;
 
-                dayHeader.style.display='grid';
-                dayHeader.style.gridTemplateColumns='repeat(auto-fill, minmax(30%, 2fr))';
+                dayHeader.style.display = 'grid';
+                dayHeader.style.gridTemplateColumns = 'repeat(auto-fill, minmax(30%, 2fr))';
 
                 dayContainer.appendChild(dayHead);
                 dayContainer.appendChild(dayHeader);
-
 
 
                 dailyBookings.forEach(booking => {

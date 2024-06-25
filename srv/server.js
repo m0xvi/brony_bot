@@ -636,12 +636,66 @@ app.get('/api/admin/get-bookings', (req, res) => {
 });
 
 app.post('/api/admin/create-booking', (req, res) => {
-    const { name, phone, email, arrival_date, item_type, comments, children, booking_id } = req.body;
-    dbPool.query('INSERT INTO bookings (name, phone, email, arrival_date, item_type, comments, children, booking_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [name, phone, email, arrival_date, item_type, comments, children, booking_id], (err, results) => {
-            if (err) throw err;
-            res.json({ success: true });
+    const { name, phone, email, arrival_date, item_type, comments, children, booking_id, items } = req.body;
+    const total_price = items.reduce((total, item) => total + item.price, 0);
+
+    const bookingQuery = `
+        INSERT INTO bookings (booking_id, name, phone, email, arrival_date, comments, children, total_price)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const itemBookingQuery = `
+        INSERT INTO item_bookings (booking_id, item_id, item_type)
+        VALUES (?, ?, ?)
+    `;
+
+    dbPool.getConnection((err, connection) => {
+        if (err) {
+            console.error('Error getting DB connection', err);
+            return res.status(500).json({ error: 'Error getting DB connection' });
+        }
+
+        connection.beginTransaction(err => {
+            if (err) {
+                connection.release();
+                console.error('Error starting transaction', err);
+                return res.status(500).json({ error: 'Error starting transaction' });
+            }
+
+            connection.query(bookingQuery, [booking_id, name, phone, email, arrival_date, comments, children, total_price], (err, results) => {
+                if (err) {
+                    return connection.rollback(() => {
+                        connection.release();
+                        console.error('Error inserting booking', err);
+                        res.status(500).json({ error: 'Error inserting booking' });
+                    });
+                }
+
+                const itemBookings = items.map(item => [booking_id, item.item_id, item_type]);
+                connection.query(itemBookingQuery, [itemBookings], (err, results) => {
+                    if (err) {
+                        return connection.rollback(() => {
+                            connection.release();
+                            console.error('Error inserting item bookings', err);
+                            res.status(500).json({ error: 'Error inserting item bookings' });
+                        });
+                    }
+
+                    connection.commit(err => {
+                        if (err) {
+                            return connection.rollback(() => {
+                                connection.release();
+                                console.error('Error committing transaction', err);
+                                res.status(500).json({ error: 'Error committing transaction' });
+                            });
+                        }
+                        connection.release();
+                        res.json({ success: true });
+                    });
+                });
+            });
         });
+    });
 });
 
 app.post('/api/admin/update-items', (req, res) => {
