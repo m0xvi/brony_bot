@@ -3,21 +3,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const paymentStatus = params.get('status');
     const bookingId = params.get('bookingId');
 
+    console.log('URL Params:', { paymentStatus, bookingId });
+
     if (paymentStatus !== 'succeeded') {
+        console.log('Payment not completed. Payment status:', paymentStatus);
         document.querySelector('.confirmation-details').innerHTML = '<p>Оплата не завершена. Пожалуйста, завершите оплату.</p>';
         return;
     }
 
     // Загрузить данные бронирования из localStorage
     const formData = JSON.parse(localStorage.getItem('bookingData'));
+    console.log('Loaded formData from localStorage:', formData);
+
     if (!formData || formData.bookingId !== bookingId) {
+        console.log('Booking data not found or bookingId does not match. formData:', formData, 'bookingId:', bookingId);
         document.querySelector('.confirmation-details').innerHTML = '<p>Ошибка: данные бронирования не найдены.</p>';
         return;
     }
 
     formData.bookingId = bookingId;
-
-    console.log('formData.items:', formData.items);
+    console.log('Sending booking data to server:', formData);
 
     fetch('/api/book', {
         method: 'POST',
@@ -35,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             // Обновляем статус оплаты
-            localStorage.setItem('paymentCompleted', true);
+            localStorage.setItem('paymentCompleted', 'true');
 
             // Удаляем bookingId из localStorage после успешного бронирования
             localStorage.removeItem('bookingId');
@@ -81,7 +86,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const childrenElement = document.querySelector('#children');
             const childrenHidElement = document.querySelector('#hid_chid');
 
-
             if (bedsElement) {
                 bedsElement.textContent = beds.length > 0 ? `${beds.length}` : '';
             }
@@ -99,5 +103,4 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Error creating booking:', error);
             document.querySelector('.confirmation-details').innerHTML = '<p>Ошибка создания бронирования.</p>';
         });
-})
-;
+});

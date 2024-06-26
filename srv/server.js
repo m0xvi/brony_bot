@@ -164,8 +164,8 @@ function inlineCss(html, css) {
 }
 
 function populateTemplate(html, data) {
-    const imgBeds = data.beds ? 'https://pool.hotelusadba.ru/img/bed.png' : '';
-    const imgLoungers = data.loungers ? 'https://pool.hotelusadba.ru/img/lounger.png' : '';
+    const imgBeds = data.beds ? 'https://drive.google.com/file/d/14zFddLr73BIkrd1SqCcYOZx4O6VZ9nPV/view?usp=sharing' : '';
+    const imgLoungers = data.loungers ? 'https://drive.google.com/file/d/1ww-M7oQDTVYZUc-fvoywmK30NInJITgy/view?usp=sharing' : '';
 
     const imageSrc = data.beds ? imgBeds : (data.loungers ? imgLoungers : '');
     return html
@@ -181,8 +181,8 @@ function populateTemplate(html, data) {
         .replace('{{comments}}', data.comments || 'Нет')
         .replace('{{children}}', data.children || '')
         .replace('{{total_price}}', data.total_price || '')
-        .replace('{{type_beds}}', data.beds ? data.beds.split(',').map(() => `Кровать`) : '')
-        .replace('{{type_loungers}}', data.loungers ? data.loungers.split(',').map(() => `Шезлонг`) : '')
+        .replace('{{type_beds}}', data.beds.length > 0 ? 'Кровать' : '')
+        .replace('{{type_loungers}}', data.loungers.length > 0 ? 'Шезлонг' : '')
         .replace('{{beds}}', data.beds ? data.beds.split(',').length : '')
         .replace('{{loungers}}', data.loungers ? data.loungers.split(',').length : '')
         .replace('{{item_image}}', imageSrc);
@@ -706,18 +706,19 @@ app.post('/api/admin/update-items', (req, res) => {
     const sqlInsertItemBooking = "INSERT INTO item_bookings (item_id, booking_id, booking_date) VALUES (?, ?, ?)";
     const sqlDeleteItemBooking = "DELETE FROM item_bookings WHERE item_id = ? AND booking_date = ?";
     const sqlUpdateBookingAdminFlag = "UPDATE bookings SET admin_updated = 1 WHERE booking_id = ?";
+    const sqlDeleteBooking = "DELETE FROM bookings WHERE booking_id = ?";
 
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({error: 'Error getting DB connection'});
+            return res.status(500).json({ error: 'Error getting DB connection' });
         }
 
         connection.beginTransaction(err => {
             if (err) {
                 console.error('Error starting transaction', err);
                 connection.release();
-                return res.status(500).json({error: 'Error starting transaction'});
+                return res.status(500).json({ error: 'Error starting transaction' });
             }
 
             const updatePromises = items.map(item => {
@@ -751,7 +752,25 @@ app.post('/api/admin/update-items', (req, res) => {
                                     console.error('Error updating booking admin_updated flag', err);
                                     return reject(err);
                                 }
-                                resolve();
+
+                                connection.query('SELECT COUNT(*) AS count FROM item_bookings WHERE booking_id = ?', [item.booking_id], (err, results) => {
+                                    if (err) {
+                                        console.error('Error checking remaining item bookings', err);
+                                        return reject(err);
+                                    }
+
+                                    if (results[0].count === 0) {
+                                        connection.query(sqlDeleteBooking, [item.booking_id], (err) => {
+                                            if (err) {
+                                                console.error('Error deleting booking', err);
+                                                return reject(err);
+                                            }
+                                            resolve();
+                                        });
+                                    } else {
+                                        resolve();
+                                    }
+                                });
                             });
                         });
                     });
@@ -765,17 +784,17 @@ app.post('/api/admin/update-items', (req, res) => {
                             console.error('Error committing transaction', err);
                             return connection.rollback(() => {
                                 connection.release();
-                                res.status(500).json({error: 'Error committing transaction'});
+                                res.status(500).json({ error: 'Error committing transaction' });
                             });
                         }
                         connection.release();
-                        res.json({message: 'Items updated successfully'});
+                        res.json({ message: 'Items updated successfully' });
                     });
                 })
                 .catch(err => {
                     connection.rollback(() => {
                         connection.release();
-                        res.status(500).json({error: 'Error updating items'});
+                        res.status(500).json({ error: 'Error updating items' });
                     });
                 });
         });
@@ -1010,149 +1029,164 @@ app.delete('/api/cancel-payment-book/:bookingId', (req, res) => {
 });
 
 app.post('/api/book', (req, res) => {
-    
-
-    const {name, arrivalDate, items, children, phone, email, comments, totalPrice, bookingId} = req.body;
+    const { name, arrivalDate, items, children, phone, email, comments, totalPrice, bookingId } = req.body;
     const bookingTimestamp = new Date();
 
-    console.log('Booking request data:', {
-        name,
-        arrivalDate,
-        items,
-        children,
-        phone,
-        email,
-        comments,
-        totalPrice,
-        bookingId
-    });
+    console.log('Received booking data:', req.body);
 
     dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({error: 'Error getting DB connection'});
+            return res.status(500).json({ error: 'Error getting DB connection' });
         }
 
         connection.beginTransaction(err => {
             if (err) {
                 console.error('Error starting transaction', err);
                 connection.release();
-                return res.status(500).json({error: 'Error starting transaction'});
+                return res.status(500).json({ error: 'Error starting transaction' });
             }
 
-            const sqlCheckBooking = "SELECT booking_id FROM bookings WHERE booking_id = ?";
-            const sqlInsertBooking = "INSERT INTO bookings (name, arrival_date, children, phone, email, comments, total_price, booking_id, booking_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            const sqlUpdateBooking = "UPDATE bookings SET name = ?, arrival_date = ?, children = ?, phone = ?, email = ?, comments = ?, total_price = ?, booking_timestamp = ? WHERE booking_id = ?";
+            const sqlCheckExistingBookings = `
+                SELECT ib.item_id
+                FROM item_bookings ib
+                         JOIN bookings b ON ib.booking_id = b.booking_id
+                WHERE ib.booking_date = ? AND ib.item_id IN (?)
+            `;
 
-            connection.query(sqlCheckBooking, [bookingId], (err, results) => {
+            connection.query(sqlCheckExistingBookings, [arrivalDate, items], (err, results) => {
                 if (err) {
-                    console.error('Error checking booking existence', err);
+                    console.error('Error checking existing bookings', err);
                     return connection.rollback(() => {
                         connection.release();
-                        res.status(500).json({error: 'Error checking booking existence'});
+                        res.status(500).json({ error: 'Error checking existing bookings' });
                     });
                 }
 
-                const isExistingBooking = results.length > 0;
-                const sqlBooking = isExistingBooking ? sqlUpdateBooking : sqlInsertBooking;
-                const bookingParams = isExistingBooking
-                    ? [name, arrivalDate, children, phone, email, comments, totalPrice, bookingTimestamp, bookingId]
-                    : [name, arrivalDate, children, phone, email, comments, totalPrice, bookingId, bookingTimestamp];
+                if (results.length > 0) {
+                    console.log('Some items are already booked for the selected date:', results);
+                    return connection.rollback(() => {
+                        connection.release();
+                        res.status(400).json({ error: 'Some items are already booked for the selected date' });
+                    });
+                }
 
-                connection.query(sqlBooking, bookingParams, (err, result) => {
+                const sqlCheckBooking = "SELECT booking_id FROM bookings WHERE booking_id = ?";
+                const sqlInsertBooking = "INSERT INTO bookings (name, arrival_date, children, phone, email, comments, total_price, booking_id, booking_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                const sqlUpdateBooking = "UPDATE bookings SET name = ?, arrival_date = ?, children = ?, phone = ?, email = ?, comments = ?, total_price = ?, booking_timestamp = ? WHERE booking_id = ?";
+
+                connection.query(sqlCheckBooking, [bookingId], (err, results) => {
                     if (err) {
-                        console.error(`Error saving booking to database (${isExistingBooking ? 'sqlUpdateBooking' : 'sqlInsertBooking'})`, err);
+                        console.error('Error checking booking existence', err);
                         return connection.rollback(() => {
                             connection.release();
-                            res.status(500).json({
-                                error: `Error saving booking to database (${isExistingBooking ? 'sqlUpdateBooking' : 'sqlInsertBooking'})`,
-                                details: err.message
-                            });
+                            res.status(500).json({ error: 'Error checking booking existence' });
                         });
                     }
 
-                    const bookingItems = items.map(itemId => [bookingId, itemId, new Date(arrivalDate).toISOString().slice(0, 19).replace('T', ' ')]);
-                    const sqlDeleteOldItems = "DELETE FROM item_bookings WHERE booking_id = ?";
-                    const sqlInsertBookingItems = "INSERT INTO item_bookings (booking_id, item_id, booking_date) VALUES ?";
+                    const isExistingBooking = results.length > 0;
+                    const sqlBooking = isExistingBooking ? sqlUpdateBooking : sqlInsertBooking;
+                    const bookingParams = isExistingBooking
+                        ? [name, arrivalDate, children, phone, email, comments, totalPrice, bookingTimestamp, bookingId]
+                        : [name, arrivalDate, children, phone, email, comments, totalPrice, bookingId, bookingTimestamp];
 
-                    connection.query(sqlDeleteOldItems, [bookingId], (err) => {
+                    connection.query(sqlBooking, bookingParams, (err, result) => {
                         if (err) {
-                            console.error('Error deleting old booking items', err);
+                            console.error(`Error saving booking to database (${isExistingBooking ? 'sqlUpdateBooking' : 'sqlInsertBooking'})`, err);
                             return connection.rollback(() => {
                                 connection.release();
                                 res.status(500).json({
-                                    error: 'Error deleting old booking items',
+                                    error: `Error saving booking to database (${isExistingBooking ? 'sqlUpdateBooking' : 'sqlInsertBooking'})`,
                                     details: err.message
                                 });
                             });
                         }
 
-                        connection.query(sqlInsertBookingItems, [bookingItems], (err, result) => {
+                        const bookingItems = items.map(itemId => [bookingId, itemId, new Date(arrivalDate).toISOString().slice(0, 19).replace('T', ' ')]);
+                        const sqlDeleteOldItems = "DELETE FROM item_bookings WHERE booking_id = ?";
+                        const sqlInsertBookingItems = "INSERT INTO item_bookings (booking_id, item_id, booking_date) VALUES ?";
+
+                        connection.query(sqlDeleteOldItems, [bookingId], (err) => {
                             if (err) {
-                                console.error('Error saving booking items to database (sqlInsertBookingItems)', err);
+                                console.error('Error deleting old booking items', err);
                                 return connection.rollback(() => {
                                     connection.release();
                                     res.status(500).json({
-                                        error: 'Error saving booking items to database (sqlInsertBookingItems)',
+                                        error: 'Error deleting old booking items',
                                         details: err.message
                                     });
                                 });
                             }
 
-                            const sqlUpdateItems = "UPDATE item_status SET is_booked = TRUE WHERE item_id IN (?)";
-                            connection.query(sqlUpdateItems, [items], (err, result) => {
+                            connection.query(sqlInsertBookingItems, [bookingItems], (err, result) => {
                                 if (err) {
-                                    console.error('Error updating item status (sqlUpdateItems)', err);
+                                    console.error('Error saving booking items to database (sqlInsertBookingItems)', err);
                                     return connection.rollback(() => {
                                         connection.release();
                                         res.status(500).json({
-                                            error: 'Error updating item status (sqlUpdateItems)',
+                                            error: 'Error saving booking items to database (sqlInsertBookingItems)',
                                             details: err.message
                                         });
                                     });
                                 }
 
-                                const getBookingDetails = `
-                                    SELECT b.booking_id,
-                                           b.name,
-                                           b.phone,
-                                           b.email,
-                                           b.comments,
-                                           b.children,
-                                           b.arrival_date,
-                                           b.total_price,
-                                           b.booking_timestamp,
-                                           GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
-                                           GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
-                                    FROM bookings b
-                                             LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
-                                             LEFT JOIN item_status i ON bi.item_id = i.item_id
-                                    WHERE b.booking_id = ?
-                                    GROUP BY b.booking_id
-                                `;
-
-                                connection.query(getBookingDetails, [bookingId], (err, bookingDetails) => {
+                                const sqlUpdateItems = "UPDATE item_status SET is_booked = TRUE WHERE item_id IN (?)";
+                                connection.query(sqlUpdateItems, [items], (err, result) => {
                                     if (err) {
-                                        console.error('Error fetching booking details', err);
+                                        console.error('Error updating item status (sqlUpdateItems)', err);
                                         return connection.rollback(() => {
                                             connection.release();
-                                            res.status(500).json({error: 'Error fetching booking details'});
+                                            res.status(500).json({
+                                                error: 'Error updating item status (sqlUpdateItems)',
+                                                details: err.message
+                                            });
                                         });
                                     }
 
-                                    connection.commit(err => {
+                                    const getBookingDetails = `
+                                        SELECT b.booking_id,
+                                               b.name,
+                                               b.phone,
+                                               b.email,
+                                               b.comments,
+                                               b.children,
+                                               b.arrival_date,
+                                               b.total_price,
+                                               b.booking_timestamp,
+                                               GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
+                                               GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
+                                        FROM bookings b
+                                                 LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
+                                                 LEFT JOIN item_status i ON bi.item_id = i.item_id
+                                        WHERE b.booking_id = ?
+                                        GROUP BY b.booking_id
+                                    `;
+
+                                    connection.query(getBookingDetails, [bookingId], (err, bookingDetails) => {
                                         if (err) {
-                                            console.error('Error committing transaction', err);
+                                            console.error('Error fetching booking details', err);
                                             return connection.rollback(() => {
                                                 connection.release();
-                                                res.status(500).json({
-                                                    error: 'Error committing transaction',
-                                                    details: err.message
-                                                });
+                                                res.status(500).json({ error: 'Error fetching booking details' });
                                             });
                                         }
-                                        connection.release();
-                                        res.json({bookingId, ...bookingDetails[0]});
+
+                                        console.log('Booking details fetched successfully:', bookingDetails[0]);
+
+                                        connection.commit(err => {
+                                            if (err) {
+                                                console.error('Error committing transaction', err);
+                                                return connection.rollback(() => {
+                                                    connection.release();
+                                                    res.status(500).json({
+                                                        error: 'Error committing transaction',
+                                                        details: err.message
+                                                    });
+                                                });
+                                            }
+                                            connection.release();
+                                            res.json({ bookingId, ...bookingDetails[0] });
+                                        });
                                     });
                                 });
                             });
@@ -1163,6 +1197,7 @@ app.post('/api/book', (req, res) => {
         });
     });
 });
+
 
 
 app.listen(port, () => {

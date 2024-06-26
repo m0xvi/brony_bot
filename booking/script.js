@@ -79,9 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 .map(box => parseInt(box.value, 10))
                 .filter(value => !isNaN(value));
 
-            // Генерируем новый bookingId для каждого бронирования
             const bookingId = uuidv4();
-
             const formData = {
                 name: document.getElementById('name').value,
                 phone: document.getElementById('phone').value,
@@ -97,8 +95,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             localStorage.setItem('bookingData', JSON.stringify(formData));
             localStorage.setItem('bookingId', bookingId);
-            localStorage.setItem('paymentCompleted', 'false');
 
+            localStorage.setItem('paymentCompleted', 'false');
             document.getElementById('booking-id').value = bookingId;
 
             try {
@@ -127,7 +125,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 const paymentData = await paymentResponse.json();
-
                 if (!paymentResponse.ok) {
                     throw new Error(paymentData.error || 'Ошибка создания платежа');
                 }
