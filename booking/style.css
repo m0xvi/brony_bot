@@ -12,7 +12,7 @@ body, html {
     border-radius: 8px;
     box-sizing: border-box;
     max-width: 600px;
-    min-width: 450px;
+    min-width: 465px;
 }
 
 h2 {
@@ -158,7 +158,7 @@ img {
     text-decoration: none;
     font-weight: 600;
     word-break: break-all;
-    font-size: 22px;
+    font-size: 20px;
 }
 
 button {
@@ -290,9 +290,8 @@ input:hover {
 input[type="text"],
 input[type="tel"],
 input[type="date"],
-input[type="time"],
-select,
-textarea {
+select
+{
     width: 100%;
     padding: 8px;
     border: 1px solid #ccc;
@@ -300,6 +299,7 @@ textarea {
     box-sizing: border-box;
     resize: vertical;
 }
+
 
 input[type="time"] {
     resize: none;
@@ -311,8 +311,7 @@ textarea {
 }
 
 #comments {
-    margin-bottom: 20px;
-    padding-bottom: 80px;
+    margin-bottom: 5px;
     transition: scale 1s ease-out;
 }
 
@@ -411,7 +410,7 @@ textarea {
 }
 
 .items-container {
-    display: flex;
+    display: none;
     flex-wrap: wrap;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -571,8 +570,9 @@ select option:checked {
         font-size: 18px;
     }
 
-    .comm, .comm textarea {
+    .comm {
         width: 100%;
+        margin-top: 5px;
     }
 
     .quantity-control button {
@@ -713,4 +713,8 @@ select option:checked {
 
 #comments::-webkit-scrollbar {
     width: 0;
+}
+
+.hidden {
+    display: none;
 }

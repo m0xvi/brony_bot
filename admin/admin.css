@@ -7,15 +7,19 @@ html, body {
     display: flex;
     flex-direction: column;
 }
+body::-webkit-scrollbar {
+    width: 0;
+}
 
 .container {
     display: flex;
+    height: 100%;
     justify-content: space-between;
     padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     background-color: #fff;
     border-radius: 8px;
-    box-sizing: border-box;
+    position: relative;
 }
 
 .admin-control, .bookings-list {
@@ -23,7 +27,14 @@ html, body {
     background-color: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
+    border: 1px solid #eee;
+    box-sizing: border-box;
 }
+
+.booking_item {
+    word-break: break-all;
+}
+
 
 .admin-control button, .admin-control select, .admin-control input[type="date"] {
     margin-top: 10px;
@@ -33,20 +44,36 @@ html, body {
     margin: 5px 0;
 }
 
+.admin-buttons {
+    display: flex;
+}
+
 
 .bookings-list {
     width: 65%;
     background-color: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
+    border: 1px solid #eee;
+    overflow-y: auto;
+    margin-left: 50px;
 }
 
 .checkbox-container {
     display: flex;
     align-items: center;
-    margin-right: 10px;
-    margin-bottom: 10px;
     position: relative;
+    cursor: pointer;
+    font-size: 14px;
+    user-select: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    transition: background-color 0.3s;
+    border: 1px solid #ccc;
+    margin: 10px;
+    justify-content: center;
 }
 
 .checkbox-container .checkmark {
@@ -54,10 +81,9 @@ html, body {
 }
 
 .checkbox-container div {
-    margin-left: 5px;
+    margin: 0 auto;
     position: absolute;
-    top: -15px;
-    width: 120%;
+    border-radius: 5px;
 }
 
 .items-container {
@@ -68,6 +94,7 @@ html, body {
     justify-content: center;
     transition: background-color 0.3s;
     padding: 10px;
+    width: 90%;
 }
 
 .items-container .item {
@@ -79,6 +106,7 @@ html, body {
     position: relative;
     cursor: pointer;
     user-select: none;
+    justify-content: center;
 }
 
 .items-container label input {
@@ -106,26 +134,20 @@ html, body {
     scale: 101%;
 }
 
+.checkbox-container input {
+    display: none;
+}
+
 .items-container .checkmark:hover {
     background-color: #ccc;
 }
 
-.items-container .bed input:not(:checked) ~ .checkmark {
-    background-image: url('../img/bed-icon.svg');
-}
-
 .items-container .bed input:checked ~ .checkmark {
-    background-image: url('../img/bed-icon.svg');
     background-color: #ff8987;
     border: 1px solid red;
 }
 
-.items-container .lounger input:not(:checked) ~ .checkmark {
-    background-image: url('../img/lounger-icon.svg');
-}
-
 .items-container .lounger input:checked ~ .checkmark {
-    background-image: url('../img/lounger-icon.svg');
     background-color: #ff8987;
     border: 1px solid red;
 }
@@ -257,36 +279,16 @@ button:hover {
 }
 
 .items-container {
-    display: grid;
+    display: none;
     grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
     gap: 10px;
 }
 
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    cursor: pointer;
-    font-size: 14px;
-    user-select: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    transition: background-color 0.3s;
-}
-
-.checkbox-container input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-    height: 0;
-    width: 0;
-}
-
 .checkbox-container input:checked ~ .checkmark {
-    background-color: #4CAF50;
+    background-color: #ff8987;
+    border-radius: 5px;
+    position: absolute;
+    border: 2px solid red;
 }
 
 .checkbox-container .checkmark {
@@ -295,20 +297,55 @@ button:hover {
     background-color: transparent;
 }
 
-.checkbox-container .checkmark:after {
-    content: "";
-    position: absolute;
-    display: none;
+
+#remove-item-btn, #add-item-btn {
+    font-size: 20px;
 }
 
-.checkbox-container input:checked ~ .checkmark:after {
-    display: none;
-}
-
-.checkbox-container img {
+#update-items-btn, #reset-data-btn {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 5px;
+    margin: 5px;
 }
+
+.item_cont {
+    display: flex;
+    justify-content: space-between;
+}
+
+.btn_ad_rm {
+    display: grid;
+    width: 10%;
+    margin-left: 10px;
+}
+
+.hide-btn {
+    border: none;
+    font-size: 20px;
+    color: white;
+    cursor: pointer;
+    float: right;
+    padding: 3px 8px;
+}
+
+.logout-btn {
+    position: absolute;
+    left: 93%;
+    top: 15px;
+}
+
+.day-container {
+    background-color: #a8cca833;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.day-container h3 {
+    background-color: #bddfa9;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 0 0 20px;
+}
+
+
 

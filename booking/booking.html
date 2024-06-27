@@ -79,24 +79,24 @@
         <label>Доступно:</label>
         <div id="beds-container" class="items-container" style="display: none;"></div>
         <div id="loungers-container" class="items-container" style="display: none;"></div>
+        <label class="comm" for="comments">Укажите время прибытия</label>
+        <input type="time" id="comments" placeholder="Укажите время прибытия" value="">
         <div id="child">
             <input type="checkbox" id="children-checkbox">
             <label for="children-checkbox">Дети (с 3-х до 14-ти лет)</label>
             <div id="children-controls" class="animated" style="display: none;">
                 <div class="quantity-control">
                     <button type="button" onclick="decreaseCount('children')">-</button>
-                    <input type="number" id="children" name="children" min="1" max="10" value="1">
+                    <input type="number" id="children" name="children" min="1" max="5" value="1">
                     <button type="button" onclick="increaseCount('children')">+</button>
                 </div>
             </div>
         </div>
-        <label class="comm" for="comments">Комментарий</label>
-        <textarea id="comments" placeholder="Ваши комментарии"></textarea>
         <div class="policy-container">
             <div class="policy">
                 <input type="checkbox" id="policy-checkbox" required>
                 <label for="policy-checkbox">Я согласен(а) на <a href="https://pool.hotelusadba.ru/privacy-policy.html">обработку
-                    моих персональных данных</a></label>
+                    персональных данных</a></label>
             </div>
             <div class="rules">
                 <input type="checkbox" id="rules-checkbox" required>
@@ -127,17 +127,12 @@
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('arrival-date').value = today;
         fetchItemsAndDisplay(getQueryParam('type'), today);
-
-        const itemsContainers = document.querySelectorAll('.items-container');
-        itemsContainers.forEach(container => container.style.display = 'flex');
     }
 
     function getQueryParam(param) {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(param);
     }
-
-
 </script>
 </body>
 </html>

@@ -3,45 +3,470 @@
 <head>
     <meta charset="UTF-8">
     <title>Админка</title>
-    <link rel="stylesheet" href="admin.css">
+    <!--    <link rel="stylesheet" href="admin.css">-->
+    <link rel="apple-touch-icon" sizes="180x180" href="/admin/img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/admin/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/admin/img/favicon-16x16.png">
+    <link rel="manifest" href="/admin/img/site.webmanifest">
+    <style>
+        #add-item-modal, #remove-item-modal, #create-booking-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5); /* затемнение фона */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .5);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+
+        .modalAd {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-content-ad {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 300px;
+            border-radius: 8px;
+        }
+
+        #loginForm {
+            display: grid;
+        }
+
+        html, body {
+            font-size: 18px;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .container {
+            display: flex;
+            height: 100%;
+            justify-content: space-between;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .admin-control, .bookings-list {
+            width: 45%;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            box-sizing: border-box;
+        }
+
+        .booking_item {
+            word-break: break-all;
+        }
+
+
+        .admin-control button, .admin-control select, .admin-control input[type="date"] {
+            margin-top: 10px;
+            width: 100%;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .admin-buttons button {
+            margin: 5px 0;
+        }
+
+        .admin-buttons {
+            display: flex;
+        }
+
+
+        .bookings-list {
+            width: 65%;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            overflow-y: auto;
+            margin-left: 50px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            font-size: 14px;
+            user-select: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            transition: background-color 0.3s;
+            border: 1px solid #ccc;
+            margin: 10px;
+            justify-content: center;
+        }
+
+        .checkbox-container .checkmark {
+            margin-right: 5px;
+        }
+
+        .checkbox-container div {
+            margin: 0 auto;
+            position: absolute;
+            border-radius: 5px;
+        }
+
+        .items-container {
+            display: flex;
+            flex-wrap: wrap;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            justify-content: center;
+            transition: background-color 0.3s;
+            padding: 10px;
+            width: 90%;
+        }
+
+        .items-container .item {
+            position: relative;
+            border-radius: 5px;
+        }
+
+        .items-container label {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            justify-content: center;
+        }
+
+        .items-container label input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .items-container .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 35px;
+            width: 35px;
+            background-color: #eee;
+            border-radius: 5px;
+            background-size: cover;
+            display: inline-block;
+            border: 1px solid #ccc;
+            box-shadow: 0px 1px 5px 1px rgba(34, 60, 80, 0.2);
+            transition: all 0.3s ease-out;
+        }
+
+        .items-container .checkmark:hover {
+            scale: 101%;
+        }
+
+        .checkbox-container input {
+            display: none;
+        }
+
+        .items-container .checkmark:hover {
+            background-color: #ccc;
+        }
+
+        .items-container .bed input:checked ~ .checkmark {
+            background-color: #ff8987;
+            border: 1px solid red;
+        }
+
+        .items-container .lounger input:checked ~ .checkmark {
+            background-color: #ff8987;
+            border: 1px solid red;
+        }
+
+
+        .items-container input:disabled ~ .checkmark {
+            background-color: #ff8987;
+            cursor: not-allowed;
+            border-radius: 5px;
+            border: 2px solid red;
+        }
+
+        select {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 8px;
+            appearance: none;
+            -moz-appearance: none;
+            -webkit-appearance: none;
+            width: 100%;
+            position: relative;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%204%205%22%3E%3Cpath%20fill%3D%22%23000%22%20d%3D%22M2%200L0%202h4zm0%205L0%203h4z%22/%3E%3C/svg%3E');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 8px 10px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        select option {
+            padding: 10px;
+        }
+
+        select option:hover {
+            background-color: #f1f1f1;
+
+        }
+
+        select option:checked {
+            background-color: #007bff;
+            color: #fff;
+
+        }
+
+        label {
+            display: block;
+            margin: 10px 0;
+            color: #333;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input {
+            padding: 8px;
+            margin-top: 5px;
+            border: none;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: scale 0.5s ease;
+        }
+
+        input:hover {
+            scale: 101%;
+        }
+
+        button:active {
+            transition: 0.2s;
+            transform: scale(99%);
+        }
+
+        button {
+            font-weight: 600;
+            font-size: 16px;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: auto;
+            margin: 10px 3px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.5s ease, scale 0.5s ease;
+        }
+
+        button:hover {
+            background-color: #0069c8;
+            scale: 101%;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .booking-item {
+            padding: 5px;
+            margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .items-container {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+        }
+
+        .checkbox-container input:checked ~ .checkmark {
+            background-color: #ff8987;
+            border-radius: 5px;
+            position: absolute;
+            border: 2px solid red;
+        }
+
+        .checkbox-container .checkmark {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+        }
+
+
+        #remove-item-btn, #add-item-btn {
+            font-size: 20px;
+        }
+
+        #update-items-btn, #reset-data-btn {
+            width: 100%;
+            margin: 5px;
+        }
+
+        .item_cont {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn_ad_rm {
+            display: grid;
+            width: 10%;
+            margin-left: 10px;
+        }
+
+        .hide-btn {
+            border: none;
+            font-size: 20px;
+            color: white;
+            cursor: pointer;
+            float: right;
+            padding: 3px 8px;
+        }
+
+        .logout-btn {
+            position: absolute;
+            left: 93%;
+            top: 15px;
+        }
+
+        .day-container {
+            background-color: #a8cca833;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .day-container h3 {
+            background-color: #bddfa9;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 0 0 20px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
-<?php
-    session_start();
-
-    if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-        // Пользователь не аутентифицирован, перенаправить на страницу входа
-        header("Location: admin.php");
-        exit();
-    }
-
-    echo "<h1>Добро пожаловать, " . htmlspecialchars($_SESSION['username']) . "!</h1>";
-    ?>
-    <a href="logout.php">Выйти</a>
 
 <div class="container">
+    <button class="logout-btn" onclick="logout()">Выйти</button>
     <div class="admin-control">
         <h2>Панель администратора</h2>
         <div>
             <label for="item-type">Тип предмета:</label>
             <select id="item-type">
-                <option value="bed">Кровать</option>
                 <option value="lounger">Шезлонг</option>
+                <option value="bed">Кровать</option>
             </select>
             <label for="booking-date">Дата бронирования:</label>
             <input type="date" id="booking-date">
             <button onclick="fetchItems()">Показать</button>
         </div>
-        <div id="beds-container" class="items-container"></div>
-        <div id="loungers-container" class="items-container"></div>
+        <div class="item_cont">
+            <div id="beds-container" class="items-container"></div>
+            <div id="loungers-container" class="items-container"></div>
+            <div class="btn_ad_rm">
+                <button id="add-item-btn" onclick="openModal()">+</button>
+                <button id="remove-item-btn" onclick="openRemoveModal()">-</button>
+            </div>
+        </div>
         <div class="admin-buttons">
-            <button id="add-item-btn" onclick="addItem()">+</button>
-            <button id="remove-item-btn" onclick="removeItem()">-</button>
-            <br>
             <button id="update-items-btn" onclick="updateItems()">Обновить</button>
-            <br>
-            <button id="reset-data-btn" onclick="resetData()" style="display: none">Сбросить данные</button>
+            <button id="reset-data-btn" style="display: none" onclick="resetData()">Сбросить</button>
+            <button id="create-booking-btn" onclick="openCreateBookingModal()">Создать бронирование</button>
         </div>
     </div>
     <div class="bookings-list">
@@ -49,6 +474,555 @@
         <div id="bookings-container"></div>
     </div>
 </div>
+
+<!-- Модальное окно для добавления предметов -->
+<div id="add-item-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Добавить новые предметы</h2>
+        <label for="item-count">Количество предметов:</label>
+        <input type="number" id="item-count" value="1" min="1" max="100">
+        <div id="default-price-section">
+            <input type="checkbox" id="custom-price-checkbox" onclick="toggleCustomPrice()"> Изменить цену
+        </div>
+        <div id="custom-price-section" class="hidden">
+            <label for="custom-prices">Введите цены через запятую:</label>
+            <textarea id="custom-prices" rows="3"></textarea>
+        </div>
+        <button onclick="submitNewItems()">Добавить</button>
+    </div>
+</div>
+
+<!-- Модальное окно для удаления предметов -->
+<div id="remove-item-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeRemoveModal()">&times;</span>
+        <h2>Удалить предметы</h2>
+        <div id="items-list"></div>
+        <button onclick="submitRemoveItems()">Удалить</button>
+    </div>
+</div>
+
+<div id="create-booking-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeCreateBookingModal()">&times;</span>
+        <h2>Создать бронирование</h2>
+        <form id="create-booking-form">
+            <label for="create-name">Имя</label>
+            <input type="text" id="create-name" name="name" required>
+            <label for="create-phone">Телефон</label>
+            <input type="tel" id="create-phone" name="phone" required>
+            <label for="create-email">Email</label>
+            <input type="email" id="create-email" name="email" required>
+            <label for="create-arrival-date">Дата прибытия</label>
+            <input type="date" id="create-arrival-date" name="arrival-date" required>
+            <label for="create-item-type">Тип предмета</label>
+            <select id="create-item-type" name="item-type" required>
+                <option value="bed">Кровать</option>
+                <option value="lounger">Шезлонг</option>
+            </select>
+            <div id="create-beds-container" class="items-container"></div>
+            <div id="create-loungers-container" class="items-container"></div>
+            <label for="create-comments">Комментарии</label>
+            <textarea id="create-comments" name="comments"></textarea>
+            <label for="create-children">Количество детей</label>
+            <input type="number" id="create-children" name="children" min="0" value="0">
+            <button type="submit">Создать</button>
+        </form>
+    </div>
+</div>
 <script src="admin.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('booking-date').value = today;
+
+        fetchBookings(); // Load bookings on page load
+        fetchItems(); // Load items on page load
+
+        document.getElementById('custom-price-checkbox').addEventListener('change', toggleCustomPrice);
+        document.getElementById('booking-date').addEventListener('change', fetchItems);
+        document.getElementById('item-type').addEventListener('change', fetchItems); // Добавляем обработчик события изменения типа предмета
+
+        document.getElementById('create-booking-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            createBooking();
+        });
+
+        document.getElementById('create-item-type').addEventListener('change', fetchCreateItems);
+        document.getElementById('create-arrival-date').addEventListener('change', fetchCreateItems);
+    });
+
+    function fetchItems() {
+        const itemType = document.getElementById('item-type').value;
+        const bookingDate = document.getElementById('booking-date').value;
+
+        if (!bookingDate || !itemType) {
+            console.error('Invalid date or type');
+            return;
+        }
+
+        fetch(`/api/get-items?type=${itemType}&date=${bookingDate}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(items => {
+                const bedsContainer = document.getElementById('beds-container');
+                const loungersContainer = document.getElementById('loungers-container');
+
+                bedsContainer.innerHTML = '';
+                loungersContainer.innerHTML = '';
+
+                if (itemType === 'bed') {
+                    loungersContainer.style.display = 'none';
+                    bedsContainer.style.display = 'flex';
+                    bedsContainer.style.flexWrap = 'wrap';
+                } else {
+                    bedsContainer.style.display = 'none';
+                    loungersContainer.style.display = 'flex';
+                    loungersContainer.style.flexWrap = 'wrap';
+                }
+
+                const itemsContainer = itemType === 'bed' ? bedsContainer : loungersContainer;
+                items.forEach((item, index) => {
+                    const label = document.createElement('label');
+                    label.className = `checkbox-container ${itemType}`;
+                    label.innerHTML = `
+                    <input type="checkbox" data-id="${item.item_id}" ${item.is_booked_today ? 'checked' : ''}>
+                    <span class="checkmark"></span>
+                    <div><b>ID:</b> ${item.item_id} <br> ${item.price} ₽</div>
+                `;
+                    itemsContainer.appendChild(label);
+                });
+            })
+            .catch(error => console.error('Failed to load items:', error));
+    }
+
+
+    function updateItems() {
+        const checkboxes = document.querySelectorAll('#beds-container input[type="checkbox"], #loungers-container input[type="checkbox"]');
+        const bookingDate = document.getElementById('booking-date').value;
+        const items = Array.from(checkboxes).map(checkbox => ({
+            item_id: checkbox.getAttribute('data-id'),
+            is_booked: checkbox.checked ? 1 : 0,
+            booking_date: bookingDate,
+            booking_id: checkbox.checked ? generateUUID() : null
+        }));
+
+        console.log('Updating items:', items); // Логирование
+
+        fetch('/api/admin/update-items', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({items})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Items updated successfully!');
+                fetchItems(); // Reload items after update
+                fetchBookings(); // Reload bookings after update
+            })
+            .catch(error => console.error('Error updating items:', error));
+    }
+
+    function fetchBookings() {
+        fetch('/api/admin/get-bookings')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(bookings => {
+                const bookingsContainer = document.getElementById('bookings-container');
+                bookingsContainer.innerHTML = '';
+
+                const bookingsByDate = groupBookingsByDate(bookings);
+
+                for (const [date, dailyBookings] of Object.entries(bookingsByDate)) {
+                    const dayContainer = document.createElement('div');
+                    dayContainer.className = 'day-container';
+                    const dayHead = document.createElement('h3');
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'day-header';
+                    dayHead.textContent = `${formatDate(date)}`;
+
+                    dayHead.addEventListener('click', () => {
+                        dayHeader.classList.toggle('hidden');
+                    });
+
+                    dayHeader.style.display = 'grid';
+                    dayHeader.style.gridTemplateColumns = 'repeat(auto-fill, minmax(30%, 2fr))';
+
+                    dayContainer.appendChild(dayHead);
+                    dayContainer.appendChild(dayHeader);
+
+                    dailyBookings.forEach(booking => {
+                        const div = document.createElement('div');
+                        div.className = 'booking-item';
+                        div.innerHTML = `
+                        <button class="hide-btn" onclick="hideBooking('${booking.booking_id}')">&times;</button>
+                        <p><strong>ID бронирования:</strong> ${booking.booking_id}</p>
+                        <p><strong>Имя:</strong> ${booking.name}</p>
+                        <p><strong>Email:</strong> ${booking.email}</p>
+                        <p><strong>Дата прибытия:</strong> ${new Date(booking.arrival_date).toLocaleDateString()}</p>
+                        <p><strong>Время бронирования:</strong> ${new Date(booking.booking_timestamp).toLocaleString()}</p>
+                        <p><strong>Телефон:</strong> ${booking.phone}</p>
+                        <p><strong>Время прибытия:</strong> ${booking.comments}</p>
+                        <p><strong>Количество детей:</strong> ${booking.children}</p>
+                        <p><strong>Общая цена:</strong> ${booking.total_price} ₽</p>
+                        ${booking.beds ? `<p><strong>Кровати:</strong> ${booking.beds.split(',').map(id => `ID: ${id}`).join(', ')}</p>` : ''}
+                        ${booking.loungers ? `<p><strong>Шезлонги:</strong> ${booking.loungers.split(',').map(id => `ID: ${id}`).join(', ')}</p>` : ''}
+                    `;
+                        dayHeader.appendChild(div);
+                    });
+
+                    bookingsContainer.appendChild(dayContainer);
+                }
+            })
+            .catch(error => console.error('Failed to load bookings:', error));
+    }
+
+    function groupBookingsByDate(bookings) {
+        return bookings.reduce((acc, booking) => {
+            const date = new Date(booking.arrival_date).toLocaleDateString('en-CA'); // Ensure date is correct
+            if (!acc[date]) {
+                acc[date] = [];
+            }
+            acc[date].push(booking);
+            return acc;
+        }, {});
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ru-RU', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long'
+        });
+    }
+
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+
+    function removeItem() {
+        const itemType = document.getElementById('item-type').value;
+        fetch('/api/admin/remove-item', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({item_type: itemType})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Item removed:', data); // Log the server response after removal
+                alert('Item removed successfully!');
+                fetchItems(); // Reload items after update
+            })
+            .catch(error => console.error('Error removing item:', error));
+    }
+
+    function resetData() {
+        fetch('/api/reset-data', {
+            method: 'POST'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Data reset:', data); // Log the server response after reset
+                alert('Data reset successfully!');
+                fetchItems(); // Reload items after reset
+                fetchBookings(); // Reload bookings after reset
+            })
+            .catch(error => console.error('Error resetting data:', error));
+    }
+
+
+    function hideBooking(bookingId) {
+        fetch(`/api/admin/remove-booking/${bookingId}`, {
+            method: 'DELETE'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Booking removed:', data);
+                fetchBookings(); // Reload bookings after deletion
+            })
+            .catch(error => console.error('Error deleting booking:', error));
+    }
+
+
+    function openModal() {
+        document.getElementById('add-item-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('add-item-modal').style.display = 'none';
+    }
+
+    function toggleCustomPrice() {
+        const isChecked = document.getElementById('custom-price-checkbox').checked;
+        document.getElementById('custom-price-section').classList.toggle('hidden', !isChecked);
+        document.getElementById('default-price-section').classList.toggle('hidden', isChecked);
+    }
+
+    function submitNewItems() {
+        const itemType = document.getElementById('item-type').value;
+        const itemCount = parseInt(document.getElementById('item-count').value, 10);
+        let prices = [];
+
+        if (document.getElementById('custom-price-checkbox').checked) {
+            const customPrices = document.getElementById('custom-prices').value.split(',').map(price => parseFloat(price.trim()));
+            if (customPrices.length !== itemCount) {
+                alert('Количество цен должно совпадать с количеством предметов.');
+                return;
+            }
+            prices = customPrices;
+        } else {
+            const defaultPrice = itemType === 'bed' ? 4500 : 2200;
+            prices = Array(itemCount).fill(defaultPrice);
+        }
+
+        fetch('/api/admin/add-items', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({item_type: itemType, prices: prices})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Items added:', data); // Log the server response after addition
+                alert('Items added successfully!');
+                fetchItems(); // Reload items after update
+                closeModal();
+            })
+            .catch(error => console.error('Error adding items:', error));
+    }
+
+    function openRemoveModal() {
+        const itemType = document.getElementById('item-type').value;
+        fetch(`/api/get-items?type=${itemType}`)
+            .then(response => response.json())
+            .then(items => {
+                const itemsList = document.getElementById('items-list');
+                itemsList.innerHTML = '';
+                itemsList.style.display = 'flex';
+                itemsList.style.margin = '20px';
+                itemsList.style.border = '1px solid #ccc';
+                itemsList.style.borderRadius = '10px';
+                itemsList.style.padding = '20px';
+                itemsList.style.flexWrap = 'wrap';
+
+
+                items.forEach(item => {
+                    const label = document.createElement('label');
+                    label.className = 'checkbox-container';
+                    label.innerHTML = `
+                    <input type="checkbox" value="${item.item_id}">
+                    <span class="checkmark"></span>
+                    <div><b>ID:</b> ${item.item_id} <br> ${item.price} ₽</div>
+                `;
+                    itemsList.appendChild(label);
+                });
+
+                document.getElementById('remove-item-modal').style.display = 'flex';
+            })
+            .catch(error => console.error('Failed to load items:', error));
+    }
+
+    function closeRemoveModal() {
+        document.getElementById('remove-item-modal').style.display = 'none';
+    }
+
+    function submitRemoveItems() {
+        const checkboxes = document.querySelectorAll('#items-list input[type="checkbox"]:checked');
+        const itemIds = Array.from(checkboxes).map(checkbox => parseInt(checkbox.value, 10));
+
+        if (itemIds.length === 0) {
+            alert('Выберите хотя бы один предмет для удаления.');
+            return;
+        }
+
+        fetch('/api/admin/remove-items', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({item_ids: itemIds})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Items removed:', data);
+                alert('Items removed successfully!');
+                fetchItems(); // Reload items after update
+                closeRemoveModal();
+            })
+            .catch(error => console.error('Error removing items:', error));
+    }
+
+
+    function openCreateBookingModal() {
+        document.getElementById('create-booking-modal').style.display = 'flex';
+    }
+
+    function closeCreateBookingModal() {
+        document.getElementById('create-booking-modal').style.display = 'none';
+    }
+
+    function createBooking() {
+        const formData = new FormData(document.getElementById('create-booking-form'));
+        const items = [];
+        const itemType = formData.get('item-type');
+        const checkboxes = document.querySelectorAll(`#create-${itemType}-container input[type="checkbox"]:checked`);
+
+        checkboxes.forEach(checkbox => {
+            items.push({
+                item_id: checkbox.getAttribute('data-id'),
+                price: parseFloat(checkbox.nextElementSibling.textContent.split(' ')[1])
+            });
+        });
+
+        const total_price = items.reduce((total, item) => total + item.price, 0);
+
+        const bookingData = {
+            name: formData.get('name'),
+            phone: formData.get('phone'),
+            email: formData.get('email'),
+            arrival_date: formData.get('arrival-date'),
+            item_type: itemType,
+            comments: formData.get('comments'),
+            children: formData.get('children'),
+            booking_id: generateUUID(),
+            items: items,
+            total_price: total_price
+        };
+
+        fetch('/api/admin/create-booking', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(bookingData)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Booking created successfully!');
+                fetchBookings(); // Reload bookings after creation
+                closeCreateBookingModal();
+            })
+            .catch(error => console.error('Error creating booking:', error));
+    }
+
+
+    function fetchCreateItems() {
+        const itemType = document.getElementById('create-item-type').value;
+        const bookingDate = document.getElementById('create-arrival-date').value;
+
+        if (!bookingDate || !itemType) {
+            console.error('Invalid date or type');
+            return;
+        }
+
+        fetch(`/api/get-items?type=${itemType}&date=${bookingDate}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(items => {
+                const bedsContainer = document.getElementById('create-beds-container');
+                const loungersContainer = document.getElementById('create-loungers-container');
+
+                bedsContainer.innerHTML = '';
+                loungersContainer.innerHTML = '';
+
+                if (itemType === 'bed') {
+                    loungersContainer.style.display = 'none';
+                    bedsContainer.style.display = 'flex';
+                    bedsContainer.style.flexWrap = 'wrap';
+                } else {
+                    bedsContainer.style.display = 'none';
+                    loungersContainer.style.display = 'flex';
+                    loungersContainer.style.flexWrap = 'wrap';
+                }
+
+                const itemsContainer = itemType === 'bed' ? bedsContainer : loungersContainer;
+                items.forEach((item) => {
+                    const label = document.createElement('label');
+                    label.className = `checkbox-container ${itemType}`;
+                    label.innerHTML = `
+                    <input type="checkbox" data-id="${item.item_id}" ${item.is_booked_today ? 'checked disabled' : ''}>
+                    <span class="checkmark"></span>
+                    <div><b>ID:</b> ${item.item_id} <br> ${item.price} ₽</div>
+                `;
+                    itemsContainer.appendChild(label);
+                });
+            })
+            .catch(error => console.error('Failed to load items:', error));
+    }
+
+    window.onload = function () {
+        fetch('/api/check-session')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.loggedin || data.role !== 'Admin') {
+                    window.location.href = '/admin/login.html';
+                }
+            });
+    };
+
+
+    function logout() {
+        fetch('/api/logout')
+            .then(() => window.location.href = '/admin/login.html');
+    }
+</script>
 </body>
 </html>

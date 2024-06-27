@@ -70,35 +70,36 @@ document.addEventListener('DOMContentLoaded', function () {
     const {v4: uuidv4} = uuid;
 
     let checkout;
+    let timeoutId;
 
     document.getElementById('book-button').addEventListener('click', async function (event) {
         event.preventDefault();
+        const bookButton = document.getElementById('book-button');
+        bookButton.disabled = true;
+
         if (validateAll()) {
             const selectedItems = Array.from(document.querySelectorAll('input[name="selectedItems[]"]:checked'))
                 .map(box => parseInt(box.value, 10))
                 .filter(value => !isNaN(value));
 
-            // Генерируем новый bookingId для каждого бронирования
             const bookingId = uuidv4();
-
             const formData = {
                 name: document.getElementById('name').value,
                 phone: document.getElementById('phone').value,
                 email: document.getElementById('email').value,
                 arrivalDate: document.getElementById('arrival-date').value,
                 items: selectedItems,
-                children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 10) || 0 : 0,
+                children: document.getElementById('children-checkbox').checked ? parseInt(document.getElementById('children').value, 5) || 0 : 0,
                 comments: document.getElementById('comments').value,
                 totalPrice: updateTotalPrice(),
-                bookingId: bookingId // Используем новый bookingId
+                bookingId: bookingId
             };
 
-            console.log('Данные формы для бронирования:', formData);
 
-            // Сохраняем данные формы в localStorage
             localStorage.setItem('bookingData', JSON.stringify(formData));
-            localStorage.setItem('bookingId', bookingId); // Сохраняем новый bookingId в localStorage
+            localStorage.setItem('bookingId', bookingId);
 
+            localStorage.setItem('paymentCompleted', 'false');
             document.getElementById('booking-id').value = bookingId;
 
             try {
@@ -122,37 +123,38 @@ document.addEventListener('DOMContentLoaded', function () {
                     body: JSON.stringify({
                         totalPrice: formData.totalPrice,
                         email: formData.email,
-                        bookingId: formData.bookingId // Передаем новый bookingId
+                        bookingId: formData.bookingId
                     })
                 });
 
                 const paymentData = await paymentResponse.json();
-                console.log('Ответ от create-payment:', paymentData);
-
                 if (!paymentResponse.ok) {
                     throw new Error(paymentData.error || 'Ошибка создания платежа');
                 }
 
-                // Устанавливаем таймер на 10 минут для удаления брони
-                setTimeout(() => {
-                    if (!localStorage.getItem('paymentCompleted')) {
+                const timeoutId = setTimeout(() => {
+                    if (localStorage.getItem('paymentCompleted') !== 'true') {
+                        console.log(`Время ожидания истекло для бронирования ID: ${bookingId}. Удаление временного бронирования.`);
                         fetch(`/api/cancel-booking/${bookingId}`, {
                             method: 'DELETE'
                         }).then(() => {
                             localStorage.removeItem('bookingId');
                             alert('Бронь была удалена из-за неоплаты в течение 10 минут.');
                             window.location.reload();
+                        }).catch(error => {
+                            console.error('Ошибка при удалении временного бронирования:', error);
                         });
+                    } else {
+                        console.log(`Оплата завершена для бронирования ID: ${bookingId}, временное бронирование не будет удалено.`);
                     }
                 }, 600000);
 
-                // Здесь извлекаем token подтверждения
+
                 const confirmationToken = paymentData.confirmation_token;
                 if (!confirmationToken) {
                     throw new Error('Confirmation token is missing');
                 }
 
-                console.log(`Получен confirmation_token: ${confirmationToken}`);
 
                 checkout = new window.YooMoneyCheckoutWidget({
                     confirmation_token: confirmationToken,
@@ -160,6 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     error_callback: function (error) {
                         console.error('Error:', error);
                         alert('Произошла ошибка при создании платежа');
+                        bookButton.disabled = false;
                     }
                 });
 
@@ -167,20 +170,33 @@ document.addEventListener('DOMContentLoaded', function () {
                 paymentFormContainer.style.display = 'flex';
                 checkout.render('payment-form');
 
-                // Обработчик закрытия виджета оплаты
+
                 document.getElementById('closeBtn').addEventListener('click', function () {
                     if (checkout) {
                         checkout.destroy();
                         paymentFormContainer.style.display = 'none';
-                        cancelBooking(bookingId);  // Вызов функции для удаления временной записи бронирования
+                        cancelBooking(bookingId);
+                        bookButton.disabled = false;
                     }
                 });
             } catch (error) {
                 console.error('Ошибка:', error);
                 alert(`Произошла ошибка: ${error.message}`);
+                bookButton.disabled = false;
             }
+
+            window.addEventListener('beforeunload', function () {
+                const bookingId = localStorage.getItem('bookingId');
+                if (bookingId) {
+                    cancelBooking(bookingId);
+                    clearTimeout(timeoutId);
+                }
+            });
+        } else {
+            bookButton.disabled = false; // Включаем кнопку если валидация не пройдена
         }
     });
+
 
     async function cancelBooking(bookingId) {
         try {
@@ -190,7 +206,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!response.ok) {
                 throw new Error('Ошибка удаления временного бронирования');
             }
-            console.log('Временное бронирование удалено');
             localStorage.removeItem('bookingId');
         } catch (error) {
             console.error('Ошибка при удалении временного бронирования:', error);
@@ -217,7 +232,6 @@ function populateDateOptions() {
 
 function fetchItemsAndDisplay(type, date) {
     if (!date || !type) {
-        console.error('Invalid date or type');
         return;
     }
 
