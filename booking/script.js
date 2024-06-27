@@ -74,6 +74,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('book-button').addEventListener('click', async function (event) {
         event.preventDefault();
+        const bookButton = document.getElementById('book-button');
+        bookButton.disabled = true;
+
         if (validateAll()) {
             const selectedItems = Array.from(document.querySelectorAll('input[name="selectedItems[]"]:checked'))
                 .map(box => parseInt(box.value, 10))
@@ -159,6 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     error_callback: function (error) {
                         console.error('Error:', error);
                         alert('Произошла ошибка при создании платежа');
+                        bookButton.disabled = false;
                     }
                 });
 
@@ -172,11 +176,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         checkout.destroy();
                         paymentFormContainer.style.display = 'none';
                         cancelBooking(bookingId);
+                        bookButton.disabled = false;
                     }
                 });
             } catch (error) {
                 console.error('Ошибка:', error);
                 alert(`Произошла ошибка: ${error.message}`);
+                bookButton.disabled = false;
             }
 
             window.addEventListener('beforeunload', function () {
@@ -186,6 +192,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearTimeout(timeoutId);
                 }
             });
+        } else {
+            bookButton.disabled = false; // Включаем кнопку если валидация не пройдена
         }
     });
 

@@ -236,7 +236,7 @@ function sendBookingDetailsToReception(bookingData) {
         month: 'long',
         day: 'numeric'
     })}</p>
-                <p>Комментарии: ${bookingData.comments}</p>
+                <p>Время прибытия: ${bookingData.comments}</p>
                 <p>Количество детей: ${bookingData.children}</p>
                 <p>Общая цена: ${bookingData.total_price} ₽</p>
                 <p>Кровати: ${bookingData.beds ? bookingData.beds.split(',').map(id => `Кровать ID: ${id}`).join(', ') : ''}</p>

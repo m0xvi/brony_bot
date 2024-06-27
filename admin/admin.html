@@ -678,7 +678,7 @@
                         <p><strong>Дата прибытия:</strong> ${new Date(booking.arrival_date).toLocaleDateString()}</p>
                         <p><strong>Время бронирования:</strong> ${new Date(booking.booking_timestamp).toLocaleString()}</p>
                         <p><strong>Телефон:</strong> ${booking.phone}</p>
-                        <p><strong>Комментарии:</strong> ${booking.comments}</p>
+                        <p><strong>Время прибытия:</strong> ${booking.comments}</p>
                         <p><strong>Количество детей:</strong> ${booking.children}</p>
                         <p><strong>Общая цена:</strong> ${booking.total_price} ₽</p>
                         ${booking.beds ? `<p><strong>Кровати:</strong> ${booking.beds.split(',').map(id => `ID: ${id}`).join(', ')}</p>` : ''}

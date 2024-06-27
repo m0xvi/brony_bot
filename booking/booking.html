@@ -79,6 +79,8 @@
         <label>Доступно:</label>
         <div id="beds-container" class="items-container" style="display: none;"></div>
         <div id="loungers-container" class="items-container" style="display: none;"></div>
+        <label class="comm" for="comments">Укажите время прибытия</label>
+        <input type="time" id="comments" placeholder="Укажите время прибытия" value="">
         <div id="child">
             <input type="checkbox" id="children-checkbox">
             <label for="children-checkbox">Дети (с 3-х до 14-ти лет)</label>
@@ -90,12 +92,11 @@
                 </div>
             </div>
         </div>
-        <label class="comm" for="comments">Комментарий</label>
-        <textarea id="comments" placeholder="Ваши комментарии"></textarea>
         <div class="policy-container">
             <div class="policy">
                 <input type="checkbox" id="policy-checkbox" required>
-                <label for="policy-checkbox">Я согласен(а) на <a href="https://pool.hotelusadba.ru/privacy-policy.html">обработку персональных данных</a></label>
+                <label for="policy-checkbox">Я согласен(а) на <a href="https://pool.hotelusadba.ru/privacy-policy.html">обработку
+                    персональных данных</a></label>
             </div>
             <div class="rules">
                 <input type="checkbox" id="rules-checkbox" required>
@@ -127,6 +128,7 @@
         document.getElementById('arrival-date').value = today;
         fetchItemsAndDisplay(getQueryParam('type'), today);
     }
+
     function getQueryParam(param) {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(param);
