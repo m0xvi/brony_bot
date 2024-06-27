@@ -164,8 +164,8 @@ function inlineCss(html, css) {
 }
 
 function populateTemplate(html, data) {
-    const imgBeds = data.beds ? 'https://pool.hotelusadba.ru/img/bed.png' : '';
-    const imgLoungers = data.loungers ? 'https://pool.hotelusadba.ru/img/lounger.png' : '';
+    const imgBeds = data.beds ? 'https://drive.google.com/file/d/14zFddLr73BIkrd1SqCcYOZx4O6VZ9nPV/view?usp=sharing' : '';
+    const imgLoungers = data.loungers ? 'https://drive.google.com/file/d/1ww-M7oQDTVYZUc-fvoywmK30NInJITgy/view?usp=sharing' : '';
 
     const imageSrc = data.beds ? imgBeds : (data.loungers ? imgLoungers : '');
     return html
