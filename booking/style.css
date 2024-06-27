@@ -311,7 +311,7 @@ textarea {
 }
 
 #comments {
-    margin-bottom: 20px;
+    margin-bottom: 5px;
     transition: scale 1s ease-out;
 }
 
@@ -570,8 +570,9 @@ select option:checked {
         font-size: 18px;
     }
 
-    .comm, .comm textarea {
+    .comm {
         width: 100%;
+        margin-top: 5px;
     }
 
     .quantity-control button {
