@@ -326,24 +326,11 @@ async function checkPaymentStatus(paymentId, bookingId, email) {
         const payment = await yookassa.getPayment(paymentId);
         if (payment.status === 'succeeded') {
             console.log(`Payment status: succeeded for booking ID: ${bookingId}`);
-            const sql = `
-                SELECT b.booking_id,
-                       b.arrival_date,
-                       b.name,
-                       b.email,
-                       b.children,
-                       b.phone,
-                       b.comments,
-                       b.total_price,
-                       b.booking_timestamp,
-                       GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
-                       GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
-                FROM bookings b
-                         LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
-                         LEFT JOIN item_status i ON bi.item_id = i.item_id
-                WHERE b.booking_id = ?
-                GROUP BY b.booking_id
-            `;
+
+            const updatePaymentStatusSQL = `
+                UPDATE bookings 
+                SET payment_status = 'succeeded' 
+                WHERE booking_id = ?`;
 
             dbPool.getConnection((err, connection) => {
                 if (err) {
@@ -351,17 +338,44 @@ async function checkPaymentStatus(paymentId, bookingId, email) {
                     return;
                 }
 
-                connection.query(sql, [bookingId], (err, result) => {
+                connection.query(updatePaymentStatusSQL, [bookingId], (err, result) => {
                     connection.release();
                     if (err) {
-                        console.error('Error fetching booking:', err);
-                    } else if (result.length === 0) {
-                        console.error('Booking not found');
-                    } else {
-                        const bookingData = result[0];
-                        sendConfirmationEmail(email, bookingId, bookingData);
-                        sendBookingDetailsToReception(bookingData);
+                        console.error('Error updating payment status:', err);
+                        return;
                     }
+                    console.log('Payment status updated successfully');
+
+                    const sql = `
+                        SELECT b.booking_id,
+                               b.arrival_date,
+                               b.name,
+                               b.email,
+                               b.children,
+                               b.phone,
+                               b.comments,
+                               b.total_price,
+                               b.booking_timestamp,
+                               GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
+                               GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
+                        FROM bookings b
+                                 LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
+                                 LEFT JOIN item_status i ON bi.item_id = i.item_id
+                        WHERE b.booking_id = ?
+                        GROUP BY b.booking_id
+                    `;
+
+                    connection.query(sql, [bookingId], (err, result) => {
+                        if (err) {
+                            console.error('Error fetching booking:', err);
+                        } else if (result.length === 0) {
+                            console.error('Booking not found');
+                        } else {
+                            const bookingData = result[0];
+                            sendConfirmationEmail(email, bookingId, bookingData);
+                            sendBookingDetailsToReception(bookingData);
+                        }
+                    });
                 });
             });
         } else if (payment.status === 'pending') {
