@@ -72,15 +72,17 @@
         </div>
         <div class="flex-row">
             <div class="flex-item">
-                <label for="arrival-date">Дата бронирования</label>
+                <label for="arrival-date">Дата</label>
                 <select id="arrival-date" required></select>
+            </div>
+            <div class="flex-item">
+                <label class="comm" for="comments">Время</label>
+                <input type="time" id="comments" placeholder="Укажите время прибытия" value="">
             </div>
         </div>
         <label>Доступно:</label>
         <div id="beds-container" class="items-container" style="display: none;"></div>
         <div id="loungers-container" class="items-container" style="display: none;"></div>
-        <label class="comm" for="comments">Укажите время прибытия</label>
-        <input type="time" id="comments" placeholder="Укажите время прибытия" value="">
         <div id="child">
             <input type="checkbox" id="children-checkbox">
             <label for="children-checkbox">Дети (с 3-х до 14-ти лет)</label>

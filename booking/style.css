@@ -313,6 +313,8 @@ textarea {
 #comments {
     margin-bottom: 5px;
     transition: scale 1s ease-out;
+    width: 100%;
+    border: 1px solid #ccc;
 }
 
 #comments:hover {

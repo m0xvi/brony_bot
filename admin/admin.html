@@ -9,7 +9,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/admin/img/favicon-16x16.png">
     <link rel="manifest" href="/admin/img/site.webmanifest">
     <style>
-        #add-item-modal, #remove-item-modal, #create-booking-modal {
+        #add-item-modal, #remove-item-modal, #create-booking-modal, #news-modal {
             display: none;
             position: fixed;
             z-index: 1000;
@@ -456,6 +456,19 @@
             border: 2px solid #7300ff !important;
         }
 
+        #news-modal {
+            display: flex;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
 
     </style>
 </head>
@@ -491,12 +504,16 @@
     <div class="bookings-list">
         <h2>Список бронирований</h2>
         <div class="nav-book">
-            <h4>Бронирования на сегодня</h4>
             <div class="date-filter">
                 <input type="date" id="start-date">
                 <input type="date" id="end-date">
+                <select id="filter-by">
+                    <option value="arrival_date">По дате прибытия</option>
+                    <option value="booking_timestamp">По дате создания</option>
+                </select>
             </div>
             <button id="today-bookings-btn" onclick="fetchTodayBookings()">Сегодня</button>
+            </button>
         </div>
         <div id="bookings-container"></div>
         <button id="load-more-btn" onclick="loadMoreBookings()">Показать еще</button>
@@ -556,11 +573,101 @@
         </form>
     </div>
 </div>
-<script src="admin.js"></script>
+
+
+<div id="news-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeNewsModal()">&times;</span>
+        <h2>Руководство пользователя</h2>
+
+        <h3>Вход в систему</h3>
+        <ol>
+            <li>Перейдите по URL-адресу админки.</li>
+            <li>Введите ваше имя пользователя и пароль для входа в систему.</li>
+        </ol>
+
+        <h3>Основные элементы интерфейса</h3>
+        <p><strong>Панель администратора:</strong> Содержит элементы для управления предметами (шезлонги и кровати),
+            кнопки для создания и удаления предметов.</p>
+        <p><strong>Список бронирований:</strong> Здесь отображаются все бронирования. Вы можете фильтровать бронирования
+            по дате прибытия или дате создания, а также загружать больше бронирований при необходимости.</p>
+
+        <h3>Управление предметами</h3>
+        <ol>
+            <li><strong>Тип предмета:</strong> Выберите тип предмета (шезлонг или кровать) в выпадающем списке.</li>
+            <li><strong>Дата бронирования:</strong> Укажите дату, для которой хотите просмотреть предметы.</li>
+            <li><strong>Кнопки управления предметами:</strong>
+                <ul>
+                    <li><strong>Добавить предмет:</strong> Нажмите на кнопку "+" для добавления нового предмета.</li>
+                    <li><strong>Удалить предмет:</strong> Нажмите на кнопку "-" для удаления выбранного предмета.</li>
+                    <li><strong>Обновить предметы:</strong> Нажмите кнопку "Обновить" для обновления информации о
+                        предметах.
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <strong>Легенда цветов:</strong>
+                <ul>
+                    <li><strong>Желтый:</strong> Бронирования в процессе оплаты.</li>
+                    <li><strong>Красный:</strong>  Бронирования успешно оплачены.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>Работа с бронированиями</h3>
+        <ol>
+            <li><strong>Фильтрация бронирований:</strong> Укажите начальную и конечную даты для фильтрации бронирований.
+                Выберите тип фильтрации (по дате прибытия или по дате создания).
+            </li>
+            <li><strong>Просмотр бронирований:</strong> Бронирования будут отображаться в виде списка. Для каждого дня
+                будут показаны бронирования, сделанные в этот день (или прибытие в этот день в зависимости от
+                фильтрации).
+            </li>
+            <li><strong>Кнопка "Сегодня":</strong> Нажмите на кнопку "Сегодня" для отображения всех бронирований на
+                текущий день.
+            </li>
+            <li><strong>Загрузка дополнительных бронирований:</strong> Если бронирований больше 50, будет отображена
+                кнопка "Показать еще". Нажмите на эту кнопку для загрузки дополнительных бронирований.
+            </li>
+        </ol>
+
+        <h3>Создание и изменение бронирований <span style="color: red">(В работе)</span></h3>
+        <ol style="color: #ccc">
+
+            <li><strong>Создание бронирования:</strong> Нажмите на кнопку "Создать бронирование" для открытия формы
+                создания бронирования. Заполните все необходимые поля и нажмите кнопку "Сохранить" для завершения
+                создания бронирования.
+            </li>
+            <li><strong>Изменение бронирования:</strong> Найдите нужное бронирование в списке, внесите изменения и
+                сохраните их.
+            </li>
+        </ol>
+
+        <h3>Удаление бронирований</h3>
+        <ol>
+            <li>Найдите бронирование, которое хотите удалить.</li>
+            <li>Нажмите на кнопку удаления рядом с бронированием.</li>
+            <li>Подтвердите удаление.</li>
+        </ol>
+
+        <h3>Логаут</h3>
+        <p>Нажмите на кнопку "Выйти", расположенную в верхнем правом углу страницы, чтобы выйти из системы.</p>
+    </div>
+</div>
+</div>
 <script>
+
+    window.onload = function () {
+        document.getElementById('news-modal').style.display = 'flex !important';
+    }
+
+
+    function closeNewsModal() {
+        document.getElementById('news-modal').style.display = 'none';
+    }
+
     let offset = 0;
     const limit = 50;
-    let updatedItems = new Set();
 
     document.addEventListener('DOMContentLoaded', function () {
         const today = new Date().toISOString().split('T')[0];
@@ -573,7 +680,8 @@
 
         document.getElementById('custom-price-checkbox').addEventListener('change', toggleCustomPrice);
         document.getElementById('booking-date').addEventListener('change', fetchItems);
-        document.getElementById('item-type').addEventListener('change', fetchItems); // Добавляем обработчик события изменения типа предмета
+        document.getElementById('item-type').addEventListener('change', fetchItems);
+        document.getElementById('filter-by').addEventListener('change', fetchBookings);
         document.getElementById('start-date').addEventListener('change', fetchBookings);
         document.getElementById('end-date').addEventListener('change', fetchBookings);
 
@@ -680,8 +788,9 @@
     function fetchBookings() {
         const startDate = document.getElementById('start-date').value;
         const endDate = document.getElementById('end-date').value;
+        const filterBy = document.getElementById('filter-by').value;
         offset = 0;
-        fetch(`/api/admin/get-bookings?startDate=${startDate}&endDate=${endDate}&offset=${offset}&limit=${limit}`)
+        fetch(`/api/admin/get-bookings?startDate=${startDate}&endDate=${endDate}&offset=${offset}&limit=${limit}&filterBy=${filterBy}`)
             .then(response => response.json())
             .then(bookingsByDate => {
                 const bookingsContainer = document.getElementById('bookings-container');
@@ -702,7 +811,8 @@
     function loadMoreBookings() {
         const startDate = document.getElementById('start-date').value;
         const endDate = document.getElementById('end-date').value;
-        fetch(`/api/admin/get-bookings?startDate=${startDate}&endDate=${endDate}&offset=${offset}&limit=${limit}`)
+        const filterBy = document.getElementById('filter-by').value;
+        fetch(`/api/admin/get-bookings?startDate=${startDate}&endDate=${endDate}&offset=${offset}&limit=${limit}&filterBy=${filterBy}`)
             .then(response => response.json())
             .then(bookingsByDate => {
                 const bookingsContainer = document.getElementById('bookings-container');
@@ -711,7 +821,6 @@
                 if (Object.keys(bookingsByDate).reduce((acc, date) => acc + bookingsByDate[date].bookings.length, 0) < limit) {
                     document.getElementById('load-more-btn').style.display = 'none';
                 }
-
                 offset += limit;
             })
             .catch(error => console.error('Failed to load bookings:', error));
@@ -737,7 +846,7 @@
             .catch(error => console.error('Failed to load today\'s bookings:', error));
     }
 
-    function renderBookings(container, bookingsByDate) {
+    function renderBookings(container, bookingsByDate, filterBy) {
         for (const [date, {total, bookings}] of Object.entries(bookingsByDate)) {
             const dayContainer = document.createElement('div');
             dayContainer.className = 'day-container';
@@ -770,10 +879,10 @@
                     <p><strong>ID бронирования:</strong> ${booking.booking_id}</p>
                     <p><strong>Имя:</strong> ${booking.name}</p>
                     <p><strong>Email:</strong> ${booking.email}</p>
-                    <p><strong>Дата прибытия:</strong> ${new Date(booking.arrival_date).toLocaleDateString()}</p>
-                    <p><strong>Время бронирования:</strong> ${new Date(booking.booking_timestamp).toLocaleString()}</p>
+                    <p><strong>Дата прибытия:</strong> ${formatDate(booking.arrival_date)}</p>
+                    <p><strong>Дата бронирования:</strong> ${new Date(booking.booking_timestamp).toLocaleString()}</p>
                     <p><strong>Телефон:</strong> ${booking.phone}</p>
-                    <p><strong>Комментарии:</strong> ${booking.comments}</p>
+                    <p><strong>Время прибытия:</strong> ${booking.comments}</p>
                     <p><strong>Количество детей:</strong> ${booking.children}</p>
                     <p><strong>Общая цена:</strong> ${booking.total_price} ₽</p>
                     ${booking.beds ? `<p><strong>Кровати:</strong> ${booking.beds.split(',').map(id => `ID: ${id}`).join(', ')}</p>` : ''}
@@ -867,6 +976,7 @@
     function openModal() {
         document.getElementById('add-item-modal').style.display = 'flex';
     }
+
 
     function closeModal() {
         document.getElementById('add-item-modal').style.display = 'none';
