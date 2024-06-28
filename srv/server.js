@@ -328,8 +328,8 @@ async function checkPaymentStatus(paymentId, bookingId, email) {
             console.log(`Payment status: succeeded for booking ID: ${bookingId}`);
 
             const updatePaymentStatusSQL = `
-                UPDATE bookings 
-                SET payment_status = 'succeeded' 
+                UPDATE bookings
+                SET payment_status = 'succeeded'
                 WHERE booking_id = ?`;
 
             dbPool.getConnection((err, connection) => {
@@ -410,6 +410,37 @@ async function checkPaymentStatus(paymentId, bookingId, email) {
         console.error('Error checking payment status:', error);
     }
 }
+
+const implementationDate = new Date('2024-06-28T00:00:00');
+
+function removePendingBookings() {
+    const sql = `
+        DELETE
+        FROM bookings
+        WHERE payment_status = 'pending'
+          AND booking_timestamp < NOW() - INTERVAL 10 MINUTE
+          AND booking_timestamp >= ?
+    `;
+
+    dbPool.getConnection((err, connection) => {
+        if (err) {
+            console.error('Error getting DB connection', err);
+            return;
+        }
+
+        connection.query(sql, [implementationDate], (err, result) => {
+            connection.release();
+            if (err) {
+                console.error('Error deleting old pending bookings:', err);
+            } else {
+                console.log('Old pending bookings deleted:', result.affectedRows);
+            }
+        });
+    });
+}
+
+setInterval(removePendingBookings, 10 * 60 * 1000);
+
 
 app.post('/api/create-payment', async (req, res) => {
     const {totalPrice, bookingId, email} = req.body;
@@ -611,14 +642,16 @@ app.get('/api/get-items', (req, res) => {
 });
 
 app.get('/api/admin/get-bookings', (req, res) => {
+    const {startDate, endDate, offset = 0, limit = 50} = req.query;
+
     const sql = `
         SELECT b.booking_id,
-               b.name,
                b.arrival_date,
-               b.children,
-               b.phone,
+               b.name,
                b.email,
+               b.phone,
                b.comments,
+               b.children,
                b.total_price,
                b.booking_timestamp,
                GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
@@ -626,10 +659,12 @@ app.get('/api/admin/get-bookings', (req, res) => {
         FROM bookings b
                  LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
                  LEFT JOIN item_status i ON bi.item_id = i.item_id
-        WHERE b.admin_updated = 0
-           OR b.admin_updated IS NULL
+        WHERE (b.payment_status = 'succeeded' AND b.admin_updated = 0 OR
+               (b.payment_status = 'pending' AND b.booking_timestamp < '2024-06-28' AND b.admin_updated = 0))
+          AND b.arrival_date BETWEEN ? AND ? 
         GROUP BY b.booking_id
-        ORDER BY b.arrival_date, b.booking_timestamp DESC
+        ORDER BY b.booking_timestamp DESC LIMIT ?
+        OFFSET ?
     `;
 
     dbPool.getConnection((err, connection) => {
@@ -638,14 +673,79 @@ app.get('/api/admin/get-bookings', (req, res) => {
             return res.status(500).json({error: 'Error getting DB connection'});
         }
 
-        connection.query(sql, (err, result) => {
+        connection.query(sql, [startDate, endDate, parseInt(limit), parseInt(offset)], (err, results) => {
             connection.release();
             if (err) {
                 console.error('Error fetching bookings:', err);
-                res.status(500).json({error: 'Error fetching bookings from database'});
-            } else {
-                res.json(result);
+                return res.status(500).json({error: 'Error fetching bookings from database'});
             }
+
+            // Calculate total price per day
+            const bookingsByDate = results.reduce((acc, booking) => {
+                const date = new Date(booking.arrival_date).toLocaleDateString('en-CA');
+                if (!acc[date]) {
+                    acc[date] = {total: 0, bookings: []};
+                }
+                acc[date].total += booking.total_price;
+                acc[date].bookings.push(booking);
+                return acc;
+            }, {});
+
+            res.json(bookingsByDate);
+        });
+    });
+});
+
+app.get('/api/admin/get-today-bookings', (req, res) => {
+    const today = new Date().toISOString().split('T')[0];
+
+    const sql = `
+        SELECT b.booking_id,
+               b.arrival_date,
+               b.name,
+               b.email,
+               b.phone,
+               b.comments,
+               b.children,
+               b.total_price,
+               b.booking_timestamp,
+               GROUP_CONCAT(CASE WHEN i.item_type = 'bed' THEN bi.item_id END)     AS beds,
+               GROUP_CONCAT(CASE WHEN i.item_type = 'lounger' THEN bi.item_id END) AS loungers
+        FROM bookings b
+                 LEFT JOIN item_bookings bi ON b.booking_id = bi.booking_id
+                 LEFT JOIN item_status i ON bi.item_id = i.item_id
+        WHERE (b.payment_status = 'succeeded' AND b.admin_updated = 0 OR
+               (b.payment_status = 'pending' AND b.booking_timestamp < '2024-06-28' AND b.admin_updated = 0))
+          AND b.arrival_date = ?
+        GROUP BY b.booking_id
+        ORDER BY b.booking_timestamp DESC
+    `;
+
+    dbPool.getConnection((err, connection) => {
+        if (err) {
+            console.error('Error getting DB connection', err);
+            return res.status(500).json({ error: 'Error getting DB connection' });
+        }
+
+        connection.query(sql, [today], (err, results) => {
+            connection.release();
+            if (err) {
+                console.error('Error fetching bookings:', err);
+                return res.status(500).json({ error: 'Error fetching bookings from database' });
+            }
+
+            // Calculate total price per day
+            const bookingsByDate = results.reduce((acc, booking) => {
+                const date = new Date(booking.arrival_date).toLocaleDateString('en-CA');
+                if (!acc[date]) {
+                    acc[date] = { total: 0, bookings: [] };
+                }
+                acc[date].total += booking.total_price;
+                acc[date].bookings.push(booking);
+                return acc;
+            }, {});
+
+            res.json(bookingsByDate);
         });
     });
 });

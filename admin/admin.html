@@ -52,37 +52,6 @@
             display: none !important;
         }
 
-        .error-message {
-            color: red;
-            margin-top: 10px;
-        }
-
-        .modalAd {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.7);
-        }
-
-        .modal-content-ad {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 300px;
-            border-radius: 8px;
-        }
-
-        #loginForm {
-            display: grid;
-        }
-
         html, body {
             font-size: 18px;
             font-family: Arial, sans-serif;
@@ -433,14 +402,35 @@
             background-color: #bddfa9;
             padding: 10px;
             border-radius: 5px;
-            margin: 0 0 20px;
+            margin: 0;
             cursor: pointer;
         }
+
+        .day-info {
+            display: flex;
+            justify-content: space-between;
+            border-radius: 5px;
+            border: 1px solid #9bc681;
+            background-color: #bddfa9;
+        }
+
+        .date-filter {
+            display: block;
+            padding: 10px;
+            margin-bottom: 10px;
+            width: max-content;
+        }
+
+        .nav-book {
+            display: flex;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
     </style>
 </head>
 <body>
-
-
 <div class="container">
     <button class="logout-btn" onclick="logout()">Выйти</button>
     <div class="admin-control">
@@ -471,10 +461,17 @@
     </div>
     <div class="bookings-list">
         <h2>Список бронирований</h2>
+        <div class="nav-book">
+            <div class="date-filter">
+                <input type="date" id="start-date">
+                <input type="date" id="end-date">
+            </div>
+            <button id="today-bookings-btn" onclick="fetchTodayBookings()">Сегодня</button>
+        </div>
         <div id="bookings-container"></div>
+        <button id="load-more-btn" onclick="loadMoreBookings()">Показать еще</button>
     </div>
 </div>
-
 <!-- Модальное окно для добавления предметов -->
 <div id="add-item-modal" class="modal">
     <div class="modal-content">
@@ -492,7 +489,6 @@
         <button onclick="submitNewItems()">Добавить</button>
     </div>
 </div>
-
 <!-- Модальное окно для удаления предметов -->
 <div id="remove-item-modal" class="modal">
     <div class="modal-content">
@@ -502,7 +498,6 @@
         <button onclick="submitRemoveItems()">Удалить</button>
     </div>
 </div>
-
 <div id="create-booking-modal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeCreateBookingModal()">&times;</span>
@@ -533,9 +528,14 @@
 </div>
 <script src="admin.js"></script>
 <script>
+    let offset = 0;
+    const limit = 50;
+
     document.addEventListener('DOMContentLoaded', function () {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('booking-date').value = today;
+        document.getElementById('start-date').value = today;
+        document.getElementById('end-date').value = today;
 
         fetchBookings(); // Load bookings on page load
         fetchItems(); // Load items on page load
@@ -543,6 +543,8 @@
         document.getElementById('custom-price-checkbox').addEventListener('change', toggleCustomPrice);
         document.getElementById('booking-date').addEventListener('change', fetchItems);
         document.getElementById('item-type').addEventListener('change', fetchItems); // Добавляем обработчик события изменения типа предмета
+        document.getElementById('start-date').addEventListener('change', fetchBookings);
+        document.getElementById('end-date').addEventListener('change', fetchBookings);
 
         document.getElementById('create-booking-form').addEventListener('submit', function (event) {
             event.preventDefault();
@@ -636,72 +638,112 @@
     }
 
     function fetchBookings() {
-        fetch('/api/admin/get-bookings')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(bookings => {
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+        offset = 0;
+        fetch(`/api/admin/get-bookings?startDate=${startDate}&endDate=${endDate}&offset=${offset}&limit=${limit}`)
+            .then(response => response.json())
+            .then(bookingsByDate => {
                 const bookingsContainer = document.getElementById('bookings-container');
                 bookingsContainer.innerHTML = '';
+                renderBookings(bookingsContainer, bookingsByDate);
 
-                const bookingsByDate = groupBookingsByDate(bookings);
-
-                for (const [date, dailyBookings] of Object.entries(bookingsByDate)) {
-                    const dayContainer = document.createElement('div');
-                    dayContainer.className = 'day-container';
-                    const dayHead = document.createElement('h3');
-                    const dayHeader = document.createElement('div');
-                    dayHeader.className = 'day-header';
-                    dayHead.textContent = `${formatDate(date)}`;
-
-                    dayHead.addEventListener('click', () => {
-                        dayHeader.classList.toggle('hidden');
-                    });
-
-                    dayHeader.style.display = 'grid';
-                    dayHeader.style.gridTemplateColumns = 'repeat(auto-fill, minmax(30%, 2fr))';
-
-                    dayContainer.appendChild(dayHead);
-                    dayContainer.appendChild(dayHeader);
-
-                    dailyBookings.forEach(booking => {
-                        const div = document.createElement('div');
-                        div.className = 'booking-item';
-                        div.innerHTML = `
-                        <button class="hide-btn" onclick="hideBooking('${booking.booking_id}')">&times;</button>
-                        <p><strong>ID бронирования:</strong> ${booking.booking_id}</p>
-                        <p><strong>Имя:</strong> ${booking.name}</p>
-                        <p><strong>Email:</strong> ${booking.email}</p>
-                        <p><strong>Дата прибытия:</strong> ${new Date(booking.arrival_date).toLocaleDateString()}</p>
-                        <p><strong>Время бронирования:</strong> ${new Date(booking.booking_timestamp).toLocaleString()}</p>
-                        <p><strong>Телефон:</strong> ${booking.phone}</p>
-                        <p><strong>Время прибытия:</strong> ${booking.comments}</p>
-                        <p><strong>Количество детей:</strong> ${booking.children}</p>
-                        <p><strong>Общая цена:</strong> ${booking.total_price} ₽</p>
-                        ${booking.beds ? `<p><strong>Кровати:</strong> ${booking.beds.split(',').map(id => `ID: ${id}`).join(', ')}</p>` : ''}
-                        ${booking.loungers ? `<p><strong>Шезлонги:</strong> ${booking.loungers.split(',').map(id => `ID: ${id}`).join(', ')}</p>` : ''}
-                    `;
-                        dayHeader.appendChild(div);
-                    });
-
-                    bookingsContainer.appendChild(dayContainer);
+                if (Object.keys(bookingsByDate).reduce((acc, date) => acc + bookingsByDate[date].bookings.length, 0) >= limit) {
+                    document.getElementById('load-more-btn').style.display = 'block';
+                } else {
+                    document.getElementById('load-more-btn').style.display = 'none';
                 }
+
+                offset += limit;
             })
             .catch(error => console.error('Failed to load bookings:', error));
     }
 
-    function groupBookingsByDate(bookings) {
-        return bookings.reduce((acc, booking) => {
-            const date = new Date(booking.arrival_date).toLocaleDateString('en-CA'); // Ensure date is correct
-            if (!acc[date]) {
-                acc[date] = [];
-            }
-            acc[date].push(booking);
-            return acc;
-        }, {});
+    function loadMoreBookings() {
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+        fetch(`/api/admin/get-bookings?startDate=${startDate}&endDate=${endDate}&offset=${offset}&limit=${limit}`)
+            .then(response => response.json())
+            .then(bookingsByDate => {
+                const bookingsContainer = document.getElementById('bookings-container');
+                renderBookings(bookingsContainer, bookingsByDate);
+
+                if (Object.keys(bookingsByDate).reduce((acc, date) => acc + bookingsByDate[date].bookings.length, 0) < limit) {
+                    document.getElementById('load-more-btn').style.display = 'none';
+                }
+
+                offset += limit;
+            })
+            .catch(error => console.error('Failed to load bookings:', error));
+    }
+
+    function fetchTodayBookings() {
+        offset = 0;
+        fetch('/api/admin/get-today-bookings')
+            .then(response => response.json())
+            .then(bookingsByDate => {
+                const bookingsContainer = document.getElementById('bookings-container');
+                bookingsContainer.innerHTML = '';
+                renderBookings(bookingsContainer, bookingsByDate);
+
+                if (Object.keys(bookingsByDate).reduce((acc, date) => acc + bookingsByDate[date].bookings.length, 0) >= limit) {
+                    document.getElementById('load-more-btn').style.display = 'block';
+                } else {
+                    document.getElementById('load-more-btn').style.display = 'none';
+                }
+
+                offset += limit;
+            })
+            .catch(error => console.error('Failed to load today\'s bookings:', error));
+    }
+
+    function renderBookings(container, bookingsByDate) {
+        for (const [date, {total, bookings}] of Object.entries(bookingsByDate)) {
+            const dayContainer = document.createElement('div');
+            dayContainer.className = 'day-container';
+            const dayInfo = document.createElement('div');
+            const dayHead = document.createElement('h3');
+            const dayHeadPrice = document.createElement('h3');
+            const dayHeader = document.createElement('div');
+            dayHeader.className = 'day-header';
+            dayInfo.className = 'day-info';
+            dayHead.textContent = `${formatDate(date)}`;
+            dayHeadPrice.textContent = `${total} ₽`;
+
+            dayHead.addEventListener('click', () => {
+                dayHeader.classList.toggle('hidden');
+            });
+
+            dayHeader.style.display = 'grid';
+            dayHeader.style.gridTemplateColumns = 'repeat(auto-fill, minmax(30%, 2fr))';
+
+            dayContainer.appendChild(dayInfo);
+            dayInfo.appendChild(dayHead);
+            dayInfo.appendChild(dayHeadPrice);
+            dayContainer.appendChild(dayHeader);
+
+            bookings.forEach(booking => {
+                const div = document.createElement('div');
+                div.className = 'booking-item';
+                div.innerHTML = `
+                    <button class="hide-btn" onclick="hideBooking('${booking.booking_id}')">&times;</button>
+                    <p><strong>ID бронирования:</strong> ${booking.booking_id}</p>
+                    <p><strong>Имя:</strong> ${booking.name}</p>
+                    <p><strong>Email:</strong> ${booking.email}</p>
+                    <p><strong>Дата прибытия:</strong> ${new Date(booking.arrival_date).toLocaleDateString()}</p>
+                    <p><strong>Время бронирования:</strong> ${new Date(booking.booking_timestamp).toLocaleString()}</p>
+                    <p><strong>Телефон:</strong> ${booking.phone}</p>
+                    <p><strong>Комментарии:</strong> ${booking.comments}</p>
+                    <p><strong>Количество детей:</strong> ${booking.children}</p>
+                    <p><strong>Общая цена:</strong> ${booking.total_price} ₽</p>
+                    ${booking.beds ? `<p><strong>Кровати:</strong> ${booking.beds.split(',').map(id => `ID: ${id}`).join(', ')}</p>` : ''}
+                    ${booking.loungers ? `<p><strong>Шезлонги:</strong> ${booking.loungers.split(',').map(id => `ID: ${id}`).join(', ')}</p>` : ''}
+                `;
+                dayHeader.appendChild(div);
+            });
+
+            container.appendChild(dayContainer);
+        }
     }
 
     function formatDate(dateString) {
