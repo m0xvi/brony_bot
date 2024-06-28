@@ -449,6 +449,13 @@
             border: 2px solid red !important;
         }
 
+        .checkbox-container .checkmark.updated {
+            background-color: #d787ff !important;
+            border-radius: 5px !important;
+            position: absolute !important;
+            border: 2px solid #7300ff !important;
+        }
+
 
     </style>
 </head>
@@ -553,6 +560,7 @@
 <script>
     let offset = 0;
     const limit = 50;
+    let updatedItems = new Set();
 
     document.addEventListener('DOMContentLoaded', function () {
         const today = new Date().toISOString().split('T')[0];
