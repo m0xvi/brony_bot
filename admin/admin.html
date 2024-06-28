@@ -343,10 +343,10 @@
         }
 
         .checkbox-container input:checked ~ .checkmark {
-            background-color: #ff8987;
+            background-color: #bbffb3;
             border-radius: 5px;
             position: absolute;
-            border: 2px solid red;
+            border: 2px solid #4bca62;
         }
 
         .checkbox-container .checkmark {
@@ -435,21 +435,21 @@
             transition: background-color 0.3s;
         }
 
-        .checkbox-container .checkmark.pending {
+        .checkbox-container input:checked ~ .checkmark.pending {
             background-color: #fff060 !important;
             border-radius: 5px !important;
             position: absolute !important;
             border: 2px solid #ffcf00 !important;
         }
 
-        .checkbox-container .checkmark.succeeded {
+        .checkbox-container input:checked ~ .checkmark.succeeded {
             background-color: #ff8987 !important;
             border-radius: 5px !important;
             position: absolute !important;
             border: 2px solid red !important;
         }
 
-        .checkbox-container .checkmark.updated {
+        .checkbox-container input:checked ~ .checkmark.admin-updated {
             background-color: #d787ff !important;
             border-radius: 5px !important;
             position: absolute !important;
@@ -505,12 +505,12 @@
         <h2>Список бронирований</h2>
         <div class="nav-book">
             <div class="date-filter">
-                <input type="date" id="start-date">
-                <input type="date" id="end-date">
                 <select id="filter-by">
                     <option value="arrival_date">По дате прибытия</option>
                     <option value="booking_timestamp">По дате создания</option>
                 </select>
+                <input type="date" id="start-date">
+                <input type="date" id="end-date">
             </div>
             <button id="today-bookings-btn" onclick="fetchTodayBookings()">Сегодня</button>
             </button>
@@ -609,7 +609,7 @@
                 <strong>Легенда цветов:</strong>
                 <ul>
                     <li><strong>Желтый:</strong> Бронирования в процессе оплаты.</li>
-                    <li><strong>Красный:</strong>  Бронирования успешно оплачены.</li>
+                    <li><strong>Красный:</strong> Бронирования успешно оплачены.</li>
                 </ul>
             </li>
         </ol>
@@ -656,7 +656,6 @@
 </div>
 </div>
 <script>
-
     window.onload = function () {
         document.getElementById('news-modal').style.display = 'flex !important';
     }
@@ -743,6 +742,9 @@
                         checkmark.classList.add('succeeded');
                     } else if (item.payment_status && item.payment_status.includes('pending')) {
                         checkmark.classList.add('pending');
+                    }
+                    if (item.admin_updated === 1) {
+                        checkmark.classList.add('admin-updated');
                     }
 
                     itemsContainer.appendChild(label);

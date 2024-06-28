@@ -873,10 +873,10 @@ app.post('/api/admin/create-booking', (req, res) => {
 app.post('/api/admin/update-items', (req, res) => {
     const items = req.body.items;
     const sqlUpdateItemStatus = "UPDATE item_status SET is_booked = ?, booking_date = ? WHERE item_id = ?";
-    const sqlInsertBooking = "INSERT INTO bookings (booking_id, name, arrival_date, children, phone, email, comments, total_price, booking_timestamp, admin_updated) VALUES (?, 'Администратор', ?, 0, 'N/A', 'N/A', 'Администратор изменил статус', 0, NOW(), 1)";
+    const sqlInsertBooking = "INSERT INTO bookings (booking_id, name, arrival_date, children, phone, email, comments, total_price, booking_timestamp, payment_status, admin_updated) VALUES (?, 'Администратор', ?, 0, 'N/A', 'N/A', 'Ручное бронирование', 0, NOW(), 'succeeded', 1)";
     const sqlInsertItemBooking = "INSERT INTO item_bookings (item_id, booking_id, booking_date) VALUES (?, ?, ?)";
     const sqlDeleteItemBooking = "DELETE FROM item_bookings WHERE item_id = ? AND booking_date = ?";
-    const sqlUpdateBookingAdminFlag = "UPDATE bookings SET admin_updated = 1 WHERE booking_id = ?";
+    const sqlDeleteBooking = "DELETE FROM bookings WHERE booking_id = ?";
 
     dbPool.getConnection((err, connection) => {
         if (err) {
@@ -917,9 +917,9 @@ app.post('/api/admin/update-items', (req, res) => {
                                 console.error('Error deleting item booking', err);
                                 return reject(err);
                             }
-                            connection.query(sqlUpdateBookingAdminFlag, [item.booking_id], (err) => {
+                            connection.query(sqlDeleteBooking, [item.booking_id], (err) => {
                                 if (err) {
-                                    console.error('Error updating booking admin_updated flag', err);
+                                    console.error('Error deleting booking', err);
                                     return reject(err);
                                 }
                                 resolve();
@@ -952,6 +952,8 @@ app.post('/api/admin/update-items', (req, res) => {
         });
     });
 });
+
+
 
 
 app.post('/api/admin/add-items', (req, res) => {

@@ -290,8 +290,7 @@ input:hover {
 input[type="text"],
 input[type="tel"],
 input[type="date"],
-select
-{
+select {
     width: 100%;
     padding: 8px;
     border: 1px solid #ccc;
@@ -308,13 +307,6 @@ input[type="time"] {
 textarea {
     height: 80px;
     font-size: 16px;
-}
-
-#comments {
-    margin-bottom: 5px;
-    transition: scale 1s ease-out;
-    width: 100%;
-    border: 1px solid #ccc;
 }
 
 #comments:hover {
@@ -390,7 +382,7 @@ textarea {
     background-color: #0056b3;
 }
 
-#arrival-date {
+#arrival-date, #comments {
     padding: 10px;
     margin-top: 5px;
     margin-bottom: 5px;
