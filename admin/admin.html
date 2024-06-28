@@ -428,6 +428,35 @@
             margin-bottom: 10px;
         }
 
+        .checkbox-container .checkmark {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            transition: background-color 0.3s;
+        }
+
+        .checkbox-container .checkmark.pending {
+            background-color: #fff060 !important;
+            border-radius: 5px !important;
+            position: absolute !important;
+            border: 2px solid #ffcf00 !important;
+        }
+
+        .checkbox-container .checkmark.succeeded {
+            background-color: #ff8987 !important;
+            border-radius: 5px !important;
+            position: absolute !important;
+            border: 2px solid red !important;
+        }
+
+        .checkbox-container .checkmark.updated {
+            background-color: #d787ff !important;
+            border-radius: 5px !important;
+            position: absolute !important;
+            border: 2px solid #7300ff !important;
+        }
+
+
     </style>
 </head>
 <body>
@@ -462,6 +491,7 @@
     <div class="bookings-list">
         <h2>Список бронирований</h2>
         <div class="nav-book">
+            <h4>Бронирования на сегодня</h4>
             <div class="date-filter">
                 <input type="date" id="start-date">
                 <input type="date" id="end-date">
@@ -530,6 +560,7 @@
 <script>
     let offset = 0;
     const limit = 50;
+    let updatedItems = new Set();
 
     document.addEventListener('DOMContentLoaded', function () {
         const today = new Date().toISOString().split('T')[0];
@@ -564,7 +595,7 @@
             return;
         }
 
-        fetch(`/api/get-items?type=${itemType}&date=${bookingDate}`)
+        fetch(`/api/admin/get-items?type=${itemType}&date=${bookingDate}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -597,6 +628,15 @@
                     <span class="checkmark"></span>
                     <div><b>ID:</b> ${item.item_id} <br> ${item.price} ₽</div>
                 `;
+
+                    const checkmark = label.querySelector('.checkmark');
+
+                    if (item.payment_status && item.payment_status.includes('succeeded')) {
+                        checkmark.classList.add('succeeded');
+                    } else if (item.payment_status && item.payment_status.includes('pending')) {
+                        checkmark.classList.add('pending');
+                    }
+
                     itemsContainer.appendChild(label);
                 });
             })
