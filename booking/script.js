@@ -134,18 +134,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const timeoutId = setTimeout(() => {
                     if (localStorage.getItem('paymentCompleted') !== 'true') {
-                        console.log(`Время ожидания истекло для бронирования ID: ${bookingId}. Удаление временного бронирования.`);
-                        fetch(`/api/cancel-booking/${bookingId}`, {
-                            method: 'DELETE'
-                        }).then(() => {
-                            localStorage.removeItem('bookingId');
-                            alert('Бронь была удалена из-за неоплаты в течение 10 минут.');
-                            window.location.reload();
-                        }).catch(error => {
-                            console.error('Ошибка при удалении временного бронирования:', error);
-                        });
+                        console.log(`Время ожидания истекло для бронирования ID: ${bookingId}. Перезагрузка страницы.`);
+                        alert('Время ожидания оплаты истекло. Пожалуйста, попробуйте снова.');
+                        window.location.reload();
                     } else {
-                        console.log(`Оплата завершена для бронирования ID: ${bookingId}, временное бронирование не будет удалено.`);
+                        console.log(`Оплата завершена для бронирования ID: ${bookingId}, перезагрузка страницы не требуется.`);
                     }
                 }, 600000);
 
@@ -179,24 +172,36 @@ document.addEventListener('DOMContentLoaded', function () {
                         bookButton.disabled = false;
                     }
                 });
+
+                window.addEventListener('beforeunload', handleBeforeUnload);
+                window.addEventListener('unload', handleUnload);
+
             } catch (error) {
                 console.error('Ошибка:', error);
                 alert(`Произошла ошибка: ${error.message}`);
                 bookButton.disabled = false;
             }
 
-            window.addEventListener('beforeunload', function () {
+            function handleBeforeUnload(event) {
                 const bookingId = localStorage.getItem('bookingId');
-                if (bookingId) {
+                if (bookingId && localStorage.getItem('paymentCompleted') !== 'true') {
+                    // event.returnValue = 'У вас есть незавершенное бронирование. Вы уверены, что хотите покинуть страницу?';
                     cancelBooking(bookingId);
                     clearTimeout(timeoutId);
                 }
-            });
+            }
+
+            function handleUnload() {
+                const bookingId = localStorage.getItem('bookingId');
+                if (bookingId && localStorage.getItem('paymentCompleted') !== 'true') {
+                    cancelBooking(bookingId);
+                }
+            }
+
         } else {
             bookButton.disabled = false; // Включаем кнопку если валидация не пройдена
         }
     });
-
 
     async function cancelBooking(bookingId) {
         try {
