@@ -641,6 +641,62 @@ app.get('/api/get-items', (req, res) => {
     });
 });
 
+app.get('/api/admin/get-items', (req, res) => {
+    const type = req.query.type;
+    const date = req.query.date || new Date().toISOString().split('T')[0]; // Default to today's date
+
+    if (!date || !type) {
+        return res.status(400).json({error: 'Invalid date or type'});
+    }
+
+    const sql = `
+        SELECT 
+            item_status.item_id,
+            item_status.item_type,
+            item_status.price,
+            CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM item_bookings
+                    WHERE item_bookings.item_id = item_status.item_id
+                    AND booking_date = ?
+                ) THEN TRUE
+                ELSE FALSE
+            END AS is_booked_today,
+            GROUP_CONCAT(DISTINCT b.payment_status) AS payment_status
+        FROM 
+            item_status
+        LEFT JOIN 
+            item_bookings ib ON item_status.item_id = ib.item_id
+        LEFT JOIN 
+            bookings b ON ib.booking_id = b.booking_id AND ib.booking_date = ?
+        WHERE 
+            item_status.item_type = ?
+        GROUP BY 
+            item_status.item_id
+    `;
+
+    dbPool.getConnection((err, connection) => {
+        if (err) {
+            console.error('Error getting DB connection', err);
+            return res.status(500).json({error: 'Error getting DB connection'});
+        }
+
+        connection.query(sql, [date, date, type], (err, result) => {
+            connection.release();
+            if (err) {
+                console.error('Error fetching items:', err);
+                res.status(500).json({error: 'Error fetching items from database'});
+            } else {
+                res.json(result);
+            }
+        });
+    });
+});
+
+
+
+
 app.get('/api/admin/get-bookings', (req, res) => {
     const {startDate, endDate, offset = 0, limit = 50} = req.query;
 

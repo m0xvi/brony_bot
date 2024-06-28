@@ -428,6 +428,28 @@
             margin-bottom: 10px;
         }
 
+        .checkbox-container .checkmark {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            transition: background-color 0.3s;
+        }
+
+        .checkbox-container .checkmark.pending {
+            background-color: #fff060 !important;
+            border-radius: 5px !important;
+            position: absolute !important;
+            border: 2px solid #ffcf00 !important;
+        }
+
+        .checkbox-container .checkmark.succeeded {
+            background-color: #ff8987 !important;
+            border-radius: 5px !important;
+            position: absolute !important;
+            border: 2px solid red !important;
+        }
+
+
     </style>
 </head>
 <body>
@@ -565,7 +587,7 @@
             return;
         }
 
-        fetch(`/api/get-items?type=${itemType}&date=${bookingDate}`)
+        fetch(`/api/admin/get-items?type=${itemType}&date=${bookingDate}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -598,6 +620,15 @@
                     <span class="checkmark"></span>
                     <div><b>ID:</b> ${item.item_id} <br> ${item.price} ₽</div>
                 `;
+
+                    const checkmark = label.querySelector('.checkmark');
+
+                    if (item.payment_status && item.payment_status.includes('succeeded')) {
+                        checkmark.classList.add('succeeded');
+                    } else if (item.payment_status && item.payment_status.includes('pending')) {
+                        checkmark.classList.add('pending');
+                    }
+
                     itemsContainer.appendChild(label);
                 });
             })
