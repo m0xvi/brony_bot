@@ -808,17 +808,19 @@ app.get('/api/admin/get-today-bookings', (req, res) => {
 });
 
 app.post('/api/admin/create-booking', (req, res) => {
-    const {name, phone, email, arrival_date, item_type, comments, children, booking_id, items} = req.body;
-    const total_price = items.reduce((total, item) => total + item.price, 0);
+    const {name, phone, email, arrivalDate, comments, children, items, totalPrice} = req.body;
+
+    const bookingId = uuidv4();
+    const bookingTimestamp = new Date();
 
     const bookingQuery = `
-        INSERT INTO bookings (booking_id, name, phone, email, arrival_date, comments, children, total_price)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO bookings (booking_id, name, phone, email, arrival_date, comments, children, total_price, booking_timestamp, payment_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
     `;
 
     const itemBookingQuery = `
         INSERT INTO item_bookings (booking_id, item_id, item_type)
-        VALUES (?, ?, ?)
+        VALUES ?
     `;
 
     dbPool.getConnection((err, connection) => {
@@ -834,7 +836,7 @@ app.post('/api/admin/create-booking', (req, res) => {
                 return res.status(500).json({error: 'Error starting transaction'});
             }
 
-            connection.query(bookingQuery, [booking_id, name, phone, email, arrival_date, comments, children, total_price], (err, results) => {
+            connection.query(bookingQuery, [bookingId, name, phone, email, arrivalDate, comments, children, totalPrice, bookingTimestamp], (err, results) => {
                 if (err) {
                     return connection.rollback(() => {
                         connection.release();
@@ -843,7 +845,7 @@ app.post('/api/admin/create-booking', (req, res) => {
                     });
                 }
 
-                const itemBookings = items.map(item => [booking_id, item.item_id, item_type]);
+                const itemBookings = items.map(item => [bookingId, item.itemId, item.type]);
                 connection.query(itemBookingQuery, [itemBookings], (err, results) => {
                     if (err) {
                         return connection.rollback(() => {
@@ -869,6 +871,7 @@ app.post('/api/admin/create-booking', (req, res) => {
         });
     });
 });
+
 
 app.post('/api/admin/update-items', (req, res) => {
     const items = req.body.items;

@@ -201,13 +201,13 @@
         }
 
         .items-container .bed input:checked ~ .checkmark {
-            background-color: #ff8987;
-            border: 1px solid red;
+            background-color: #b3ffba;
+            border: 1px solid #4bca62;
         }
 
         .items-container .lounger input:checked ~ .checkmark {
-            background-color: #ff8987;
-            border: 1px solid red;
+            background-color: #b3ffba;
+            border: 1px solid #4bca62;
         }
 
 
@@ -560,15 +560,35 @@
             <input type="date" id="create-arrival-date" name="arrival-date" required>
             <label for="create-item-type">Тип предмета</label>
             <select id="create-item-type" name="item-type" required>
-                <option value="bed">Кровать</option>
                 <option value="lounger">Шезлонг</option>
+                <option value="bed">Кровать</option>
             </select>
             <div id="create-beds-container" class="items-container"></div>
             <div id="create-loungers-container" class="items-container"></div>
-            <label for="create-comments">Комментарии</label>
-            <textarea id="create-comments" name="comments"></textarea>
+            <label for="create-comments">Время</label>
+            <select id="create-comments" name="comments" required>
+                <option value="11:00">11:00</option>
+                <option value="11:30">11:30</option>
+                <option value="12:00">12:00</option>
+                <option value="12:30">12:30</option>
+                <option value="13:00">13:00</option>
+                <option value="13:30">13:30</option>
+                <option value="14:00">14:00</option>
+                <option value="14:30">14:30</option>
+                <option value="15:00">15:00</option>
+                <option value="15:30">15:30</option>
+                <option value="16:00">16:00</option>
+                <option value="16:30">16:30</option>
+                <option value="17:00">17:00</option>
+                <option value="17:30">17:30</option>
+                <option value="18:00">18:00</option>
+                <option value="18:30">18:30</option>
+                <option value="19:00">19:00</option>
+                <option value="19:30">19:30</option>
+                <option value="20:00">20:00</option>
+            </select>
             <label for="create-children">Количество детей</label>
-            <input type="number" id="create-children" name="children" min="0" value="0">
+            <input type="number" id="create-children" name="children" min="1" max="5" value="1">
             <button type="submit">Создать</button>
         </form>
     </div>
@@ -654,7 +674,7 @@
         <p>Нажмите на кнопку "Выйти", расположенную в верхнем правом углу страницы, чтобы выйти из системы.</p>
     </div>
 </div>
-</div>
+
 <script>
     window.onload = function () {
         document.getElementById('news-modal').style.display = 'flex !important';
@@ -1052,6 +1072,8 @@
                     <span class="checkmark"></span>
                     <div><b>ID:</b> ${item.item_id} <br> ${item.price} ₽</div>
                 `;
+
+
                     itemsList.appendChild(label);
                 });
 
@@ -1163,7 +1185,7 @@
             return;
         }
 
-        fetch(`/api/get-items?type=${itemType}&date=${bookingDate}`)
+        fetch(`/api/admin/get-items?type=${itemType}&date=${bookingDate}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -1196,6 +1218,17 @@
                     <span class="checkmark"></span>
                     <div><b>ID:</b> ${item.item_id} <br> ${item.price} ₽</div>
                 `;
+
+                    const checkmark = label.querySelector('.checkmark');
+
+                    if (item.payment_status && item.payment_status.includes('succeeded')) {
+                        checkmark.classList.add('succeeded');
+                    } else if (item.payment_status && item.payment_status.includes('pending')) {
+                        checkmark.classList.add('pending');
+                    }
+                    if (item.admin_updated === 1) {
+                        checkmark.classList.add('admin-updated');
+                    }
                     itemsContainer.appendChild(label);
                 });
             })
