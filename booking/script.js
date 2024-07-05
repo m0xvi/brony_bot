@@ -280,7 +280,7 @@ function updateTotalPrice() {
     const childrenCheckbox = document.getElementById('children-checkbox');
     if (childrenCheckbox && childrenCheckbox.checked) {
         const childrenCount = parseInt(document.getElementById('children').value, 10) || 0;
-        const childPrice = childrenCount * 500;
+        const childPrice = childrenCount * 1000;
         total += childPrice;
     }
 
