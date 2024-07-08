@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Сервис бронирования</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
+    <link rel="manifest" href="/img/site.webmanifest">
+    <link type="text/css" rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Google+Sans:400,500,700|Google+Sans+Text:400&amp;lang=ru">
+    <link type="text/css" rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Google+Sans+Text:400&amp;text=%E2%86%90%E2%86%92%E2%86%91%E2%86%93&amp;lang=ru">
+</head>
+<body>
+
+<div class="container">
+    <div class="product" id="nav">
+        <div class="nav-buttons">
+            <button onclick="history.back()"><img src="/img/back.svg" alt="back"></button>
+            <h2>Бронирование</h2>
+            <button onclick="window.location.href='https://pool.hotelusadba.ru/'"><img src="/img/home.svg" alt="home">
+            </button>
+        </div>
+    </div>
+    <div class="product" id="bed">
+        <img src="../img/bed.png" alt="Кровать">
+        <div class="line"></div>
+        <div class="description">
+            <p>Кровать</p>
+            <p class="price">5 000 ₽</p>
+            <a href="booking.html?type=bed" class="book-btn">Забронировать</a>
+        </div>
+    </div>
+    <div class="product" id="sun-lounger">
+        <img src="../img/lounger.png" alt="Шезлонг">
+        <div class="line"></div>
+        <div class="description">
+            <p>Шезлонг</p>
+            <p class="price">2 500 ₽</p>
+            <a href="booking.html?type=lounger" class="book-btn">Забронировать</a>
+        </div>
+    </div>
+</div>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="script.js"></script>
+<script>
+    window.onload = function () {
+        let element1 = document.getElementById("bed");
+        let element2 = document.getElementById("sun-lounger");
+        let element3 = document.getElementById("nav");
+        element1.classList.add("show");
+        element2.classList.add("show");
+        element3.classList.add("show");
+    }
+</script>
+</body>
+</html>

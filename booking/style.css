@@ -1,0 +1,714 @@
+body, html {
+    font-family: Arial, sans-serif;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    border-radius: 8px;
+    box-sizing: border-box;
+    max-width: 600px;
+    min-width: 465px;
+}
+
+h2 {
+    text-align: center;
+    word-break: break-all;
+}
+
+hr {
+    border: none;
+    height: 1px;
+    background-color: #eeeeee;
+}
+
+label {
+    display: block;
+    margin: 10px 0;
+    color: #333;
+}
+
+.product {
+    box-shadow: 0 4px 16px 1px rgba(0, 26, 52, .16);
+    padding: 10px 0;
+    text-align: center;
+    border-radius: 10px;
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin: 20px auto;
+    position: relative;
+    opacity: 0;
+    transform: translateX(-5%);
+    transition: opacity 1s ease-out, transform 1s ease;
+}
+
+.product.show {
+    opacity: 1;
+    transform: translateX(0%);
+}
+
+.booking-form {
+    user-select: none;
+    padding: 10px;
+    margin-bottom: 20px;
+    text-align: justify;
+    border-radius: 10px;
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    opacity: 0;
+    transform: translateX(-5%);
+    transition: opacity 1s ease-out, transform 1s ease;
+}
+
+.booking-form.show {
+    opacity: 1;
+    transform: translateX(0%);
+}
+
+
+.booking-form label {
+    font-weight: bold;
+}
+
+img {
+    width: 30%;
+    height: auto;
+    border-radius: 5px;
+    margin: 0 auto;
+    object-fit: cover;
+}
+
+
+.description:hover {
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    border-radius: 5px;
+    scale: 105%;
+}
+
+
+.confirmation p {
+    padding: 10px;
+    font-weight: 600;
+    word-break: break-all;
+}
+
+.description p {
+    font-weight: 600;
+    word-break: break-all;
+    font-size: 22px;
+    margin-top: 10px;
+    margin-bottom: 0;
+    padding: 10px 0;
+    border-radius: 0;
+}
+
+.description p:first-child {
+    font-size: 25px;
+}
+
+.price {
+    background-color: #4bca62;
+    color: white;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.line {
+    z-index: 1001;
+    width: 6px;
+    height: 150px;
+    margin: 0 auto;
+    border-radius: 10px;
+    background-color: #eee;
+}
+
+.line_h {
+    width: auto;
+    height: 6px;
+    border-radius: 10px;
+    background-color: #eee;
+    margin: 10px 20px;
+}
+
+.description {
+    border-radius: 5px;
+    /*padding: 10px 30px 40px 30px;*/
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 0 auto;
+    width: 40%;
+    height: auto;
+    transition: box-shadow 0.5s ease, scale 0.5s ease;
+    background-color: #fbfbfb;
+}
+
+.description a {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 0 0 4px 4px;
+    width: auto;
+    text-decoration: none;
+    font-weight: 600;
+    word-break: break-all;
+    font-size: 20px;
+}
+
+button {
+    font-weight: 600;
+    font-size: 16px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: auto;
+    margin: 10px 3px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.5s ease, scale 0.5s ease;
+}
+
+button:hover {
+    background-color: #0069c8;
+    scale: 101%;
+}
+
+.book-btn {
+    margin-top: auto;
+    padding: 15px 0;
+
+}
+
+button.book-btn {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+
+a:hover {
+    transition: 0.4s;
+    background-color: #0069c8;
+}
+
+button:active {
+    transition: 0.2s;
+    transform: scale(99%);
+}
+
+
+.hidden {
+    display: none;
+}
+
+#children {
+    text-align: center;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+input {
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: scale 0.5s ease;
+}
+
+input:hover {
+    scale: 101%;
+}
+
+
+.total {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-top: 20px;
+    color: black;
+    border-radius: 5px;
+    text-align: right;
+}
+
+.total p {
+    margin: 3px 15px;
+    font-weight: 600;
+}
+
+
+#email {
+    width: 100%;
+    border: 1px solid #ccc;
+}
+
+.error {
+    background-color: #fdd;
+}
+
+.policy.error,
+.rules.error {
+    text-decoration: 2px underline red;
+}
+
+.flex-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+
+.flex-item {
+    flex: 1;
+    padding-right: 10px;
+}
+
+.flex-item:last-child {
+    padding-right: 0;
+}
+
+input[type="text"],
+input[type="tel"],
+input[type="date"],
+select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+
+input[type="time"] {
+    resize: none;
+}
+
+textarea {
+    height: 80px;
+    font-size: 16px;
+}
+
+#comments:hover {
+    scale: 101%;
+}
+
+
+#child {
+    position: relative;
+    display: flex;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease-in-out;
+}
+
+#child.show {
+    opacity: 1;
+}
+
+
+#children-checkbox {
+    width: 18px;
+    box-shadow: none;
+    margin-right: 15px;
+    margin-bottom: 5px;
+}
+
+#children-controls {
+    position: absolute;
+    left: 9%;
+    top: 80%;
+}
+
+
+.animated {
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+    height: 0;
+    opacity: 0;
+    transform: translateY(-30%);
+}
+
+.animated.show {
+    height: auto;
+    opacity: 1;
+    transform: translateY(0%);
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+}
+
+.quantity-control button {
+    width: 30px;
+    height: 30px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.quantity-control input {
+    width: 50px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin: 0 5px;
+}
+
+.quantity-control button:hover {
+    background-color: #0056b3;
+}
+
+#arrival-date, #comments {
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: scale 0.5s ease;
+    width: 100%;
+}
+
+#arrival-date:hover {
+    scale: 101%;
+}
+
+.hidden {
+    display: none;
+}
+
+.items-container {
+    display: none;
+    flex-wrap: wrap;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    justify-content: center;
+    padding-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.items-container .item {
+    width: 40px;
+    height: 40px;
+    position: relative;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.items-container label {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    margin: 5px;
+}
+
+.items-container label input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.items-container .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 35px;
+    width: 35px;
+    background-color: #eee;
+    border-radius: 5px;
+    background-size: cover;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-shadow: 0px 1px 5px 1px rgba(34, 60, 80, 0.2);
+    transition: all 0.3s ease-out;
+}
+
+.items-container .checkmark:hover {
+    scale: 101%;
+}
+
+.items-container .checkmark:hover {
+    background-color: #ccc;
+}
+
+.items-container .bed input:not(:checked) ~ .checkmark {
+    background-image: url('../img/bed-icon.svg');
+}
+
+.items-container .bed input:checked ~ .checkmark {
+    background-image: url('../img/bed-icon.svg');
+    background-color: #86ff91;
+    border: 1px solid limegreen;
+    box-shadow: 0px 5px 10px 2px rgba(26, 255, 0, 0.2);
+}
+
+.items-container .lounger input:not(:checked) ~ .checkmark {
+    background-image: url('../img/lounger-icon.svg');
+}
+
+.items-container .lounger input:checked ~ .checkmark {
+    background-image: url('../img/lounger-icon.svg');
+    background-color: #86ff91;
+    border: 1px solid limegreen;
+    box-shadow: 0px 5px 10px 2px rgba(26, 255, 0, 0.2);
+}
+
+
+.items-container input:disabled ~ .checkmark {
+    background-color: #ff8987;
+    cursor: not-allowed;
+    border-radius: 5px;
+    border: 2px solid red;
+}
+
+select {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 8px;
+    appearance: none;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    position: relative;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%204%205%22%3E%3Cpath%20fill%3D%22%23000%22%20d%3D%22M2%200L0%202h4zm0%205L0%203h4z%22/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 8px 10px;
+}
+
+select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+select option {
+    padding: 10px;
+}
+
+select option:hover {
+    background-color: #f1f1f1;
+
+}
+
+select option:checked {
+    background-color: #007bff;
+    color: #fff;
+
+}
+
+#booking_id {
+    user-select: all;
+}
+
+
+@media (max-width: 390px) {
+    .container {
+        padding: 10px;
+        min-width: 100%;
+    }
+
+    .flex-item {
+        margin-bottom: 10px;
+    }
+
+    .items-container {
+        grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+        gap: 10px;
+    }
+
+    .items-container .item {
+        width: 30px;
+        height: 30px;
+    }
+
+    .checkbox-container .checkmark {
+        height: 40px;
+        width: 40px;
+    }
+
+    .book-btn {
+        width: 100%;
+        font-size: 16px;
+        padding: 15px 0;
+    }
+
+    .total p {
+        font-size: 18px;
+    }
+
+    .comm {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .quantity-control button {
+        width: 30px;
+        height: 30px;
+    }
+
+    .quantity-control input {
+        width: 50px;
+        text-align: center;
+    }
+
+    .description {
+        width: 100%;
+        align-items: center;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .description a {
+        font-size: 20px;
+        word-wrap: break-word; /* Перенос длинных слов на новую строку */
+        overflow-wrap: break-word;
+        width: 100%;
+    }
+
+    .description p {
+        font-weight: 600;
+        word-break: break-all;
+        font-size: 22px;
+        margin-top: 10px;
+        margin-bottom: 0;
+        padding: 10px 0;
+        border-radius: 0;
+        width: 100%;
+    }
+
+    .line {
+        z-index: 1001;
+        width: 150px;
+        height: 6px;
+        margin: 0 auto;
+        border-radius: 10px;
+        background-color: #eee;
+    }
+
+    .product {
+        flex-direction: column; /* вертикальное расположение для маленьких экранов */
+        align-items: center;
+    }
+
+    .product img {
+        width: 30%;
+        height: 30%;
+        margin-bottom: 20px;
+    }
+
+    .nav-buttons button {
+        margin: auto 10px !important;
+    }
+
+}
+
+
+.confirmation-details p {
+    margin: 0;
+    padding: 10px 0;
+    font-size: 18px;
+}
+
+#booking-id p {
+    margin: 0;
+    padding: 10px 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.policy-container {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+
+}
+
+.policy, .rules {
+    display: flex;
+    background: none;
+}
+
+#rules-checkbox, #policy-checkbox {
+    width: 18px;
+    box-shadow: none;
+    margin-right: 15px;
+    margin-bottom: 5px;
+}
+
+
+.policy label, .rules label {
+    font-weight: normal;
+    font-size: 15px;
+    text-align: left;
+}
+
+.policy label a, .rules label a {
+    color: #32beff;
+}
+
+.policy label a:hover, .rules label a:hover {
+    background: none;
+}
+
+.nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    background-color: white;
+    width: 100%;
+}
+
+.nav-buttons button {
+    padding: 8px;
+    width: 40px;
+    margin: auto 20px;
+    height: 100%;
+}
+
+.nav-buttons button:hover {
+    box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
+    border-radius: 5px;
+    scale: 105%;
+}
+
+.nav-buttons button img {
+    margin: 0 auto;
+    width: 100%;
+    height: auto;
+    z-index: 1000;
+}
+
+#comments::-webkit-scrollbar {
+    width: 0;
+}
+
+.hidden {
+    display: none;
+}

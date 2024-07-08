@@ -1,0 +1,7 @@
+User-agent: Yandex
+Disallow: /admin/
+
+User-agent: Googlebot
+Disallow: /admin/
+
+Sitemap: https://pool.hotelusadba.ru/sitemap.xml

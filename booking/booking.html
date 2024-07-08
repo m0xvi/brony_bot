@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Бронирование шезлонгов - Отель «Усадьба» - Agroup">
+    <meta property="og:description"
+          content="Прайс лист на пользование бассейном в отеле «Усадьба» · Шезлонг — 2200₽ · Кровать — 4500₽. Купание детей до 14 лет 500₽. Здесь вы можете забронировать лучшее место для отдыха у бассейна с летним баром. Бронь по телефону +7 (4012) 38-48-50.">
+    <meta property="og:site_name" content="Бронирование шезлонгов - Отель «Усадьба» - Agroup">
+    <meta property="og:locale" content="ru-RU">
+    <title>Форма бронирования</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
+    <link rel="manifest" href="/img/site.webmanifest">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <script src="https://unpkg.com/imask"></script>
+    <script src="https://yookassa.ru/checkout-widget/v1/checkout-widget.js"></script>
+    <style>
+        #payment-form-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none; /* Скрыть по умолчанию */
+        }
+
+        #payment-form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="product" id="nav">
+        <div class="nav-buttons">
+            <button onclick="history.back()"><img src="/img/back.svg" alt="back"></button>
+            <h2>Бронирование</h2>
+            <button onclick="window.location.href='https://pool.hotelusadba.ru/'"><img src="/img/home.svg" alt="home">
+            </button>
+        </div>
+    </div>
+    <div class="booking-form" id="form">
+        <div class="flex-row">
+            <div class="flex-item">
+                <label for="name">Ваше имя</label>
+                <input type="text" id="name" placeholder="Введите ваше имя">
+            </div>
+            <div class="flex-item">
+                <label class="tel" for="phone">Телефон</label>
+                <input type="tel" id="phone" placeholder="+7 (___) ___-____">
+            </div>
+        </div>
+        <div class="flex-row">
+            <div class="flex-item">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="name@example.com">
+            </div>
+        </div>
+        <div class="flex-row">
+            <div class="flex-item">
+                <label for="arrival-date">Дата</label>
+                <select id="arrival-date" required></select>
+            </div>
+            <div class="flex-item">
+                <label class="comm" for="comments">Время</label>
+                <select id="comments" required>
+                    <option value="11:00">11:00</option>
+                    <option value="11:30">11:30</option>
+                    <option value="12:00">12:00</option>
+                    <option value="12:30">12:30</option>
+                    <option value="13:00">13:00</option>
+                    <option value="13:30">13:30</option>
+                    <option value="14:00">14:00</option>
+                    <option value="14:30">14:30</option>
+                    <option value="15:00">15:00</option>
+                    <option value="15:30">15:30</option>
+                    <option value="16:00">16:00</option>
+                    <option value="16:30">16:30</option>
+                    <option value="17:00">17:00</option>
+                    <option value="17:30">17:30</option>
+                    <option value="18:00">18:00</option>
+                    <option value="18:30">18:30</option>
+                    <option value="19:00">19:00</option>
+                    <option value="19:30">19:30</option>
+                    <option value="20:00">20:00</option>
+                </select>
+            </div>
+        </div>
+        <label>Доступно:</label>
+        <div id="beds-container" class="items-container" style="display: none;"></div>
+        <div id="loungers-container" class="items-container" style="display: none;"></div>
+        <div id="child">
+            <input type="checkbox" id="children-checkbox">
+            <label for="children-checkbox">Дети (с 3-х до 14-ти лет)</label>
+            <div id="children-controls" class="animated" style="display: none;">
+                <div class="quantity-control">
+                    <button type="button" onclick="decreaseCount('children')">-</button>
+                    <input type="number" id="children" name="children" min="1" max="5" value="1">
+                    <button type="button" onclick="increaseCount('children')">+</button>
+                </div>
+            </div>
+        </div>
+        <div class="policy-container">
+            <div class="policy">
+                <input type="checkbox" id="policy-checkbox" required>
+                <label for="policy-checkbox">Я согласен(а) на <a href="https://pool.hotelusadba.ru/privacy-policy.html">обработку
+                    персональных данных</a></label>
+            </div>
+            <div class="rules">
+                <input type="checkbox" id="rules-checkbox" required>
+                <label for="rules-checkbox">Я ознакомлен(а) с <a href="https://pool.hotelusadba.ru/rules.html">правилами
+                    посещения бассейна</a></label>
+            </div>
+        </div>
+        <div class="line_h"></div>
+        <div class="total">
+            <p><b>Итого:</b> <span id="totalPrice">0</span> ₽</p>
+        </div>
+        <button class="book-btn" id="book-button">Забронировать</button>
+    </div>
+</div>
+<input type="hidden" id="booking-id">
+<div id="payment-form-container">
+    <div id="payment-form">
+        <button id="closeBtn">&times;</button>
+    </div>
+</div>
+<script>
+    window.onload = function () {
+        let element1 = document.getElementById("form");
+        let element3 = document.getElementById("nav");
+        element1.classList.add("show");
+        element3.classList.add("show");
+
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('arrival-date').value = today;
+        fetchItemsAndDisplay(getQueryParam('type'), today);
+    }
+
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+</script>
+</body>
+</html>
