@@ -43,13 +43,13 @@ label {
     margin: 20px auto;
     position: relative;
     opacity: 0;
-    transform: scale(0.90);
-    transition: opacity 1s ease-out, transform 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transform: translateX(-5%);
+    transition: opacity 1s ease-out, transform 1s ease;
 }
 
 .product.show {
     opacity: 1;
-    transform: scale(1);
+    transform: translateX(0%);
 }
 
 .booking-form {
@@ -60,13 +60,13 @@ label {
     border-radius: 10px;
     box-shadow: 0 20px 12px -16px rgba(0, 30, 85, .1), 0 8px 24px 18px rgba(0, 30, 85, .05);
     opacity: 0;
-    transform: scale(0.95);
-    transition: opacity 1s ease-out, transform 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transform: translateX(-5%);
+    transition: opacity 1s ease-out, transform 1s ease;
 }
 
 .booking-form.show {
     opacity: 1;
-    transform: scale(1);
+    transform: translateX(0%);
 }
 
 
@@ -566,7 +566,7 @@ select option:checked {
 
     .comm {
         width: 100%;
-        margin-top: 5px;
+        margin-top: 10px;
     }
 
     .quantity-control button {
