@@ -849,26 +849,25 @@
     }
 
     function fetchTodayBookings() {
-        offset = 0;
         fetch('/api/admin/get-today-bookings')
             .then(response => response.json())
-            .then(bookingsByDate => {
+            .then(data => {
+                const bookingsByDate = {};
+                const today = new Date().toISOString().split('T')[0];
+                bookingsByDate[today] = {
+                    total: data.reduce((sum, booking) => sum + booking.total_price, 0),
+                    bookings: data
+                };
                 const bookingsContainer = document.getElementById('bookings-container');
                 bookingsContainer.innerHTML = '';
                 renderBookings(bookingsContainer, bookingsByDate);
-
-                if (Object.keys(bookingsByDate).reduce((acc, date) => acc + bookingsByDate[date].bookings.length, 0) >= limit) {
-                    document.getElementById('load-more-btn').style.display = 'block';
-                } else {
-                    document.getElementById('load-more-btn').style.display = 'none';
-                }
-
-                offset += limit;
             })
-            .catch(error => console.error('Failed to load today\'s bookings:', error));
+            .catch(error => {
+                console.error('Failed to load today\'s bookings:', error);
+            });
     }
 
-    function renderBookings(container, bookingsByDate, filterBy) {
+    function renderBookings(container, bookingsByDate) {
         for (const [date, {total, bookings}] of Object.entries(bookingsByDate)) {
             const dayContainer = document.createElement('div');
             dayContainer.className = 'day-container';

@@ -773,12 +773,12 @@ app.get('/api/admin/get-today-bookings', (req, res) => {
                  LEFT JOIN item_status i ON bi.item_id = i.item_id
         WHERE (b.payment_status = 'succeeded' AND b.admin_updated = 0 OR
                (b.payment_status = 'pending' AND b.booking_timestamp < '2024-06-28' AND b.admin_updated = 0))
-          AND b.arrival_date = ?
+          AND DATE (b.booking_timestamp) = ?
         GROUP BY b.booking_id
         ORDER BY b.booking_timestamp DESC
     `;
 
-    dbPool.getConnection((err, connection) => {
+      dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
             return res.status(500).json({ error: 'Error getting DB connection' });
@@ -787,25 +787,15 @@ app.get('/api/admin/get-today-bookings', (req, res) => {
         connection.query(sql, [today], (err, results) => {
             connection.release();
             if (err) {
-                console.error('Error fetching bookings:', err);
-                return res.status(500).json({ error: 'Error fetching bookings from database' });
+                console.error('Error fetching today bookings:', err);
+                return res.status(500).json({ error: 'Error fetching today bookings from database' });
             }
 
-            // Calculate total price per day
-            const bookingsByDate = results.reduce((acc, booking) => {
-                const date = new Date(booking.arrival_date).toLocaleDateString('en-CA');
-                if (!acc[date]) {
-                    acc[date] = { total: 0, bookings: [] };
-                }
-                acc[date].total += booking.total_price;
-                acc[date].bookings.push(booking);
-                return acc;
-            }, {});
-
-            res.json(bookingsByDate);
+            res.json(results);
         });
     });
 });
+
 
 app.post('/api/admin/create-booking', (req, res) => {
     const {name, phone, email, arrivalDate, comments, children, items, totalPrice} = req.body;
