@@ -650,30 +650,24 @@ app.get('/api/admin/get-items', (req, res) => {
     }
 
     const sql = `
-        SELECT 
-            item_status.item_id,
-            item_status.item_type,
-            item_status.price,
-            CASE
-                WHEN EXISTS (
-                    SELECT 1
-                    FROM item_bookings
-                    WHERE item_bookings.item_id = item_status.item_id
-                    AND booking_date = ?
-                ) THEN TRUE
-                ELSE FALSE
-            END AS is_booked_today,
-            GROUP_CONCAT(DISTINCT b.payment_status) AS payment_status
-        FROM 
-            item_status
-        LEFT JOIN 
-            item_bookings ib ON item_status.item_id = ib.item_id
-        LEFT JOIN 
-            bookings b ON ib.booking_id = b.booking_id AND ib.booking_date = ?
-        WHERE 
-            item_status.item_type = ?
-        GROUP BY 
-            item_status.item_id
+        SELECT item_status.item_id,
+               item_status.item_type,
+               item_status.price,
+               CASE
+                   WHEN EXISTS (SELECT 1
+                                FROM item_bookings
+                                WHERE item_bookings.item_id = item_status.item_id
+                                  AND booking_date = ?) THEN TRUE
+                   ELSE FALSE
+                   END                                 AS is_booked_today,
+               GROUP_CONCAT(DISTINCT b.payment_status) AS payment_status
+        FROM item_status
+                 LEFT JOIN
+             item_bookings ib ON item_status.item_id = ib.item_id
+                 LEFT JOIN
+             bookings b ON ib.booking_id = b.booking_id AND ib.booking_date = ?
+        WHERE item_status.item_type = ?
+        GROUP BY item_status.item_id
     `;
 
     dbPool.getConnection((err, connection) => {
@@ -695,10 +689,12 @@ app.get('/api/admin/get-items', (req, res) => {
 });
 
 
-
-
 app.get('/api/admin/get-bookings', (req, res) => {
-    const { startDate, endDate, offset = 0, limit = 50, filterBy = 'arrival_date' } = req.query;
+    const {startDate, endDate, offset = 0, limit = 50, filterBy = 'arrival_date'} = req.query;
+
+ const adjustedEndDate = filterBy === 'booking_timestamp'
+        ? new Date(new Date(endDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        : endDate;
 
     const sql = `
         SELECT b.booking_id,
@@ -729,7 +725,7 @@ app.get('/api/admin/get-bookings', (req, res) => {
             return res.status(500).json({ error: 'Error getting DB connection' });
         }
 
-        connection.query(sql, [startDate, endDate, parseInt(limit), parseInt(offset)], (err, results) => {
+        connection.query(sql, [startDate, adjustedEndDate, parseInt(limit), parseInt(offset)], (err, results) => {
             connection.release();
             if (err) {
                 console.error('Error fetching bookings:', err);
@@ -778,17 +774,17 @@ app.get('/api/admin/get-today-bookings', (req, res) => {
         ORDER BY b.booking_timestamp DESC
     `;
 
-      dbPool.getConnection((err, connection) => {
+    dbPool.getConnection((err, connection) => {
         if (err) {
             console.error('Error getting DB connection', err);
-            return res.status(500).json({ error: 'Error getting DB connection' });
+            return res.status(500).json({error: 'Error getting DB connection'});
         }
 
         connection.query(sql, [today], (err, results) => {
             connection.release();
             if (err) {
                 console.error('Error fetching today bookings:', err);
-                return res.status(500).json({ error: 'Error fetching today bookings from database' });
+                return res.status(500).json({error: 'Error fetching today bookings from database'});
             }
 
             res.json(results);
@@ -804,7 +800,8 @@ app.post('/api/admin/create-booking', (req, res) => {
     const bookingTimestamp = new Date();
 
     const bookingQuery = `
-        INSERT INTO bookings (booking_id, name, phone, email, arrival_date, comments, children, total_price, booking_timestamp, payment_status)
+        INSERT INTO bookings (booking_id, name, phone, email, arrival_date, comments, children, total_price,
+                              booking_timestamp, payment_status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
     `;
 
@@ -945,8 +942,6 @@ app.post('/api/admin/update-items', (req, res) => {
         });
     });
 });
-
-
 
 
 app.post('/api/admin/add-items', (req, res) => {
